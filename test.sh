@@ -4,7 +4,7 @@
 #
 # source "$(dirname "$(readlink -f "$0")")"/test.sh
 #
-#set -x
+# TODO: sort out global var names and control which are exported
 set -a
 set -o errexit
 set -o pipefail
@@ -18,28 +18,26 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color'
 
-# TODO: redir stdout to test output log file
-# TODO: substitute a named pipe + dumper process (redir to fd3 if verbose, /dev/null if not, then tee testout.log) for these two redir_* shitty functions
-# TODO: display_test_name will always redirect to fd 3 (pipe).
-REDIR=0
+exit_trap() {
+  rm -f "$PIPE"
+}
+
 redir_stdout() {
-  if [ "$REDIR" -eq 0 ]; then
-    [ "$VERBOSE" = 1 ] || exec 3>&1 >/dev/null
-  fi
-  REDIR=$(($REDIR + 1))
+  PIPE=$(mktemp -u)
+  mkfifo "$PIPE"
+  trap exit_trap EXIT
+  TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
+  TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
+  mkdir -p "$TESTOUT_DIR"
+  [ "$VERBOSE" = 1 ] || cat <"$PIPE" >"$TESTOUT_FILE" &
+  [ "$VERBOSE" != 1 ] || tee <"$PIPE" "$TESTOUT_FILE" &
+  exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
-restore_stdout() {
-  REDIR=$(($REDIR - 1))
-  if [ $REDIR -eq 0 ]; then
-    [ "$VERBOSE" = 1 ] || exec 1>&3
-  fi
-}
-
+# TODO: display after test: green ok, red failed, blue ignores
 display_test_name() {
-	restore_stdout
+  [ "$VERBOSE" = 1 ] || echo -e "${GREEN}*" "$@" "${NC}" >&3
   echo -e "${GREEN}*" "$@" "${NC}"
-  redir_stdout
 }
 
 setup_test() { true; }
@@ -47,12 +45,17 @@ teardown_test() { true; }
 setup_test_suite() { true; }
 teardown_test_suite() { true; }
 
+teardown_test_called=0
 run_test() {
   local test_func=$1
   shift 1
   setup_test
+  run_test_exit_trap() {
+    [ $teardown_test_called = 1 ] || teardown_test
+  }
+  trap run_test_exit_trap EXIT
   $test_func
-  # TODO: call on TRAP
+  teardown_test_called=1
   teardown_test
 }
 
@@ -60,15 +63,21 @@ discover_tests() {
   declare -F | cut -d \  -f 3 | grep ^test_
 }
 
+teardown_test_suite_called=0
 run_tests() {
   [ $# -gt 0 ] || set $(discover_tests)
   local failures=0
   setup_test_suite
+  run_test_exit_trap() {
+    [ $teardown_test_suite_called = 1 ] || teardown_test_suite
+    exit_trap
+  }
+  trap run_test_exit_trap EXIT
   while [ $# -gt 0 ]; do
     local failed=0
     bash -c "set -e; set -o pipefail; run_test $1" || failed=1
     if [ $failed -ne 0 ]; then
-      echo -e "${RED}$1 FAILED${NC}" >&2
+      echo -e "${RED}$1 FAILED${NC}" >&3
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
         break
@@ -76,7 +85,7 @@ run_tests() {
     fi
     shift
   done
-  # TODO: call on TRAP
+  teardown_test_suite_called=1
   teardown_test_suite
   return $failures
 }
