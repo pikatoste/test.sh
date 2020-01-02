@@ -149,8 +149,7 @@ load_includes() {
 
 # TODO: use bash vars to pass current options to subshells
 subshell() {
-#    bash -c "set -e; set -o pipefail; $1"
-    bash -c "$1"
+  bash -c "$1"
 }
 
 assert_fail_msg() {
