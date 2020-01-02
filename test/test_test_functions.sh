@@ -58,4 +58,4 @@ setup_test
 teardown_test
 teardown_test_suite
 EOF
-grep -v run_tests "$TESTOUT_FILE" | diff - test.out.expected
+grep -v run_tests "$TESTOUT_FILE" | grep -v FAILED | diff - test.out.expected

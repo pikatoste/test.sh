@@ -9,7 +9,6 @@ unset INCLUDE_PATH
 unset CONFIG_FILE
 unset CONFIG_DIR
 cp "$TEST_SCRIPT_DIR"/test.sh.config.default "$TEST_SCRIPT_DIR"/../test.sh.config
-CONFIG_DIR="$TEST_SCRIPT_DIR/.."
 load_config
 rm "$TEST_SCRIPT_DIR"/../test.sh.config
 [ "$VERBOSE" = 0 ]
@@ -35,7 +34,6 @@ unset INCLUDE_PATH
 unset CONFIG_FILE
 unset CONFIG_DIR
 cp "$TEST_SCRIPT_DIR"/test.sh.config.DIR "$TEST_SCRIPT_DIR"/test.sh.config
-CONFIG_DIR="$TEST_SCRIPT_DIR"
 load_config
 rm "$TEST_SCRIPT_DIR"/test.sh.config
 [ "$VERBOSE" = 0 ]

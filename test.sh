@@ -122,7 +122,20 @@ run_tests() {
   return $failures
 }
 
-# TODO: load from predefined PATHs: test dir, testshdir
+try_config_path() {
+  CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
+  local current_IFS="$IFS"
+  IFS=":"
+  for path in $CONFIG_PATH; do
+    ! [ -f "$path"/test.sh.config ] || {
+      CONFIG_FILE="$path"/test.sh.config
+      source "$CONFIG_FILE"
+      break
+    }
+  done
+  IFS="$current_IFS"
+}
+
 load_config() {
   # save environment config
   VERBOSE_=$VERBOSE
@@ -132,11 +145,8 @@ load_config() {
   FAIL_FAST_=$FAIL_FAST
 
   # load config if present
-  CONFIG_DIR=${CONFIG_DIR:-"$TESTSH_DIR"}
-  CONFIG_FILE=${CONFIG_FILE:-"$CONFIG_DIR"/test.sh.config}
-  if [ -f "$CONFIG_FILE" ]; then
-    source "$CONFIG_FILE"
-  fi
+  [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
+  [ -n "$CONFIG_FILE" ] || try_config_path
 
   # prioritize environment config
   VERBOSE=${VERBOSE_:-$VERBOSE}
