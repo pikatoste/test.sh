@@ -3,6 +3,7 @@ TESTS ?= \
     test_includes.sh \
     test_test_functions.sh \
     test_FAIL_FAST.sh \
-    test_log.sh
+    test_log.sh \
+    test_assert.sh
 
 include $(shell git rev-parse --show-toplevel)/Makefile.test

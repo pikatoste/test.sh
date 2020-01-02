@@ -90,6 +90,7 @@ run_tests() {
   return $failures
 }
 
+# TODO: load from predefined PATHs: test dir, testshdir
 load_config() {
   # save environment config
   VERBOSE_=$VERBOSE
@@ -144,11 +145,26 @@ load_includes() {
   fi
 }
 
-assert() {
-  if [ $? -ne 0 ]; then
-    echo "Assertion failed: " "$@" >&2
-    return 1
-  fi
+subshell() {
+    bash -c "set -e; set -o pipefail; $1"
+}
+
+assert_fail_msg() {
+  local what="$1"
+  local why="$2"
+  local msg="$3"
+  echo "Assertion failed: ${msg:+$msg: }$why in: $what" >&2
+  return 1
+}
+
+assert_true() {
+#  subshell "$1" "$2" || { echo "Assertion failed: $2" >&2; false; }
+  subshell "$1" "$2" || assert_fail_msg "$1" "expected success but got failure" "$2"
+}
+
+assert_false() {
+#  ! subshell "$1" "$2" || { echo "Assertion failed: $2" >&2; false; }
+  ! subshell "$1" "$2" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
 redir_stdout
