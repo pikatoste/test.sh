@@ -79,7 +79,7 @@ run_test() {
     [ $teardown_test_called = 1 ] || subshell teardown_test || warn_teardown_failed
   }
   trap run_test_exit_trap EXIT
-  trap display_test_failed ERR
+  trap "print_stack_trace; display_test_failed" ERR
   $test_func
   display_test_passed
   teardown_test_called=1
@@ -182,6 +182,15 @@ subshell() {
   bash -c "$1"
 }
 
+print_stack_trace() {
+  echo "stack trace:"
+  local frame=${1:-0}
+  while caller $frame; do
+    ((frame++))
+  done || true
+  #caller || true
+}
+
 assert_fail_msg() {
   local what="$1"
   local why="$2"
@@ -191,16 +200,17 @@ assert_fail_msg() {
 }
 
 assert_true() {
-  subshell "$1" "$2" || assert_fail_msg "$1" "expected success but got failure" "$2"
+  subshell "$1" || assert_fail_msg "$1" "expected success but got failure" "$2"
 }
 
 assert_false() {
-  ! subshell "$1" "$2" || assert_fail_msg "$1" "expected failure but got success" "$2"
+  ! subshell "$1" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
 redir_stdout
 load_config
 load_includes
+trap "print_stack_trace" ERR
 
 # TODO: process arguments: --version, --help
 

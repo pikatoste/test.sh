@@ -42,6 +42,10 @@ EOF
 grep -v run_tests "$TESTOUT_FILE" | diff - test.out.expected
 
 set_test_name "run_tests shoud invoke tests and setup methods when there are failures"
+print_stack_trace() {
+  true
+}
+
 test_02_fail=1
 ! bash -c run_tests
 
