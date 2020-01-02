@@ -46,6 +46,7 @@ redir_stdout() {
 set_test_name() {
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
+  [ -z "$CURRENT_TEST_NAME" ] || echo "Start test: $CURRENT_TEST_NAME"
 }
 
 display_test_passed() {
@@ -61,7 +62,7 @@ display_test_skipped() {
 }
 
 warn_teardown_failed() {
-  echo -e "${BLUE}WARN: teardown_test failed${NC}" >&3
+  echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
 setup_test() { true; }
@@ -69,7 +70,6 @@ teardown_test() { true; }
 setup_test_suite() { true; }
 teardown_test_suite() { true; }
 
-# TODO: define semantics of setup/teardown with respect to test failure
 run_test() {
   teardown_test_called=0
   local test_func=$1
@@ -96,7 +96,7 @@ run_tests() {
   local failures=0
   setup_test_suite
   run_test_exit_trap() {
-    [ $teardown_test_suite_called = 1 ] || teardown_test_suite
+    [ $teardown_test_suite_called = 1 ] || subshell teardown_test_suite || warn_teardown_failed _suite
     exit_trap
   }
   trap run_test_exit_trap EXIT
@@ -106,7 +106,7 @@ run_tests() {
     local failed=0
     subshell "run_test $test_func" || failed=1
     if [ $failed -ne 0 ]; then
-      #echo -e "${RED}$test_func FAILED${NC}" >&3
+      echo -e "${RED}$test_func FAILED${NC}" >&2
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
         while [ $# -gt 0 ]; do
@@ -118,7 +118,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  teardown_test_suite
+  subshell teardown_test_suite || warn_teardown_failed _suite
   return $failures
 }
 
@@ -177,7 +177,6 @@ load_includes() {
   fi
 }
 
-# TODO: use bash vars to pass current options to subshells
 subshell() {
   bash -c "$1"
 }
