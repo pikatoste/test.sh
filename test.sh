@@ -7,6 +7,7 @@
 # TODO: sort out global var names and control which are exported
 set -a
 set -o errexit
+set -o errtrace
 set -o pipefail
 export SHELLOPTS
 
@@ -18,9 +19,15 @@ TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 # TODO: configure whether to colorize output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color'
 
 exit_trap() {
+  if [ $? -eq 0 ]; then
+    display_test_passed
+  else
+    display_test_failed
+  fi
   rm -f "$PIPE"
 }
 
@@ -36,10 +43,25 @@ redir_stdout() {
   exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
-# TODO: display after test: green ok, red failed, blue ignores
-display_test_name() {
-  [ "$VERBOSE" = 1 ] || echo -e "${GREEN}* $*${NC}" >&3
-  echo -e "${GREEN}* $*${NC}"
+set_test_name() {
+  [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
+  CURRENT_TEST_NAME="$1"
+}
+
+display_test_passed() {
+  [ -z "$CURRENT_TEST_NAME" ] || echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
+}
+
+display_test_failed() {
+  [ -z "$CURRENT_TEST_NAME" ] || echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
+}
+
+display_test_skipped() {
+  echo -e "${BLUE}* [skipped] $1${NC}" >&3
+}
+
+warn_teardown_failed() {
+  echo -e "${BLUE}WARN: teardown_test failed${NC}" >&3
 }
 
 setup_test() { true; }
@@ -47,18 +69,21 @@ teardown_test() { true; }
 setup_test_suite() { true; }
 teardown_test_suite() { true; }
 
-teardown_test_called=0
+# TODO: define semantics of setup/teardown with respect to test failure
 run_test() {
+  teardown_test_called=0
   local test_func=$1
   shift 1
   setup_test
   run_test_exit_trap() {
-    [ $teardown_test_called = 1 ] || teardown_test
+    [ $teardown_test_called = 1 ] || subshell teardown_test || warn_teardown_failed
   }
   trap run_test_exit_trap EXIT
+  trap display_test_failed ERR
   $test_func
+  display_test_passed
   teardown_test_called=1
-  teardown_test
+  subshell teardown_test || warn_teardown_failed
 }
 
 discover_tests() {
@@ -76,16 +101,21 @@ run_tests() {
   }
   trap run_test_exit_trap EXIT
   while [ $# -gt 0 ]; do
+    local test_func=$1
+    shift
     local failed=0
-    subshell $1 || failed=1
+    subshell "run_test $test_func" || failed=1
     if [ $failed -ne 0 ]; then
-      echo -e "${RED}$1 FAILED${NC}" >&3
+      #echo -e "${RED}$test_func FAILED${NC}" >&3
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
+        while [ $# -gt 0 ]; do
+          display_test_skipped $1
+          shift
+        done
         break
       fi
     fi
-    shift
   done
   teardown_test_suite_called=1
   teardown_test_suite

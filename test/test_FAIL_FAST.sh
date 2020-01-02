@@ -15,18 +15,18 @@ test_fail() {
 
 [ $# -eq 0 ] || { run_tests "$@"; exit 0; }
 
-display_test_name "Any command that fails in the body of a test function should make the test to fail"
+set_test_name "Any command that fails in the body of a test function should make the test to fail"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! bash -c "$0 test_fail"
 [ -f "$TEST_SCRIPT_DIR"/.test_fail ]
 
-display_test_name "FAIL_FAST should interrupt the script at the first test failure"
+set_test_name "FAIL_FAST should interrupt the script at the first test failure"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! bash -c "$0 test_fail test_ok"
 ! [ -f "$TEST_SCRIPT_DIR"/.test_ok ]
 [ -f "$TEST_SCRIPT_DIR"/.test_fail ]
 
-display_test_name "not FAIL_FAST should run all tests but signal failure at the end"
+set_test_name "not FAIL_FAST should run all tests but signal failure at the end"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! FAIL_FAST=0 bash -c "$0 test_fail test_ok"
 [ -f "$TEST_SCRIPT_DIR"/.test_ok ]

@@ -2,7 +2,7 @@ TEST_SCRIPT="$(readlink -f "$0")"
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 source "$TEST_SCRIPT_DIR"/../test.sh
 
-display_test_name "Include files should be processed at the default locations with default names"
+set_test_name "Include files should be processed at the default locations with default names"
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../include_test.sh
 cp "$TEST_SCRIPT_DIR"/_include_test2.sh "$TEST_SCRIPT_DIR"/include_test.sh
 load_includes
@@ -11,7 +11,7 @@ rm "$TEST_SCRIPT_DIR"/include_test.sh
 include_test1
 include_test2
 
-display_test_name "Include files should be processed with INCLUDE_GLOB"
+set_test_name "Include files should be processed with INCLUDE_GLOB"
 unset -f include_test1
 unset -f include_test2
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../__include_test.sh
@@ -25,7 +25,7 @@ rm "$TEST_SCRIPT_DIR"/__include_test.sh
 include_test1
 include_test2
 
-display_test_name "Include files should be processed with INCLUDE_PATH"
+set_test_name "Include files should be processed with INCLUDE_PATH"
 unset -f include_test1
 unset -f include_test2
 INCLUDE_PATH="$TEST_SCRIPT_DIR/_include*.sh"

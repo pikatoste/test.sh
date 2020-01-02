@@ -26,7 +26,7 @@ test_02() {
   echo test_02
 }
 
-display_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
+set_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
 run_tests
 
 cat >test.out.expected <<EOF
@@ -41,7 +41,7 @@ teardown_test_suite
 EOF
 grep -v run_tests "$TESTOUT_FILE" | diff - test.out.expected
 
-display_test_name "run_tests shoud invoke tests and setup methods when there are failures"
+set_test_name "run_tests shoud invoke tests and setup methods when there are failures"
 test_02_fail=1
 ! bash -c run_tests
 

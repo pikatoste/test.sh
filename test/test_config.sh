@@ -2,7 +2,7 @@ TEST_SCRIPT="$(readlink -f "$0")"
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 source "$TEST_SCRIPT_DIR"/../test.sh
 
-display_test_name "The configuration file should be loaded from the default location"
+set_test_name "The configuration file should be loaded from the default location"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -16,7 +16,7 @@ rm "$TEST_SCRIPT_DIR"/../test.sh.config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = default ]
 
-display_test_name "The configuration file should be loaded from CONFIG_FILE"
+set_test_name "The configuration file should be loaded from CONFIG_FILE"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -28,7 +28,7 @@ load_config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_FILE ]
 
-display_test_name "Configuration file should be loaded from CONFIG_DIR"
+set_test_name "Configuration file should be loaded from CONFIG_DIR"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -42,7 +42,7 @@ rm "$TEST_SCRIPT_DIR"/test.sh.config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_DIR ]
 
-display_test_name "Configuration through environment variables should be respected"
+set_test_name "Configuration through environment variables should be respected"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
@@ -53,7 +53,7 @@ load_config
 [ "$INCLUDE_GLOB" = include_glob ]
 [ "$INCLUDE_PATH" = include_path ]
 
-display_test_name "Configuration through environment variables should override the configuration file"
+set_test_name "Configuration through environment variables should override the configuration file"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
