@@ -8,12 +8,14 @@
 set -a
 set -o errexit
 set -o pipefail
+export SHELLOPTS
 
 VERSION=0.0.0-SNAPSHOT
 TEST_SCRIPT="$(readlink -f "$0")"
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
+# TODO: configure whether to colorize output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color'
@@ -36,8 +38,8 @@ redir_stdout() {
 
 # TODO: display after test: green ok, red failed, blue ignores
 display_test_name() {
-  [ "$VERBOSE" = 1 ] || echo -e "${GREEN}*" "$@" "${NC}" >&3
-  echo -e "${GREEN}*" "$@" "${NC}"
+  [ "$VERBOSE" = 1 ] || echo -e "${GREEN}* $*${NC}" >&3
+  echo -e "${GREEN}* $*${NC}"
 }
 
 setup_test() { true; }
@@ -75,7 +77,7 @@ run_tests() {
   trap run_test_exit_trap EXIT
   while [ $# -gt 0 ]; do
     local failed=0
-    bash -c "set -e; set -o pipefail; run_test $1" || failed=1
+    subshell $1 || failed=1
     if [ $failed -ne 0 ]; then
       echo -e "${RED}$1 FAILED${NC}" >&3
       failures=$(( $failures + 1 ))
@@ -145,8 +147,10 @@ load_includes() {
   fi
 }
 
+# TODO: use bash vars to pass current options to subshells
 subshell() {
-    bash -c "set -e; set -o pipefail; $1"
+#    bash -c "set -e; set -o pipefail; $1"
+    bash -c "$1"
 }
 
 assert_fail_msg() {
@@ -158,12 +162,10 @@ assert_fail_msg() {
 }
 
 assert_true() {
-#  subshell "$1" "$2" || { echo "Assertion failed: $2" >&2; false; }
   subshell "$1" "$2" || assert_fail_msg "$1" "expected success but got failure" "$2"
 }
 
 assert_false() {
-#  ! subshell "$1" "$2" || { echo "Assertion failed: $2" >&2; false; }
   ! subshell "$1" "$2" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
