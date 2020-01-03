@@ -27,7 +27,7 @@ test_02() {
 }
 
 set_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
-run_tests
+CURRENT_TEST_NAME= run_tests
 
 cat >test.out.expected <<EOF
 setup_test_suite
@@ -47,7 +47,7 @@ print_stack_trace() {
 }
 
 test_02_fail=1
-! bash -c run_tests
+! CURRENT_TEST_NAME= bash -c run_tests
 
 cat >>test.out.expected <<EOF
 setup_test_suite
