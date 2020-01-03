@@ -142,7 +142,8 @@ This is the list of variables defined by test.sh:
 
 * TESTSH_DIR: the directory of test.sh.
 * TEST_SCRIPT_DIR: the directory of the test script.
-* CONFIG_FILE: set to the location of the effective configuration file.
+* CONFIG_FILE: the location of the effective configuration file.
+* TESTOUT_FILE: the log file.
 
 ### Function reference
 
