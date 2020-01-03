@@ -6,5 +6,7 @@ set_test_name "The log file should contain test stdout and stderr"
 echo output
 echo stderr >&2
 
+# Allow for the log file writer subprocess to do its job
+sleep 1
 grep ^output$ "$TESTOUT_FILE"
 grep ^stderr$ "$TESTOUT_FILE"
