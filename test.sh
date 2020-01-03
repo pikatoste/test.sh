@@ -164,27 +164,15 @@ load_config() {
 }
 
 load_includes() {
-  set +e
-  shopt -q nullglob
-  local current_nullglob=$?
-  set -e
-  shopt -s nullglob
   local current_IFS="$IFS"
   IFS=":"
   for path in $INCLUDE_PATH; do
-    if [ -f "$path" ]; then
-      source "$path"
-    else
-      local files=( "$path" )
-      if [ ${#files[@]} -gt 0 ]; then
-        source "${files[@]}"
-      fi
-    fi
+    # shellcheck disable=SC2066
+    for include in "$path"; do
+      [ ! -f "$include" ] || PATH= source "$include"
+    done
   done
   IFS="$current_IFS"
-  if [ $current_nullglob -ne 0 ]; then
-    shopt -u nullglob
-  fi
 }
 
 subshell() {

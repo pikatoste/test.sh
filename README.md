@@ -116,11 +116,7 @@ Available configuration variables:
 
 * INCLUDE_PATH
 
-  A colon separated list of include locations. Each location can be:
-
-  * A file
-  * A glob
-  * A directory
+  A colon separated list of include locations. Each location is a file glob.
 
   The default value is '$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'.
 
@@ -178,6 +174,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   * Initialization code
   * Execution code
   * Validation code
+  TODO: unfinished
 
 * set_test_name
 
