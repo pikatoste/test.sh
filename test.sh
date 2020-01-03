@@ -151,15 +151,15 @@ load_config() {
   # prioritize environment config
   VERBOSE=${VERBOSE_:-$VERBOSE}
   DEBUG=${DEBUG_:-$DEBUG}
-  INCLUDE_GLOB=${INCLUDE_GLOB_:-$INCLUDE_GLOB}
-  INCLUDE_PATH=${INCLUDE_PATH_:-$INCLUDE_PATH}
+  INCLUDE_GLOB="${INCLUDE_GLOB_:-$INCLUDE_GLOB}"
+  INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
   FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
 
   # set defaults
   VERBOSE=${VERBOSE:-}
   DEBUG=${DEBUG:-}
   INCLUDE_GLOB=${INCLUDE_GLOB:-"include*.sh"}
-  INCLUDE_PATH=${INCLUDE_PATH:-"$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB"}
+  INCLUDE_PATH="${INCLUDE_PATH:-$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB}"
   FAIL_FAST=${FAIL_FAST:-1}
 }
 
@@ -197,7 +197,6 @@ print_stack_trace() {
   while caller $frame; do
     ((frame++))
   done || true
-  #caller || true
 }
 
 assert_fail_msg() {

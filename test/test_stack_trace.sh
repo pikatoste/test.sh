@@ -3,6 +3,9 @@ TEST_SCRIPT="$(readlink -f "$0")"
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 source "$TEST_SCRIPT_DIR"/../test.sh
 
+teardown_test_suite() {
+  false
+}
 test_00() {
   set_test_name test_00
   true
