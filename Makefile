@@ -16,7 +16,7 @@ build/test.sh: test.sh VERSION
 	sed -e "s/^VERSION=$$/VERSION=$(VERSION)/" test.sh >build/test.sh.tmp
 	mv build/test.sh.tmp build/test.sh
 
-clean:
+clean: test_clean
 	rm -rf build
 
 all: build/test.sh test
