@@ -11,7 +11,7 @@ set -o errtrace
 set -o pipefail
 export SHELLOPTS
 
-VERSION=0.0.0-SNAPSHOT
+VERSION=unbuilt
 TEST_SCRIPT="$(readlink -f "$0")"
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -87,6 +87,7 @@ run_test() {
 }
 
 discover_tests() {
+  # TODO: use a configurable test matching pattern
   declare -F | cut -d \  -f 3 | grep ^test_
 }
 

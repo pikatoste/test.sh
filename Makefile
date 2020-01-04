@@ -19,7 +19,11 @@ build/test.sh: test.sh VERSION
 clean: test_clean
 	rm -rf build
 
-all: build/test.sh test
+build: build/test.sh
 
-.PHONY: test, prepare_test, test_clean, clean
+check: test
+
+all: build
+
+.PHONY: test, prepare_test, test_clean, clean, build, check
 .DEFAULT_GOAL := all
