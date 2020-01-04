@@ -1,3 +1,5 @@
+![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)
+
 # test.sh
 
 test.sh is a shell library for writing tests as shell scripts.
