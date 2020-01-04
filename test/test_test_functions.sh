@@ -1,35 +1,37 @@
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 setup_test_suite() {
-  echo setup_test_suite
+  echo setup_test_suite >>"$OUTFILE"
 }
 
 teardown_test_suite() {
-  echo teardown_test_suite
+  echo teardown_test_suite >>"$OUTFILE"
 }
 
 setup_test() {
-  echo setup_test
+  echo setup_test >>"$OUTFILE"
 }
 
 teardown_test() {
-  echo teardown_test
+  echo teardown_test >>"$OUTFILE"
 }
 
 test_01() {
   [ -z "$test_01_fail" ]
-  echo test_01
+  echo test_01 >>"$OUTFILE"
 }
 
 test_02() {
   [ -z "$test_02_fail" ]
-  echo test_02
+  echo test_02 >>"$OUTFILE"
 }
 
 set_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
+OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
+rm -rf "$OUTFILE"
 CURRENT_TEST_NAME= run_tests
 
-cat >test.out.expected <<EOF
+diff - "$OUTFILE" <<EOF
 setup_test_suite
 setup_test
 test_01
@@ -39,17 +41,13 @@ test_02
 teardown_test
 teardown_test_suite
 EOF
-grep -v run_tests "$TESTOUT_FILE" | diff - test.out.expected
 
 set_test_name "run_tests shoud invoke tests and setup methods when there are failures"
-print_stack_trace() {
-  true
-}
-
+rm -rf "$OUTFILE"
 test_02_fail=1
 ! CURRENT_TEST_NAME= bash -c run_tests
 
-cat >>test.out.expected <<EOF
+diff - "$OUTFILE" <<EOF
 setup_test_suite
 setup_test
 test_01
@@ -58,4 +56,3 @@ setup_test
 teardown_test
 teardown_test_suite
 EOF
-grep -v run_tests "$TESTOUT_FILE" | grep -v FAILED | diff - test.out.expected
