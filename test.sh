@@ -181,9 +181,12 @@ subshell() {
 }
 
 print_stack_trace() {
-  echo "stack trace:"
+  echo -e "${RED}stack trace:${NC}" >&2
   local frame=${1:-0}
-  while caller $frame; do
+  while true; do
+    local line=$(caller $frame)
+    [ -n "$line" ] || break
+    echo -e "${RED}$line${NC}"
     ((frame++))
   done || true
 }
@@ -192,7 +195,7 @@ assert_fail_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  echo "Assertion failed: ${msg:+$msg: }$why in: $what" >&2
+  echo -e "${RED}Assertion failed: ${msg:+$msg: }$why in: $what${NC}" >&2
   return 1
 }
 
