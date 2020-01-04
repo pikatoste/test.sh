@@ -16,7 +16,7 @@ Then copy `build/test.sh` to your project or put it in a central location, such 
 
 ## Usage
 
-Source test.sh at the beginning of your test script. If the script is included in your project, you
+Source test.sh at the beginning of your test script. If test.sh is included in your project, you
 may want to reference it relative to the script location:
 
 ```shell script
@@ -51,7 +51,7 @@ run_tests
 
 Test output:
 
-```shell script
+```text
 * This is my first test
 ```
 
