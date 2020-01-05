@@ -22,6 +22,10 @@ jobs:
       with:
         name: testout
         path: runtest/test/testout
+    - name: Install requirements for coverage
+      run: |
+        sudo apt install ruby
+        sudo gem install bashcov
     - name: Generate code coverage report
       run: make codecov
     - name: Publish code coverage report
