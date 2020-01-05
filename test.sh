@@ -181,12 +181,27 @@ load_includes() {
 }
 
 subshell() {
+  SAVE_STACK="$CURRENT_STACK"
+  trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
+  #CURRENT_STACK=
+  current_stack
   bash --norc -c "REENTRANT=1; REENTRANT=1 source $TESTSH; source $TEST_SCRIPT; $1"
+  #CURRENT_STACK=
 #  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
 #  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT; $1"
 #  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT \"$1\""
 #  bash -c "REENTRANT=1 source $TESTSH; $1"
 #  bash -c "$1"
+}
+
+current_stack() {
+  local frame=${1:-0}
+  while true; do
+    local line=$(caller $frame)
+    [ -n "$line" ] || break
+    CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
+    ((frame++))
+  done || true
 }
 
 print_stack_trace() {
@@ -198,6 +213,7 @@ print_stack_trace() {
     echo -e "${RED}$line${NC}" >&2
     ((frame++))
   done || true
+  [ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
 }
 
 assert_fail_msg() {
