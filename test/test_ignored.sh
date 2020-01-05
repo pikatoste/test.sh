@@ -14,3 +14,4 @@ TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 source "$TEST_SCRIPT_DIR"/../test.sh
 
 ! subshell "FAIL_FAST=1 run_tests"
+# TODO: verify that the [ignored] line is printed

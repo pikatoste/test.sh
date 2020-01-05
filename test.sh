@@ -68,13 +68,6 @@ warn_teardown_failed() {
   echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
-#if [ "$REENTRANT" != 1 ]; then
-#setup_test() { true; }
-#teardown_test() { true; }
-#setup_test_suite() { true; }
-#teardown_test_suite() { true; }
-#fi
-
 call_if_exists() {
   ! declare -f $1 >/dev/null || $1
 }
@@ -148,6 +141,7 @@ load_config() {
   INCLUDE_GLOB_="$INCLUDE_GLOB"
   INCLUDE_PATH_="$INCLUDE_PATH"
   FAIL_FAST_=$FAIL_FAST
+  REENTER_=$REENTER
 
   # load config if present
   [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
@@ -159,6 +153,7 @@ load_config() {
   INCLUDE_GLOB="${INCLUDE_GLOB_:-$INCLUDE_GLOB}"
   INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
   FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
+  REENTER=${REENTER_:-REENTER}
 
   # set defaults
   VERBOSE=${VERBOSE:-}
@@ -166,6 +161,7 @@ load_config() {
   INCLUDE_GLOB=${INCLUDE_GLOB:-"include*.sh"}
   INCLUDE_PATH="${INCLUDE_PATH:-$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB}"
   FAIL_FAST=${FAIL_FAST:-1}
+  REENTER=${REENTER:-1}
 }
 
 load_includes() {
@@ -186,7 +182,11 @@ subshell() {
   CURRENT_STACK=
   current_stack 1
   CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
-  bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
+  if [ "$REENTER" = 1 ]; then
+    bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
+  else
+    bash --norc -c "$1"
+  fi
   #CURRENT_STACK=
 #  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
 #  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT; $1"
@@ -234,10 +234,10 @@ assert_false() {
 }
 
 if [ "$REENTRANT" != 1 ]; then
+trap "print_stack_trace" ERR
 redir_stdout
 load_config
 load_includes
-trap "print_stack_trace" ERR
 
 # TODO: process arguments: --version, --help
 
