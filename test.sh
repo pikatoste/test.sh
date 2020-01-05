@@ -184,7 +184,7 @@ subshell() {
   SAVE_STACK="$CURRENT_STACK"
   trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
   CURRENT_STACK=
-  current_stack
+  current_stack 1
   CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
   bash --norc -c "REENTRANT=1; REENTRANT=1 source $TESTSH; source $TEST_SCRIPT; $1"
   #CURRENT_STACK=
@@ -202,7 +202,7 @@ current_stack() {
     [ -n "$line" ] || break
     CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
     ((frame++))
-  done || true
+  done
 }
 
 print_stack_trace() {
