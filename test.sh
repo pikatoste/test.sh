@@ -183,8 +183,9 @@ load_includes() {
 subshell() {
   SAVE_STACK="$CURRENT_STACK"
   trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
-  #CURRENT_STACK=
+  CURRENT_STACK=
   current_stack
+  CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
   bash --norc -c "REENTRANT=1; REENTRANT=1 source $TESTSH; source $TEST_SCRIPT; $1"
   #CURRENT_STACK=
 #  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
