@@ -11,4 +11,4 @@ include $(shell git rev-parse --show-toplevel)/Makefile.test
 
 .PHONY: codecov
 codecov:
-	for test in $(TESTS); do bashcov --skip-uncovered $$test; done
+	cd .. && for test in $(TESTS); do bashcov --skip-uncovered test/$$test; done
