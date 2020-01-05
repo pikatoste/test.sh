@@ -4,6 +4,7 @@
 #
 # source "$(dirname "$(readlink -f "$0")")"/test.sh
 #
+# TODO: inlcude license
 # TODO: sort out global var names and control which are exported
 [ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
 if [ "$REENTRANT" != 1 ]; then
@@ -153,7 +154,7 @@ load_config() {
   INCLUDE_GLOB="${INCLUDE_GLOB_:-$INCLUDE_GLOB}"
   INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
   FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
-  REENTER=${REENTER_:-REENTER}
+  REENTER=${REENTER_:-$REENTER}
 
   # set defaults
   VERBOSE=${VERBOSE:-}
