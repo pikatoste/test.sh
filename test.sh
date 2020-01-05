@@ -7,23 +7,23 @@
 # TODO: sort out global var names and control which are exported
 [ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
 if [ "$REENTRANT" != 1 ]; then
-set -a
-set -o errexit
-set -o errtrace
-set -o pipefail
-export SHELLOPTS
+  set -a
+  set -o errexit
+  set -o errtrace
+  set -o pipefail
+  export SHELLOPTS
 
-VERSION=unbuilt
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-TESTSH="$(readlink -f "$BASH_SOURCE")"
-TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+  VERSION=@VERSION@
+  TEST_SCRIPT="$(readlink -f "$0")"
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH="$(readlink -f "$BASH_SOURCE")"
+  TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-# TODO: configure whether to colorize output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color'
+  # TODO: configure whether to colorize output
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  BLUE='\033[0;34m'
+  NC='\033[0m' # No Color'
 fi
 exit_trap() {
   if [ $? -eq 0 ]; then
@@ -234,14 +234,14 @@ assert_false() {
 }
 
 if [ "$REENTRANT" != 1 ]; then
-trap "print_stack_trace" ERR
-redir_stdout
-load_config
-load_includes
+  trap "print_stack_trace" ERR
+  redir_stdout
+  load_config
+  load_includes
 
-# TODO: process arguments: --version, --help
+  # TODO: process arguments: --version, --help
 
-[ "$DEBUG" != 1 ] || set -x
+  [ "$DEBUG" != 1 ] || set -x
 #else
 #  return 1
 #  REENTRANT=2 source "$TEST_SCRIPT"

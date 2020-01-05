@@ -13,7 +13,7 @@ VERSION:=$(shell cat VERSION | sed -e 's/SNAPSHOT$$/SNAPSHOT-$(shell git rev-par
 
 build/test.sh: test.sh VERSION
 	mkdir -p build
-	sed -e "s/^VERSION=.*$$/VERSION=$(VERSION)/" test.sh >build/test.sh.tmp
+	sed -e "s/@VERSION@/$(VERSION)/" test.sh >build/test.sh.tmp
 	mv build/test.sh.tmp build/test.sh
 
 clean: test_clean
