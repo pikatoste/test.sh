@@ -5,7 +5,7 @@
 # source "$(dirname "$(readlink -f "$0")")"/test.sh
 #
 # TODO: sort out global var names and control which are exported
-#[ "$REENTRANT" != 2 ] || return 1
+[ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
 if [ "$REENTRANT" != 1 ]; then
 set -a
 set -o errexit
@@ -186,7 +186,7 @@ subshell() {
   CURRENT_STACK=
   current_stack 1
   CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
-  bash --norc -c "REENTRANT=1; REENTRANT=1 source $TESTSH; source $TEST_SCRIPT; $1"
+  bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
   #CURRENT_STACK=
 #  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
 #  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT; $1"
