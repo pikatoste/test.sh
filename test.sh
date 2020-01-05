@@ -88,12 +88,12 @@ run_test() {
 
 discover_tests() {
   # TODO: use a configurable test matching pattern
-  declare -F | cut -d \  -f 3 | grep ^test_
+  declare -F | cut -d \  -f 3 | grep ^test_ || true
 }
 
 teardown_test_suite_called=0
 run_tests() {
-  [ $# -gt 0 ] || set $(discover_tests)
+  [ $# -gt 0 ] || { local discovered="$(discover_tests)"; [ -z "$discovered" ] || set $discovered; }
   local failures=0
   setup_test_suite
   run_test_exit_trap() {
