@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build
+      run: make
+    - name: Run tests
+      run: make check
+    - name: Publish test output
+      uses: actions/upload-artifact@v1
+      with:
+        name: testout
+        path: runtest/test/testout
+    - name: Generate code coverage report
+      run: make codecov
+    - name: Publish code coverage report
+      uses: actions/upload-artifact@v1
+      with:
+        name: coverage
+        path: runtest/coverage
