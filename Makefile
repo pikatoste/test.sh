@@ -23,7 +23,10 @@ build: build/test.sh
 
 check: test
 
+codecov: test_clean prepare_test
+	${MAKE} -C runtest/test codecov
+
 all: build
 
-.PHONY: test, prepare_test, test_clean, clean, build, check
+.PHONY: test, prepare_test, test_clean, clean, build, check, codecov
 .DEFAULT_GOAL := all
