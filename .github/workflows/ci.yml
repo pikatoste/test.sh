@@ -41,7 +41,7 @@ jobs:
         curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-green" >/tmp/coverage.svg
     - name: Upload coverage badge
       run: |
-        git checkout --orphan assets
+        git checkout --orphan assets || git checkout assets
         git reset --hard
         cp /tmp/coverage.svg .
         git add .
