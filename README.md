@@ -1,4 +1,5 @@
 ![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)
+![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg)
 
 # test.sh
 

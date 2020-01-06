@@ -33,3 +33,17 @@ jobs:
       with:
         name: coverage
         path: runtest/coverage
+    - name: Generate coverage badge from report
+      run: |
+        sudo apt install xsltproc
+        COVERAGE=$(sed -n '/<tbody>/,/<\/tbody>/p;/<\/tbody>/q' runtest/coverage/index.html | xsltproc tools/coverage.xsl -)
+        COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
+        curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-green" >/tmp/coverage.svg
+    - name: Upload coverage badge
+      run: |
+        git checkout --orphan assets
+        git reset --hard
+        cp /tmp/coverage.svg .
+        git add .
+        git commit -m 'Updated coverage badge'
+        git push -u origin assets
