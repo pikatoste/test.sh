@@ -41,6 +41,8 @@ jobs:
         curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-green" >/tmp/coverage.svg
     - name: Upload coverage badge
       run: |
+        git config user.email "ci@nowhere.org"
+        git config user.name "ci"
         git checkout --orphan assets || git checkout assets
         git reset --hard
         cp /tmp/coverage.svg .
