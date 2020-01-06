@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Build
       run: make
     - name: Run tests
@@ -44,6 +44,7 @@ jobs:
         git config user.email "ci@nowhere.org"
         git config user.name "ci"
         git checkout --orphan assets || git checkout assets
+        make clean
         git reset --hard
         cp /tmp/coverage.svg .
         git add .
