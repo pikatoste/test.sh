@@ -49,4 +49,4 @@ jobs:
         cp /tmp/coverage.svg .
         git add .
         git commit -m 'Updated coverage badge'
-        git push --hard -u origin assets
+        git push -u origin assets --force
