@@ -39,14 +39,14 @@ jobs:
         COVERAGE=$(sed -n '/<tbody>/,/<\/tbody>/p;/<\/tbody>/q' runtest/coverage/index.html | xsltproc tools/coverage.xsl -)
         COVERAGE_VAL=$(echo -n "$COVERAGE" | tr -d '.%')
         COVERAGE_COLOR=$(if [ "$COVERAGE_VAL" -le 8000 ]; then
-          "red"
-        else if [ "$COVERAGE_VAL" -le 9000 ]; then
-          "yellow"
+          echo "red"
+        elif [ "$COVERAGE_VAL" -le 9000 ]; then
+          echo "yellow"
         else
-          "brightgreen"
-        fi
+          echo "brightgreen"
+        fi)
         COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
-        curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-green" >/tmp/coverage.svg
+        curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
     - name: Upload coverage badge
       run: |
         git config user.email "ci@nowhere.org"
