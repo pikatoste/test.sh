@@ -21,7 +21,7 @@ Then copy `build/test.sh` to your project or put it in a central location, such 
 
 ## Usage
 
-You must source test.sh in your test script, after function definitions and before any commands.
+You must source test.sh in your test script, **after function definitions and before any commands**.
 If test.sh is included in your project, you may want to reference it relative to the script location.
 The sequence to source test.sh is:
 
@@ -83,11 +83,9 @@ Test failures will cause a stack trace to be logged.
 
 In managed mode, each test function is executed in its own subshell. Assertions are evaluated in a subshell also.
 This subshell inherits the environment, which includes both variables and functions, and the shell
-options. Some implications of this are:
-
-* You cannot affect the environment of the test script from a test function.
-* The stack traces generated from test functions show 'environment' as the source file of the functions.
-  The line number is relative to the function ignoring blank lines and starting in 0.
+options. One implication of this is that you cannot affect the environment of the test script from a test function.
+Another consecuence is that bash looses track of the source files where functions are defined, affecting the
+quality of stack traces. In order to overcome this, the REENTER feature has been defined.
 
 ### Configuration
 
