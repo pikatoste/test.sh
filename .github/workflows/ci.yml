@@ -51,14 +51,7 @@ jobs:
         run: |
           sudo apt install xsltproc
           COVERAGE=$(sed -n '/<tbody>/,/<\/tbody>/p;/<\/tbody>/q' runtest/coverage/index.html | xsltproc tools/coverage.xsl -)
-          COVERAGE_VAL=$(echo -n "$COVERAGE" | tr -d '.%')
-          COVERAGE_COLOR=$(if [ "$COVERAGE_VAL" -le 8000 ]; then
-            echo "red"
-          elif [ "$COVERAGE_VAL" -le 9000 ]; then
-            echo "yellow"
-          else
-            echo "brightgreen"
-          fi)
+          COVERAGE_COLOR=$(echo "$COVERAGE" | awk '{if ($1 <= 80) print "red"; else if ($1 < 90) print "yellow"; else print "brightgreen"}')
           COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
           curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
       - name: Upload coverage badge
