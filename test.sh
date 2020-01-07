@@ -56,7 +56,7 @@ redir_stdout() {
 set_test_name() {
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
-  [ -z "$CURRENT_TEST_NAME" ] || echo "Start test: $CURRENT_TEST_NAME"
+  [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
 }
 
 display_test_passed() {
@@ -73,6 +73,10 @@ display_test_skipped() {
 
 warn_teardown_failed() {
   echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
+}
+
+log() {
+  echo -e "[test.sh] $*"
 }
 
 call_if_exists() {
@@ -111,7 +115,7 @@ run_tests() {
     local failed=0
     subshell "run_test $test_func" || failed=1
     if [ $failed -ne 0 ]; then
-      echo -e "${RED}$test_func FAILED${NC}" >&2
+      log "${RED}${test_func} FAILED${NC}" >&2
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
         while [ $# -gt 0 ]; do
@@ -208,22 +212,25 @@ current_stack() {
 }
 
 print_stack_trace() {
-  echo -e "${RED}stack trace:${NC}" >&2
+  log "${RED}stack trace:${NC}" >&2
   local frame=${1:-0}
   while true; do
     local line=$(caller $frame)
     [ -n "$line" ] || break
-    echo -e "${RED}$line${NC}" >&2
+    log "${RED}$line${NC}" >&2
     ((frame++))
   done
-  [ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
+  echo "$CURRENT_STACK" | while read line; do
+    log "${RED}${line}${NC}" >&2
+  done
+  #[ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
 }
 
 assert_fail_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  echo -e "${RED}Assertion failed: ${msg:+$msg: }$why in: $what${NC}" >&2
+  log "${RED}Assertion failed: ${msg:+$msg: }$why in: $what${NC}" >&2
   return 1
 }
 

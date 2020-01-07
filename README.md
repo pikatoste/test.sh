@@ -21,8 +21,9 @@ Then copy `build/test.sh` to your project or put it in a central location, such 
 
 ## Usage
 
-You must source test.sh in your test script. If test.sh is included in your project, you
-may want to reference it relative to the script location:
+You must source test.sh in your test script, after function definitions and before any commands.
+If test.sh is included in your project, you may want to reference it relative to the script location.
+The sequence to source test.sh is:
 
 ```shell script
 [ "$REENTRANT" != 1 ] || return 0
