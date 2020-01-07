@@ -79,14 +79,14 @@ run_test() {
   shift 1
   call_if_exists setup_test
   run_test_exit_trap() {
-    [ $teardown_test_called = 1 ] || subshell "trap print_stack_trace ERR; call_if_exists teardown_test" || warn_teardown_failed
+    [ $teardown_test_called = 1 ] || subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test" || warn_teardown_failed
   }
   trap run_test_exit_trap EXIT
-  trap "print_stack_trace; display_test_failed" ERR
+  trap "print_stack_trace || true; display_test_failed" ERR
   $test_func
   display_test_passed
   teardown_test_called=1
-  subshell "trap print_stack_trace ERR; call_if_exists teardown_test" || warn_teardown_failed
+  subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test" || warn_teardown_failed
 }
 
 discover_tests() {
@@ -117,7 +117,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  subshell "trap print_stack_trace ERR; call_if_exists teardown_test_suite" || warn_teardown_failed _suite
+  subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test_suite" || warn_teardown_failed _suite
   return $failures
 }
 
@@ -214,7 +214,7 @@ print_stack_trace() {
     [ -n "$line" ] || break
     echo -e "${RED}$line${NC}" >&2
     ((frame++))
-  done || true
+  done
   [ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
 }
 
@@ -235,7 +235,7 @@ assert_false() {
 }
 
 if [ "$REENTRANT" != 1 ]; then
-  trap "print_stack_trace" ERR
+  trap "print_stack_trace || true" ERR
   redir_stdout
   load_config
   load_includes
