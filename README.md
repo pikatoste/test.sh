@@ -19,10 +19,11 @@ Then copy `build/test.sh` to your project or put it in a central location, such 
 
 ## Usage
 
-Source test.sh at the beginning of your test script. If test.sh is included in your project, you
+You must source test.sh in your test script. If test.sh is included in your project, you
 may want to reference it relative to the script location:
 
 ```shell script
+[ "$REENTRANT" != 1 ] || return 0
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 ```
 
@@ -33,21 +34,23 @@ same test script.
 Inline mode:
 
 ```shell script
+[ "$REENTRANT" != 1 ] || return 0
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 
-test_name "This is my first test"
+set_test_name "This is my first test"
 assert_true true
 ```
 
 Managed mode:
 
 ```shell script
-source "$(dirname "$(readlink -f "$0")")"/test.sh
-
 test_01() {
   test_name "This is my first test"
   assert_true true
 }
+
+[ "$REENTRANT" != 1 ] || return 0
+source "$(dirname "$(readlink -f "$0")")"/test.sh
 
 run_tests
 ```
@@ -130,10 +133,19 @@ Available configuration variables:
 
   Values: 0 or 1, default 1. Only used in managed mode.
 
-  If set to 1, failure of a test fuction will interrupt the script and the remaining test functions will
+  If set to 1, failure of a test function will interrupt the script and the remaining test functions will
   be skipped.
 
   If set to 0, all test functions will be executed.
+
+* REENTER
+
+  Values: 0 or 1, default 1.
+
+  IF set to 1, when test.sh starts a subshell it will source itself and the test script. This is why the
+  line `[ "$REENTRANT" != 1 ] || return 0` is necessary. test.sh executes code whose exit status must be
+  monitored in subshells; this includes your test functions and assert functions. To not loose track of
+  function source files and to support the test coverage of test.sh itself, the scripts are sourced again.
 
 ### Variables reference
 
