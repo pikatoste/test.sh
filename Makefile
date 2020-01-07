@@ -16,6 +16,7 @@ build/test.sh: test.sh VERSION
 	sed -e 's/^/\# /' LICENSE >build/LICENSE
 	sed -e "s/@VERSION@/$(VERSION)/" -e '/@LICENSE@/r build/LICENSE' -e '/@LICENSE@/d' test.sh >build/test.sh.tmp
 	mv build/test.sh.tmp build/test.sh
+	chmod a+x build/test.sh
 
 clean: test_clean coverage_clean
 	rm -rf build

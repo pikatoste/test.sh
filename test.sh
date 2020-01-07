@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 @LICENSE@
 # Shared functions for local tests.
 # It is a shell fragment intended to be included from actual tests. Start each test script
@@ -6,6 +6,11 @@
 #
 # source "$(dirname "$(readlink -f "$0")")"/test.sh
 #
+if [ "$0" = "${BASH_SOURCE}" ]; then
+  echo "This is test.sh version @VERSION@"
+  echo "See https://github.com/pikatoste/test.sh"
+  exit 0
+fi
 # TODO: sort out global var names and control which are exported
 [ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
 if [ "$REENTRANT" != 1 ]; then
@@ -240,8 +245,6 @@ if [ "$REENTRANT" != 1 ]; then
   redir_stdout
   load_config
   load_includes
-
-  # TODO: process arguments: --version, --help
 
   [ "$DEBUG" != 1 ] || set -x
 #else
