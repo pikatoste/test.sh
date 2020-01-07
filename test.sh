@@ -191,15 +191,10 @@ subshell() {
   CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
   if [ "$REENTER" = 1 ]; then
     bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
+#    bash --norc -c "REENTRANT=1 source $TEST_SCRIPT \"$1\""
   else
     bash --norc -c "$1"
   fi
-  #CURRENT_STACK=
-#  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
-#  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT; $1"
-#  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT \"$1\""
-#  bash -c "REENTRANT=1 source $TESTSH; $1"
-#  bash -c "$1"
 }
 
 current_stack() {
@@ -248,9 +243,6 @@ if [ "$REENTRANT" != 1 ]; then
 
   [ "$DEBUG" != 1 ] || set -x
 #else
-#  return 1
-#  REENTRANT=2 source "$TEST_SCRIPT"
-#  #$1
 #  eval "$1"
 #  exit 0
 fi
