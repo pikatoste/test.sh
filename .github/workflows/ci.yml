@@ -12,24 +12,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Build
-      run: make
-    - name: Run tests
-      run: make check
-    - name: Publish test output
-      uses: actions/upload-artifact@v1
-      with:
-        name: testout
-        path: runtest/test/testout
-    - name: Install requirements for coverage
-      run: |
-        sudo apt install ruby
-        sudo gem install bashcov
-    - name: Generate code coverage report
-      run: make codecov
-    - name: Publish code coverage report
-      uses: actions/upload-artifact@v1
-      with:
-        name: coverage
-        path: runtest/coverage
+      - uses: actions/checkout@v2
+      - name: Build
+        run: make
+      - name: Run tests
+        run: make check
+      - name: Publish test output
+        uses: actions/upload-artifact@v1
+        with:
+          name: testout
+          path: runtest/test/testout
+      - name: Install requirements for coverage
+        run: |
+          sudo apt install ruby
+          sudo gem install bashcov
+      - name: Generate code coverage report
+        run: make codecov
+      - name: Publish code coverage report
+        uses: actions/upload-artifact@v1
+        with:
+          name: coverage
+          path: runtest/coverage
+
+  coverage_badge:
+
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download coverage report artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: coverage
+          path: runtest/coverage
+      - name: Generate coverage badge from report
+        run: |
+          sudo apt install xsltproc
+          COVERAGE=$(sed -n '/<tbody>/,/<\/tbody>/p;/<\/tbody>/q' runtest/coverage/index.html | xsltproc tools/coverage.xsl -)
+          COVERAGE_VAL=$(echo -n "$COVERAGE" | tr -d '.%')
+          COVERAGE_COLOR=$(if [ "$COVERAGE_VAL" -le 8000 ]; then
+            echo "red"
+          elif [ "$COVERAGE_VAL" -le 9000 ]; then
+            echo "yellow"
+          else
+            echo "brightgreen"
+          fi)
+          COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
+          curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
+      - name: Upload coverage badge
+        run: |
+          git config user.email "ci@nowhere.org"
+          git config user.name "ci"
+          git checkout --orphan assets || git checkout assets
+          make clean
+          git reset --hard
+          cp /tmp/coverage.svg .
+          git add .
+          git commit -m 'Updated coverage badge'
+          git push -u origin assets --force
