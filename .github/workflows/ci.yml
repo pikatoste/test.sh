@@ -38,6 +38,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Download coverage report artifact
       uses: actions/download-artifact@v1
       with:
@@ -57,7 +58,6 @@ jobs:
         fi)
         COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
         curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
-#    - uses: actions/checkout@v2
     - name: Upload coverage badge
       run: |
         git config user.email "ci@nowhere.org"
