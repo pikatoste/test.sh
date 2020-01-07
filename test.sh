@@ -177,7 +177,7 @@ load_includes() {
   for path in $INCLUDE_PATH; do
     # shellcheck disable=SC2066
     for include in "$path"; do
-      [ ! -f "$include" ] || PATH= source "$include"
+      [ ! -f "$include" ] || source "$include"
     done
   done
   IFS="$current_IFS"
