@@ -5,7 +5,10 @@ TESTS ?= \
     test_FAIL_FAST.sh \
     test_log.sh \
     test_assert.sh \
-    test_ignored.sh
+    test_ignored.sh \
+    test_REENTER_0.sh \
+    test_teardown_fail.sh \
+    test_inline.sh
 
 include $(shell git rev-parse --show-toplevel)/Makefile.test
 
