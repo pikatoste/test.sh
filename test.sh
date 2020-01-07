@@ -4,24 +4,28 @@
 #
 # source "$(dirname "$(readlink -f "$0")")"/test.sh
 #
+# TODO: inlcude license
 # TODO: sort out global var names and control which are exported
-set -a
-set -o errexit
-set -o errtrace
-set -o pipefail
-export SHELLOPTS
+[ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
+if [ "$REENTRANT" != 1 ]; then
+  set -a
+  set -o errexit
+  set -o errtrace
+  set -o pipefail
+  export SHELLOPTS
 
-VERSION=unbuilt
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+  VERSION=@VERSION@
+  TEST_SCRIPT="$(readlink -f "$0")"
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH="$(readlink -f "$BASH_SOURCE")"
+  TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-# TODO: configure whether to colorize output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color'
-
+  # TODO: configure whether to colorize output
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  BLUE='\033[0;34m'
+  NC='\033[0m' # No Color'
+fi
 exit_trap() {
   if [ $? -eq 0 ]; then
     display_test_passed
@@ -65,25 +69,24 @@ warn_teardown_failed() {
   echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
-setup_test() { true; }
-teardown_test() { true; }
-setup_test_suite() { true; }
-teardown_test_suite() { true; }
+call_if_exists() {
+  ! declare -f $1 >/dev/null || $1
+}
 
 run_test() {
   teardown_test_called=0
   local test_func=$1
   shift 1
-  setup_test
+  call_if_exists setup_test
   run_test_exit_trap() {
-    [ $teardown_test_called = 1 ] || subshell teardown_test || warn_teardown_failed
+    [ $teardown_test_called = 1 ] || subshell "trap print_stack_trace ERR; call_if_exists teardown_test" || warn_teardown_failed
   }
   trap run_test_exit_trap EXIT
   trap "print_stack_trace; display_test_failed" ERR
   $test_func
   display_test_passed
   teardown_test_called=1
-  subshell teardown_test || warn_teardown_failed
+  subshell "trap print_stack_trace ERR; call_if_exists teardown_test" || warn_teardown_failed
 }
 
 discover_tests() {
@@ -91,16 +94,11 @@ discover_tests() {
   declare -F | cut -d \  -f 3 | grep ^test_ || true
 }
 
-teardown_test_suite_called=0
 run_tests() {
+  teardown_test_suite_called=0
   [ $# -gt 0 ] || { local discovered="$(discover_tests)"; [ -z "$discovered" ] || set $discovered; }
   local failures=0
-  setup_test_suite
-  run_test_exit_trap() {
-    [ $teardown_test_suite_called = 1 ] || subshell teardown_test_suite || warn_teardown_failed _suite
-    exit_trap
-  }
-  trap run_test_exit_trap EXIT
+  call_if_exists setup_test_suite
   while [ $# -gt 0 ]; do
     local test_func=$1
     shift
@@ -119,7 +117,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  subshell teardown_test_suite || warn_teardown_failed _suite
+  subshell "trap print_stack_trace ERR; call_if_exists teardown_test_suite" || warn_teardown_failed _suite
   return $failures
 }
 
@@ -144,6 +142,7 @@ load_config() {
   INCLUDE_GLOB_="$INCLUDE_GLOB"
   INCLUDE_PATH_="$INCLUDE_PATH"
   FAIL_FAST_=$FAIL_FAST
+  REENTER_=$REENTER
 
   # load config if present
   [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
@@ -155,6 +154,7 @@ load_config() {
   INCLUDE_GLOB="${INCLUDE_GLOB_:-$INCLUDE_GLOB}"
   INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
   FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
+  REENTER=${REENTER_:-$REENTER}
 
   # set defaults
   VERBOSE=${VERBOSE:-}
@@ -162,6 +162,7 @@ load_config() {
   INCLUDE_GLOB=${INCLUDE_GLOB:-"include*.sh"}
   INCLUDE_PATH="${INCLUDE_PATH:-$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB}"
   FAIL_FAST=${FAIL_FAST:-1}
+  REENTER=${REENTER:-1}
 }
 
 load_includes() {
@@ -177,7 +178,32 @@ load_includes() {
 }
 
 subshell() {
-  bash -c "$1"
+  SAVE_STACK="$CURRENT_STACK"
+  trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
+  CURRENT_STACK=
+  current_stack 1
+  CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
+  if [ "$REENTER" = 1 ]; then
+    bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
+  else
+    bash --norc -c "$1"
+  fi
+  #CURRENT_STACK=
+#  bash --norc -c "REENTRANT=1 source $TESTSH; $1"
+#  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT; $1"
+#  bash --norc -c "REENTRANT=1 source $TEST_SCRIPT \"$1\""
+#  bash -c "REENTRANT=1 source $TESTSH; $1"
+#  bash -c "$1"
+}
+
+current_stack() {
+  local frame=${1:-0}
+  while true; do
+    local line=$(caller $frame)
+    [ -n "$line" ] || break
+    CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
+    ((frame++))
+  done
 }
 
 print_stack_trace() {
@@ -186,9 +212,10 @@ print_stack_trace() {
   while true; do
     local line=$(caller $frame)
     [ -n "$line" ] || break
-    echo -e "${RED}$line${NC}"
+    echo -e "${RED}$line${NC}" >&2
     ((frame++))
   done || true
+  [ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
 }
 
 assert_fail_msg() {
@@ -207,11 +234,19 @@ assert_false() {
   ! subshell "$1" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
-redir_stdout
-load_config
-load_includes
-trap "print_stack_trace" ERR
+if [ "$REENTRANT" != 1 ]; then
+  trap "print_stack_trace" ERR
+  redir_stdout
+  load_config
+  load_includes
 
-# TODO: process arguments: --version, --help
+  # TODO: process arguments: --version, --help
 
-[ "$DEBUG" != 1 ] || set -x
+  [ "$DEBUG" != 1 ] || set -x
+#else
+#  return 1
+#  REENTRANT=2 source "$TEST_SCRIPT"
+#  #$1
+#  eval "$1"
+#  exit 0
+fi

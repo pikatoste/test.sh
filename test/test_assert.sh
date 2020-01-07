@@ -1,7 +1,3 @@
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-source "$TEST_SCRIPT_DIR"/../test.sh
-
 test_01_ok() {
   set_test_name "Assertions should not fail when the assertion succeeds"
   assert_true "true" "ok"
@@ -19,5 +15,10 @@ test_03_fail() {
   assert_false "true" "ok"
   assert_false "false" "nok"
 }
+
+[ "$REENTRANT" != 1 ] || return 0
+TEST_SCRIPT=${TEST_SCRIPT:-"$(readlink -f "$0")"}
+TEST_SCRIPT_DIR=${TEST_SCRIPT_DIR:-$(dirname "$TEST_SCRIPT")}
+source "$TEST_SCRIPT_DIR"/../test.sh #|| return 0 #"$1"
 
 ! subshell "FAIL_FAST=0 run_tests"

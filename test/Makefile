@@ -8,3 +8,7 @@ TESTS ?= \
     test_ignored.sh
 
 include $(shell git rev-parse --show-toplevel)/Makefile.test
+
+.PHONY: codecov
+codecov:
+	cd .. && for test in $(TESTS); do bashcov --skip-uncovered test/$$test; done
