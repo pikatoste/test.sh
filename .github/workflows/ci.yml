@@ -33,6 +33,15 @@ jobs:
         with:
           name: coverage
           path: runtest/coverage
+      - name: Generate version
+        run: |
+          tools/generate-version.sh >build/version
+      - name: Save VERSION artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: version
+          path: build/version
+
 
   coverage:
 
@@ -75,10 +84,16 @@ jobs:
         with:
           name: coverage
           path: coverage
+      - name: Download version artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: version
+          path: build
       - name: Publish coverage report
         run: |
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
-          git add coverage
+          sed -i -e "s/@VERSION@/$(cat build/version)/" index.md
+          git add coverage index.md
           git commit -m "Update coverage report"
           git push --set-upstream origin gh-pages
