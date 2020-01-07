@@ -9,7 +9,7 @@ test: test_clean prepare_test
 test_clean:
 	rm -rf runtest
 
-VERSION:=$(shell cat VERSION | sed -e 's/SNAPSHOT$$/SNAPSHOT-$(shell git rev-parse HEAD)$(shell git diff-index --quiet HEAD -- || echo -n -dirty)/')
+VERSION:=$(shell tools/generate-version.sh)
 
 build/test.sh: test.sh VERSION
 	mkdir -p build
