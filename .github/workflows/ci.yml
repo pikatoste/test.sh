@@ -35,6 +35,8 @@ jobs:
         path: runtest/coverage
 
   coverage_badge:
+    runs-on: ubuntu-latest
+    steps:
     - name: Download coverage report artifact
       uses: actions/download-artifact@v1
       with:
