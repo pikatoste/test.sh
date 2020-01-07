@@ -1,6 +1,8 @@
 ![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)
 ![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)
 
+See https://pikatoste.github.io/test.sh/.
+
 # test.sh
 
 test.sh is a shell library for writing tests as shell scripts.
