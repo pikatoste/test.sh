@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -34,7 +34,7 @@ jobs:
           name: coverage
           path: runtest/coverage
 
-  coverage_badge:
+  coverage:
 
     needs: build
     runs-on: ubuntu-latest
@@ -68,6 +68,7 @@ jobs:
       - name: Switch to gh-pages branch
         run: |
           git checkout --orphan gh-pages
+          git reset --hard
           git pull origin gh-pages
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
