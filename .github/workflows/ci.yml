@@ -37,7 +37,7 @@ jobs:
   coverage_badge:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.push.size > 0
+    if: github.event == "push"
     steps:
       - uses: actions/checkout@v2
       - name: Download coverage report artifact
