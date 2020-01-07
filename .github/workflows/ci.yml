@@ -80,4 +80,4 @@ jobs:
           git config user.name "ci"
           git add coverage
           git commit -m "Update coverage report"
-          git push
+          git push --set-upstream origin gh-pages
