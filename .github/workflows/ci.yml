@@ -67,7 +67,8 @@ jobs:
           git push -u origin assets --force
       - name: Switch to gh-pages branch
         run: |
-          git checkout gh-pages
+          git checkout --orphan gh-pages
+          git pull
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
         with:
