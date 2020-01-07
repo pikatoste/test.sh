@@ -1,5 +1,5 @@
 TESTS ?= \
-    test_script.sh \
+    ../test.sh \
     test_config.sh \
     test_includes.sh \
     test_test_functions.sh \

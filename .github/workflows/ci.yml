@@ -94,7 +94,7 @@ jobs:
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
           cat build/version
-          sed -i -e "s/@VERSION@/$(cat build/version)/" index.md
+          sed -i -e "s/Version:.*$/Version: $(cat build/version)/" index.md
           git add coverage index.md
           git commit -m "Update coverage report"
           git push --set-upstream origin gh-pages
