@@ -68,7 +68,7 @@ jobs:
       - name: Switch to gh-pages branch
         run: |
           git checkout --orphan gh-pages
-          git pull
+          git pull origin gh-pages
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
         with:
