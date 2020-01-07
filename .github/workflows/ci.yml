@@ -33,6 +33,13 @@ jobs:
       with:
         name: coverage
         path: runtest/coverage
+
+  coverage_badge:
+    - name: Download coverage report artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: coverage
+        path: runtest/coverage
     - name: Generate coverage badge from report
       run: |
         sudo apt install xsltproc
@@ -47,6 +54,7 @@ jobs:
         fi)
         COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
         curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
+#    - uses: actions/checkout@v2
     - name: Upload coverage badge
       run: |
         git config user.email "ci@nowhere.org"
