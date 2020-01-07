@@ -16,20 +16,20 @@ build/test.sh: test.sh VERSION
 	sed -e "s/@VERSION@/$(VERSION)/" test.sh >build/test.sh.tmp
 	mv build/test.sh.tmp build/test.sh
 
-clean: test_clean codecov_clean
+clean: test_clean coverage_clean
 	rm -rf build
 
 build: build/test.sh
 
 check: test
 
-codecov_clean:
+coverage_clean:
 	rm -rf coverage
 
-codecov: test_clean prepare_test
-	${MAKE} -C runtest/test codecov
+coverage: test_clean prepare_test
+	${MAKE} -C runtest/test coverage
 
 all: build
 
-.PHONY: test, prepare_test, test_clean, clean, build, check, codecov, codecov_clean
+.PHONY: test, prepare_test, test_clean, clean, build, check, coverage, coverage_clean
 .DEFAULT_GOAL := all

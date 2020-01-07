@@ -9,6 +9,6 @@ TESTS ?= \
 
 include $(shell git rev-parse --show-toplevel)/Makefile.test
 
-.PHONY: codecov
-codecov:
+.PHONY: coverage
+coverage:
 	cd .. && for test in $(TESTS); do bashcov --skip-uncovered test/$$test; done
