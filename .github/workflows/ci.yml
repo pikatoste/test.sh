@@ -7,10 +7,18 @@ on:
   pull_request:
 
 jobs:
-  test:
-
+  clear_coverage_badge:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dismiss current coverage badge
+        run: |
+          tools/generate-coverage-badge.sh >/tmp/coverage.svg
+          tools/upload-coverage-badge.sh /tmp/coverage.svg
 
+  test:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -44,9 +52,7 @@ jobs:
           name: version
           path: build/version
 
-
   coverage:
-
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -65,16 +71,7 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt install xsltproc
           tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
-        run: |
-          git config user.email "ci@nowhere.org"
-          git config user.name "ci"
-          git checkout --orphan assets || git checkout assets
-          make clean
-          git reset --hard
-          cp /tmp/coverage.svg .
-          git add .
-          git commit -m 'Updated coverage badge'
-          git push -u origin assets --force
+        run: tools/upload-coverage-badge.sh /tmp/coverage.svg
       - name: Switch to gh-pages branch
         run: |
           git checkout --orphan gh-pages
