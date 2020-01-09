@@ -26,8 +26,10 @@ jobs:
         run: |
           sudo apt install ruby
           sudo gem install bashcov
-      - name: Generate code coverage report
-        run: make coverage
+      - name: Generate and fix code coverage report
+        run: |
+          make coverage
+          sed -i -e "s#type='text/css'>#type='text/css'/>#" runtest/coverage/index.html
       - name: Publish code coverage report
         uses: actions/upload-artifact@v1
         with:
@@ -93,7 +95,7 @@ jobs:
         run: |
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
-          cat build/version
+          tools/jekyllize.sh coverage/index.html
           sed -i -e "s/Version:.*$/Version: $(cat build/version)/" index.md
           git add coverage index.md
           git commit -m "Update coverage report"
