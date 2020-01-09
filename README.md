@@ -246,5 +246,21 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+To run the tests run `make check`. This target expects test.sh to be built already, so to run the test on a clean
+repository run `make all check`. The tests are run in the temporary directory `runtest` and the test logs can be
+found in `runtest/test/testout`.
+
+Other Makefile targets:
+
+* all: build test.sh. Produces `build/test.sh`.
+* clean: remove the `build` and `runtest`directories.
+* coverage: run the tests and generate an HTML coverage report in `runtest/coverage`.
+Requires [Bashcov](https://github.com/infertux/bashcov), so you must install it first:
+
+    ```shell script
+    sudo apt isntall ruby
+    gem install bashcov
+    ```
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
