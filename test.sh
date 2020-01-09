@@ -1,10 +1,8 @@
 #!/bin/bash
-@LICENSE@
-# Shared functions for local tests.
-# It is a shell fragment intended to be included from actual tests. Start each test script
-# with a line simlilar to (depends on the relative position of this file):
 #
-# source "$(dirname "$(readlink -f "$0")")"/test.sh
+@LICENSE@
+#
+# See https://github.com/pikatoste/test.sh/
 #
 if [ "$0" = "${BASH_SOURCE}" ]; then
   echo "This is test.sh version @VERSION@"
@@ -12,7 +10,7 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 # TODO: sort out global var names and control which are exported
-[ "$NOTESTSH" != 1 ] || { echo "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
+[ "$NOTESTSH" != 1 ] || { log "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
 if [ "$REENTRANT" != 1 ]; then
   set -a
   set -o errexit
@@ -146,6 +144,9 @@ try_config_path() {
 }
 
 load_config() {
+  # TODO: respect emptyness
+  # TODO: write checks on booleans without comparison operators
+  # TODO: use empty/not empty as boolean values, not 0/1
   # save environment config
   VERBOSE_=$VERBOSE
   DEBUG_=$DEBUG
