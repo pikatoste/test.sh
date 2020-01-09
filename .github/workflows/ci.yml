@@ -46,11 +46,21 @@ jobs:
       - name: Generate version
         run: |
           tools/generate-version.sh >build/version
+          echo "::set-env name=TESTSH_VERSION::$(cat build/version)"
       - name: Save version artifact
         uses: actions/upload-artifact@v1
         with:
           name: version
           path: build/version
+      - uses: "marvinpinto/action-automatic-releases@v0.2.2"
+        if: github.event_name == 'push'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build ${{ env.TESTSH_VERSION }}"
+          files: |
+            build/test.sh
 
   coverage:
     needs: test
