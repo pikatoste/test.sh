@@ -24,7 +24,9 @@ jobs:
       - name: Build
         run: make
       - name: Run tests
-        run: make check
+        run: |
+          make check | tee /tmp/testmain.out
+          cp /tmp/testmain.out runtest/test/testout/.main
       - name: Publish test output
         uses: actions/upload-artifact@v1
         with:
@@ -96,6 +98,11 @@ jobs:
         with:
           name: coverage
           path: coverage
+      - name: Download test output artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: testout
+          path: build/testout
       - name: Download version artifact
         uses: actions/download-artifact@v1
         with:
@@ -107,6 +114,8 @@ jobs:
           git config user.name "ci"
           /tmp/tools/jekyllize.sh coverage/index.html
           sed -i -e "s/\(v\|V\)ersion:.*SNAPSHOT.*$/\1ersion: $(cat build/version)/" index.md
-          git add coverage index.md
+          mkdir -p snapshot
+          cd snapshot && /tmp/tools/generate-buildinfo-pages.sh ../build/testout/.main ../build/testout
+          git add coverage index.md snapshot
           git commit -m "Update coverage report"
           git push --set-upstream origin gh-pages
