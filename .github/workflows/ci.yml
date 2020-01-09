@@ -59,8 +59,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.WORKFLOW_TOKEN }}
       - name: Save tools folder
         run: cp -a tools /tmp
       - name: Download coverage report artifact
@@ -74,9 +72,12 @@ jobs:
           tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
         run: tools/upload-coverage-badge.sh /tmp/coverage.svg
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.WORKFLOW_TOKEN }}
       - name: Switch to gh-pages branch
         run: |
-          rm -f *
+          rm -rf *
           git checkout --orphan gh-pages
           git reset --hard
           git pull origin gh-pages
