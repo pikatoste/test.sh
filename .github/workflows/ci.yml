@@ -24,7 +24,7 @@ jobs:
           path: runtest/test/testout
       - name: Install requirements for coverage
         run: |
-          sudo DEBIAN_FONTEND=noninteractive apt install ruby
+          sudo DEBIAN_FRONTEND=noninteractive apt install ruby
           sudo gem install bashcov
       - name: Generate and fix code coverage report
         run: |
@@ -62,7 +62,7 @@ jobs:
           path: runtest/coverage
       - name: Generate coverage badge from report
         run: |
-          sudo DEBIAN_FONTEND=noninteractive apt install xsltproc
+          sudo DEBIAN_FRONTEND=noninteractive apt install xsltproc
           tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
         run: |
