@@ -53,6 +53,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Save tools folder
+        run: cp -a tools /tmp
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
         with:
@@ -95,7 +97,7 @@ jobs:
         run: |
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
-          tools/jekyllize.sh coverage/index.html
+          /tmp/tools/jekyllize.sh coverage/index.html
           sed -i -e "s/Version:.*$/Version: $(cat build/version)/" index.md
           git add coverage index.md
           git commit -m "Update coverage report"
