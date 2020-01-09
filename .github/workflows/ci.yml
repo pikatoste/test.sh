@@ -24,7 +24,7 @@ jobs:
           path: runtest/test/testout
       - name: Install requirements for coverage
         run: |
-          sudo apt install ruby
+          sudo DEBIAN_FONTEND=noninteractive apt install ruby
           sudo gem install bashcov
       - name: Generate and fix code coverage report
         run: |
@@ -62,11 +62,8 @@ jobs:
           path: runtest/coverage
       - name: Generate coverage badge from report
         run: |
-          sudo apt install xsltproc
-          COVERAGE=$(sed -n '/<tbody>/,/<\/tbody>/p;/<\/tbody>/q' runtest/coverage/index.html | xsltproc tools/coverage.xsl -)
-          COVERAGE_COLOR=$(echo "$COVERAGE" | awk '{if ($1 <= 80) print "red"; else if ($1 < 90) print "yellow"; else print "brightgreen"}')
-          COVERAGE_URLENC=$(echo -n "$COVERAGE" | xxd -plain | tr -d '\n' | sed 's/\(..\)/%\1/g')
-          curl -X GET "https://img.shields.io/badge/coverage-${COVERAGE_URLENC}-${COVERAGE_COLOR}" >/tmp/coverage.svg
+          sudo DEBIAN_FONTEND=noninteractive apt install xsltproc
+          tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
         run: |
           git config user.email "ci@nowhere.org"
