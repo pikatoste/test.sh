@@ -11,7 +11,7 @@ TESTS ?= \
     test_teardown_fail.sh \
     test_inline.sh
 
-include $(shell git rev-parse --show-toplevel)/Makefile.test
+include Makefile.test
 
 .PHONY: coverage
 coverage:
