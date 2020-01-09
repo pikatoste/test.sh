@@ -1,5 +1,5 @@
-![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)
-![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)
+[![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)](https://github.com/pikatoste/test.sh/actions)
+[![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/coverage/)
 
 See https://pikatoste.github.io/test.sh/.
 
@@ -165,7 +165,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   Syntax:
 
-  ```shell script
+  ```text
   run_tests [test function]...
   ```
 
@@ -196,7 +196,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   Syntax:
 
-  ```shell script
+  ```text
   set_test_name <test name>
   ```
 
@@ -229,7 +229,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   Syntax:
 
-  ```shell script
+  ```text
   assert_true <shell command> [message]
   ```
 
@@ -237,7 +237,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   Syntax:
 
-  ```shell script
+  ```text
   assert_false <shell command> [message]
   ```
 
