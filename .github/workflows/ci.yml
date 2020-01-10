@@ -67,15 +67,12 @@ jobs:
           tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
         run: tools/upload-coverage-badge.sh /tmp/coverage.svg
-      - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.WORKFLOW_TOKEN }}
       - name: Switch to gh-pages branch
-        run: |
-          rm -rf *
-          git checkout --orphan gh-pages
-          git reset --hard
-          git pull origin gh-pages || true
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          fetch-depth: 2
+          token: ${{ secrets.WORKFLOW_TOKEN }}
       - name: Set tag name
         run: |
           TAG=v$VERSION
@@ -85,7 +82,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: coverage
-          path: buildinfo/${{ env.TAG }}/coverage
+          path: buildinfo/$TAG/coverage
       - name: Download test output artifact
         uses: actions/download-artifact@v1
         with:
