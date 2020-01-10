@@ -3,31 +3,29 @@ name: CI
 on:
   push:
     branches:
-      - master
+      #- master
   pull_request:
 
 jobs:
-  clear_coverage_badge:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v2
-      - name: Dismiss current coverage badge
-        run: |
-          tools/generate-coverage-badge.sh >/tmp/coverage.svg
-          tools/upload-coverage-badge.sh /tmp/coverage.svg
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Dismiss current coverage badge
+        if: github.event_name == 'push'
+        run: |
+          tools/generate-coverage-badge.sh >/tmp/coverage.svg
+          tools/upload-coverage-badge.sh /tmp/coverage.svg
+      - uses: actions/checkout@v2
+        if: github.event_name == 'push'
       - name: Build
         run: make
       - name: Run tests
         run: |
           make check | tee /tmp/testmain.out
           cp /tmp/testmain.out runtest/test/testout/.main
-      - name: Publish test output
+      - name: Upload test output artifact
         uses: actions/upload-artifact@v1
         with:
           name: testout
@@ -40,37 +38,22 @@ jobs:
         run: |
           make coverage
           sed -i -e "s#type='text/css'>#type='text/css'/>#" runtest/coverage/index.html
-      - name: Publish code coverage report
+      - name: Upload code coverage report artifact
         uses: actions/upload-artifact@v1
         with:
           name: coverage
           path: runtest/coverage
-      - name: Generate version
-        run: |
-          tools/generate-version.sh >build/version
-          echo "::set-env name=TESTSH_VERSION::$(cat build/version)"
-      - name: Save version artifact
-        uses: actions/upload-artifact@v1
-        with:
-          name: version
-          path: build/version
-      - uses: "marvinpinto/action-automatic-releases@v0.2.2"
-        if: github.event_name == 'push'
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build ${{ env.TESTSH_VERSION }}"
-          files: |
-            build/test.sh
 
-  coverage:
+  publish:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v2
+      - name: Generate version
+        run: |
+          echo "::set-env name=VERSION::$(tools/generate-version.sh)"
       - name: Save tools folder
         run: cp -a tools /tmp
       - name: Download coverage report artifact
@@ -92,30 +75,58 @@ jobs:
           rm -rf *
           git checkout --orphan gh-pages
           git reset --hard
-          git pull origin gh-pages
+          git pull origin gh-pages || true
+      - name: Set tag name
+        run: |
+          TAG=v$VERSION
+          TAG=${TAG/*SNAPSHOT*/latest}
+          echo "::set-env name=TAG::$TAG"
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
         with:
           name: coverage
-          path: coverage
+          path: buildinfo/${{ env.TAG }}/coverage
       - name: Download test output artifact
         uses: actions/download-artifact@v1
         with:
           name: testout
           path: build/testout
-      - name: Download version artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: version
-          path: build
-      - name: Publish coverage report
+      - name: Publish gh-pages
         run: |
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
-          /tmp/tools/jekyllize.sh coverage/index.html
-          sed -i -e "s/\(v\|V\)ersion:.*SNAPSHOT.*$/\1ersion: $(cat build/version)/" index.md
-          mkdir -p snapshot
-          cd snapshot && /tmp/tools/generate-buildinfo-pages.sh ../build/testout/.main ../build/testout
-          git add coverage index.md snapshot
-          git commit -m "Update coverage report"
+          /tmp/tools/jekyllize.sh buildinfo/$TAG/coverage/index.html
+          [ "$TAG" = latest ] && sed -i -e "s/\(v\|V\)ersion:.*SNAPSHOT.*$/\1ersion: $VERSION/" index.md
+          (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout)
+          git add index.md buildinfo
+          git commit -m "Update build info for tag $TAG"
           git push --set-upstream origin gh-pages
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: make
+      - name: Set version and tag
+        run: |
+          VERSION=$(tools/generate-version.sh)
+          TAG=v$VERSION
+          TAG=${TAG/*SNAPSHOT*/latest}
+          if [[ $TAG = latest ]]; then
+            git tag -f latest
+            git push --force origin latest
+          else
+            REF_TAG=${GITHUB_REF/refs\/tags\//}
+            echo GITHUB_REF=$GITHUB_REF
+            echo REF_TAG=$REF_TAG
+            [[ $TAG == $REF_TAG ]] || TAG=
+          fi
+          echo VERSION=$VERSION
+          echo TAG=$TAG
+          echo "::set-env name=VERSION::$VERSION"
+          echo "::set-env name=TAG::$TAG"
+      - name: Create release
+        if: env.TAG != ''
+        run: tools/github-create-release.sh $TAG $VERSION ${{ secrets.WORKFLOW_TOKEN }}
