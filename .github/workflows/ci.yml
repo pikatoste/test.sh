@@ -95,12 +95,13 @@ jobs:
         run: |
           git config user.email "ci@nowhere.org"
           git config user.name "ci"
+          git reset HEAD~1
           /tmp/tools/jekyllize.sh buildinfo/$TAG/coverage/index.html
           [ "$TAG" = latest ] && sed -i -e "s/\(v\|V\)ersion:.*SNAPSHOT.*$/\1ersion: $VERSION/" index.md
           (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout)
-          git add index.md buildinfo
+          git add .
           git commit -m "Update build info for tag $TAG"
-          git push --set-upstream origin gh-pages
+          git push --force --set-upstream origin gh-pages
 
   release:
     needs: publish
