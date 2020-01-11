@@ -44,18 +44,12 @@ jobs:
           name: coverage
           path: runtest/coverage
 
-  publish:
+  coverage_badge:
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-
     steps:
       - uses: actions/checkout@v2
-      - name: Generate version
-        run: |
-          echo "::set-env name=VERSION::$(tools/generate-version.sh)"
-      - name: Save tools folder
-        run: cp -a tools /tmp
       - name: Download coverage report artifact
         uses: actions/download-artifact@v1
         with:
@@ -67,42 +61,11 @@ jobs:
           tools/generate-coverage-badge.sh >/tmp/coverage.svg
       - name: Upload coverage badge
         run: tools/upload-coverage-badge.sh /tmp/coverage.svg
-      - name: Switch to gh-pages branch
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          fetch-depth: 2
-          token: ${{ secrets.WORKFLOW_TOKEN }}
-      - name: Set tag name
-        run: |
-          TAG=v$VERSION
-          TAG=${TAG/*SNAPSHOT*/latest}
-          echo "::set-env name=TAG::$TAG"
-      - name: Download coverage report artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: coverage
-          path: buildinfo/$TAG/coverage
-      - name: Download test output artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: testout
-          path: build/testout
-      - name: Publish gh-pages
-        run: |
-          git config user.email "ci@nowhere.org"
-          git config user.name "ci"
-          git reset HEAD~1
-          /tmp/tools/jekyllize.sh buildinfo/$TAG/coverage/index.html
-          [ "$TAG" = latest ] && sed -i -e "s/\(v\|V\)ersion:.*SNAPSHOT.*$/\1ersion: $VERSION/" index.md
-          (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout)
-          git add .
-          git commit -m "Update build info for tag $TAG"
-          git push --force --set-upstream origin gh-pages
 
   release:
-    needs: publish
+    needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v2
       - name: Build
@@ -121,10 +84,43 @@ jobs:
             echo REF_TAG=$REF_TAG
             [[ $TAG == $REF_TAG ]] || TAG=
           fi
-          echo VERSION=$VERSION
-          echo TAG=$TAG
           echo "::set-env name=VERSION::$VERSION"
           echo "::set-env name=TAG::$TAG"
+      - name: Save tools folder
+        if: env.TAG != ''
+        run: cp -a tools /tmp
       - name: Create release
         if: env.TAG != ''
         run: tools/github-create-release.sh $TAG $VERSION ${{ secrets.WORKFLOW_TOKEN }}
+      - name: Switch to gh-pages branch
+        if: env.TAG != ''
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          fetch-depth: 2
+          token: ${{ secrets.WORKFLOW_TOKEN }}
+      - name: Download coverage report artifact
+        if: env.TAG != ''
+        uses: actions/download-artifact@v1
+        with:
+          name: coverage
+          path: buildinfo/$TAG/coverage
+      - name: Download test output artifact
+        if: env.TAG != ''
+        uses: actions/download-artifact@v1
+        with:
+          name: testout
+          path: build/testout
+      - name: Publish gh-pages
+        if: env.TAG != ''
+        run: |
+          git config user.email "ci@nowhere.org"
+          git config user.name "ci"
+          git reset HEAD~1
+          /tmp/tools/jekyllize.sh buildinfo/$TAG/coverage/index.html
+          [ "$TAG" = latest ] && sed -i -e "s/^unstable_version:.*$/unstable_version: $VERSION/" _config.yml
+          [ "$TAG" != latest ] && sed -i -e "s/^stable_version:.*$/stable_version: $VERSION/" _config.yml
+          (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout)
+          git add .
+          git commit -m "Update build info for tag $TAG"
+          git push --force --set-upstream origin gh-pages
