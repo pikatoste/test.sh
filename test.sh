@@ -10,28 +10,6 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
-# TODO: sort out global var names and control which are exported
-if [[ ! -v SUBSHELL_CMD ]]; then
-  set -o allexport
-  set -o errexit
-  set -o errtrace
-  set -o pipefail
-  export SHELLOPTS
-
-  VERSION=@VERSION@
-  TEST_SCRIPT="$(readlink -f "$0")"
-  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-  TESTSH="$(readlink -f "$BASH_SOURCE")"
-  TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
-  PRUNE_PATH=${PRUNE_PATH:-$PWD/}
-
-  # TODO: configure whether to colorize output
-  GREEN='\033[0;32m'
-  RED='\033[0;31m'
-  BLUE='\033[0;34m'
-  NC='\033[0m' # No Color'
-fi
-
 exit_trap() {
   if [ $? -eq 0 ]; then
     display_test_passed
@@ -172,6 +150,7 @@ load_config() {
   INCLUDE_PATH_="$INCLUDE_PATH"
   FAIL_FAST_=$FAIL_FAST
   REENTER_=$REENTER
+  PRUNE_PATH_=$PRUNE_PATH
 
   # load config if present
   [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
@@ -184,6 +163,7 @@ load_config() {
   INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
   FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
   REENTER=${REENTER_:-$REENTER}
+  PRUNE_PATH=${PRUNE_PATH_:-$PRUNE_PATH}
 
   # set defaults
   VERBOSE=${VERBOSE:-}
@@ -192,6 +172,7 @@ load_config() {
   INCLUDE_PATH="${INCLUDE_PATH:-$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB}"
   FAIL_FAST=${FAIL_FAST:-1}
   REENTER=${REENTER:-1}
+  PRUNE_PATH=${PRUNE_PATH:-$PWD/}
 }
 
 load_includes() {
@@ -220,6 +201,7 @@ subshell() {
 }
 
 prune_path() {
+  [[ -v PRUNE_PATH ]] || PRUNE_PATH=$PWD/
   local path=$(realpath "$1")
   echo ${path##$PRUNE_PATH}
 }
@@ -275,6 +257,25 @@ assert_false() {
 }
 
 if [[ ! -v SUBSHELL_CMD ]]; then
+  set -o allexport
+  set -o errexit
+  set -o errtrace
+  set -o pipefail
+  export SHELLOPTS
+
+  # TODO: sort out global var names and control which are exported
+  VERSION=@VERSION@
+  TEST_SCRIPT="$(readlink -f "$0")"
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH="$(readlink -f "$BASH_SOURCE")"
+  TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
+  # TODO: configure whether to colorize output
+  GREEN='\033[0;32m'
+  RED='\033[0;31m'
+  BLUE='\033[0;34m'
+  NC='\033[0m' # No Color'
+
   trap "print_stack_trace || true" ERR
   setup_io
   load_config
