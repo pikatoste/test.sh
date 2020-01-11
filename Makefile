@@ -3,8 +3,10 @@ prepare_test:
 	cp build/test.sh runtest
 	cp -a test runtest
 
+PRUNE_PATH?=$$PWD/
+
 test: test_clean prepare_test
-	${MAKE} -C runtest/test
+	${MAKE} -C runtest/test PRUNE_PATH=$(PRUNE_PATH)
 
 test_clean:
 	rm -rf runtest

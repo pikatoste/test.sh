@@ -9,10 +9,10 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   echo "See https://github.com/pikatoste/test.sh"
   exit 0
 fi
+
 # TODO: sort out global var names and control which are exported
-[ "$NOTESTSH" != 1 ] || { log "Reentering test.sh from reentered script, did you forget the check '[ \"\$REENTRANT\" != 1 ] || return 0'?" >&2; exit 1; }
-if [ "$REENTRANT" != 1 ]; then
-  set -a
+if [[ ! -v SUBSHELL_CMD ]]; then
+  set -o allexport
   set -o errexit
   set -o errtrace
   set -o pipefail
@@ -23,6 +23,7 @@ if [ "$REENTRANT" != 1 ]; then
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
   TESTSH="$(readlink -f "$BASH_SOURCE")"
   TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+  PRUNE_PATH=${PRUNE_PATH:-$PWD/}
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
@@ -30,6 +31,7 @@ if [ "$REENTRANT" != 1 ]; then
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
 fi
+
 exit_trap() {
   if [ $? -eq 0 ]; then
     display_test_passed
@@ -39,18 +41,21 @@ exit_trap() {
   rm -f "$PIPE"
 }
 
-redir_stdout() {
+setup_io() {
   PIPE=$(mktemp -u)
   mkfifo "$PIPE"
   trap exit_trap EXIT
   TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
   TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
   mkdir -p "$TESTOUT_DIR"
-  [ "$VERBOSE" = 1 ] || cat <"$PIPE" >"$TESTOUT_FILE" &
-  [ "$VERBOSE" != 1 ] || tee <"$PIPE" "$TESTOUT_FILE" &
+  local testsh=$(basename "$TESTSH")
+  [ "$VERBOSE" = 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
+  [ "$VERBOSE" != 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee "$TESTOUT_FILE" &
   exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
+# TODO: rename to something more apporpiate, such as 'start_test'
+# TODO: call setup/teardown also in online mode
 set_test_name() {
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
@@ -73,12 +78,25 @@ warn_teardown_failed() {
   echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
+do_log() {
+  echo -e "$*"
+}
+
 log() {
-  echo -e "[test.sh] $*"
+  do_log "${GREEN}[test.sh]${NC} $*"
+}
+
+logerr() {
+  do_log "${RED}[test.sh]${NC} $*" >&2
 }
 
 call_if_exists() {
   ! declare -f $1 >/dev/null || $1
+}
+
+call_teardown() {
+  trap "print_stack_trace || true" ERR
+  call_if_exists $1
 }
 
 run_test() {
@@ -87,14 +105,14 @@ run_test() {
   shift 1
   call_if_exists setup_test
   run_test_exit_trap() {
-    [ $teardown_test_called = 1 ] || subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test" || warn_teardown_failed
+    [ $teardown_test_called = 1 ] || subshell "call_teardown teardown_test" || warn_teardown_failed
   }
   trap run_test_exit_trap EXIT
   trap "print_stack_trace || true; display_test_failed" ERR
   $test_func
   display_test_passed
   teardown_test_called=1
-  subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test" || warn_teardown_failed
+  subshell "call_teardown teardown_test" || warn_teardown_failed
 }
 
 discover_tests() {
@@ -113,7 +131,7 @@ run_tests() {
     local failed=0
     subshell "run_test $test_func" || failed=1
     if [ $failed -ne 0 ]; then
-      log "${RED}${test_func} FAILED${NC}" >&2
+      logerr "${test_func} FAILED"
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
         while [ $# -gt 0 ]; do
@@ -125,7 +143,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  subshell "trap \"print_stack_trace || true\" ERR; call_if_exists teardown_test_suite" || warn_teardown_failed _suite
+  subshell "call_teardown teardown_test_suite" || warn_teardown_failed _suite
   return $failures
 }
 
@@ -192,65 +210,79 @@ subshell() {
   SAVE_STACK="$CURRENT_STACK"
   trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
   CURRENT_STACK=
-  current_stack 1
+  current_stack 0
   CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
   if [ "$REENTER" = 1 ]; then
-    bash --norc -c "REENTRANT=1; source $TESTSH; NOTESTSH=1 source $TEST_SCRIPT; $1"
-#    bash --norc -c "REENTRANT=1 source $TEST_SCRIPT \"$1\""
+    /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source $TEST_SCRIPT"
   else
     bash --norc -c "$1"
   fi
 }
 
+prune_path() {
+  local path=$(realpath "$1")
+  echo ${path##$PRUNE_PATH}
+}
+
 current_stack() {
-  local frame=${1:-0}
-  while true; do
-    local line=$(caller $frame)
-    [ -n "$line" ] || break
-    CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
-    ((frame++))
-  done
+    for ((i=${1:-0};i<${#FUNCNAME[@]}-1;i++))
+    do
+      local line=$(echo "${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})")
+      CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
+    done
 }
 
 print_stack_trace() {
-  log "${RED}stack trace:${NC}" >&2
-  local frame=${1:-0}
-  while true; do
-    local line=$(caller $frame)
-    [ -n "$line" ] || break
-    log "${RED}$line${NC}" >&2
-    ((frame++))
+  local err=$?
+  local idx=1
+  local i=${1:-0}
+  ERRCMD=$BASH_COMMAND
+  if [ "$IN_ASSERT" = 1 ]; then
+    ((idx++))
+    ERRCMD=${FUNCNAME[1]}
+    ((i++))
+  fi
+  logerr "Error in ${FUNCNAME[$idx]}($(prune_path "${BASH_SOURCE[$idx]}"):${BASH_LINENO[$idx-1]}): '${ERRCMD}' exited with status $err"
+  if [ ${#FUNCNAME[@]} -gt 2 ]
+  then
+    for ((i=1;i<${#FUNCNAME[@]}-1;i++))
+    do
+      logerr " at ${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
+    done
+  fi
+  echo "$CURRENT_STACK" | while IFS= read line; do
+    [ -z "$line" ] || logerr " at ${line}"
+    ((i++))
   done
-  echo "$CURRENT_STACK" | while read line; do
-    log "${RED}${line}${NC}" >&2
-  done
-  #[ -z "$CURRENT_STACK" ] || echo -e "${RED}$CURRENT_STACK${NC}" >&2
 }
 
 assert_fail_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  log "${RED}Assertion failed: ${msg:+$msg: }$why in: $what${NC}" >&2
+  logerr "Assertion failed: ${msg:+$msg: }$why in: $what"
   return 1
 }
 
 assert_true() {
+  IN_ASSERT=1
   subshell "$1" || assert_fail_msg "$1" "expected success but got failure" "$2"
 }
 
 assert_false() {
+  IN_ASSERT=1
   ! subshell "$1" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
-if [ "$REENTRANT" != 1 ]; then
+if [[ ! -v SUBSHELL_CMD ]]; then
   trap "print_stack_trace || true" ERR
-  redir_stdout
+  setup_io
   load_config
   load_includes
 
   [ "$DEBUG" != 1 ] || set -x
-#else
-#  eval "$1"
-#  exit 0
+else
+  load_includes
+  eval "$SUBSHELL_CMD"
+  exit 0
 fi

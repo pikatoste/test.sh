@@ -10,9 +10,6 @@ test_00() {
   false
 }
 
-[ "$REENTRANT" != 1 ] || return 0
-TEST_SCRIPT=${TEST_SCRIPT:-"$(readlink -f "$0")"}
-TEST_SCRIPT_DIR=${TEST_SCRIPT_DIR:-$(dirname "$TEST_SCRIPT")}
-source "$TEST_SCRIPT_DIR"/../test.sh #|| return 0 #"$1"
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 run_tests

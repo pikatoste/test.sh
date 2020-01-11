@@ -11,8 +11,7 @@ test_fail() {
   true
 }
 
-[ "$REENTRANT" != 1 ] || return 0
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 set_test_name "Any command that fails in the body of a test function should make the test to fail"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail

@@ -8,10 +8,7 @@ test_02() {
   true
 }
 
-[ "$REENTRANT" != 1 ] || return 0
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-source "$TEST_SCRIPT_DIR"/../test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 ! subshell "FAIL_FAST=1 run_tests"
 # TODO: verify that the [ignored] line is printed

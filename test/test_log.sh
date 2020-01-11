@@ -1,6 +1,4 @@
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-source "$TEST_SCRIPT_DIR"/../test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 set_test_name "The log file should contain test stdout and stderr"
 # run in a different test script to avoid the race condition on the log output

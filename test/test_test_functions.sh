@@ -24,8 +24,7 @@ test_02() {
   echo test_02 >>"$OUTFILE"
 }
 
-[ "$REENTRANT" != 1 ] || return 0
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 set_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
