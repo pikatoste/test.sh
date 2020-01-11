@@ -1,5 +1,6 @@
 MAIN_OUT="$1"
 TESTOUT_DIR="$2"
+VERSION=$3
 
 TOOLS_DIR=$(dirname "$(readlink -f "$0")")
 
@@ -11,7 +12,7 @@ cat >testmain.md <<EOF
 ---
 layout: default
 ---
-# Main test output
+# Main test output of version $VERSION
 
 EOF
 
