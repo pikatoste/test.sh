@@ -1,7 +1,4 @@
-[ "$REENTRANT" != 1 ] || return 0
-TEST_SCRIPT="$(readlink -f "$0")"
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-source "$TEST_SCRIPT_DIR"/../test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 set_test_name "The configuration file should be loaded from the default location"
 unset VERBOSE

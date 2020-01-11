@@ -1,7 +1,4 @@
-[ "$REENTRANT" != 1 ] || return 0
-TEST_SCRIPT=${TEST_SCRIPT:-"$(readlink -f "$0")"}
-TEST_SCRIPT_DIR=${TEST_SCRIPT_DIR:-$(dirname "$TEST_SCRIPT")}
-source "$TEST_SCRIPT_DIR"/../test.sh #|| return 0 #"$1"
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 set_test_name "Include files should be processed at the default locations with default names"
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../include_test.sh
