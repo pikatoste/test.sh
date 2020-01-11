@@ -139,40 +139,57 @@ try_config_path() {
   IFS="$current_IFS"
 }
 
+config_defaults() {
+  default_VERBOSE=
+  default_DEBUG=
+  default_INCLUDE_GLOB='include*.sh'
+  default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
+  default_FAIL_FAST=1
+  default_REENTER=1
+  default_PRUNE_PATH='$PWD/'
+}
+
 load_config() {
-  # TODO: respect emptyness
+  save_variable() {
+    local var=$1
+    [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
+  }
+
+  restore_variable() {
+    local var=$1
+    local saved_var=saved_$var
+    [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
+  }
+
+  set_default() {
+    local var=$1
+    local default_var=default_$var
+    [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
+  }
+
   # TODO: write checks on booleans without comparison operators
   # TODO: use empty/not empty as boolean values, not 0/1
+
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH"
+
   # save environment config
-  VERBOSE_=$VERBOSE
-  DEBUG_=$DEBUG
-  INCLUDE_GLOB_="$INCLUDE_GLOB"
-  INCLUDE_PATH_="$INCLUDE_PATH"
-  FAIL_FAST_=$FAIL_FAST
-  REENTER_=$REENTER
-  PRUNE_PATH_=$PRUNE_PATH
+  for var in $config_vars; do
+    save_variable $var
+  done
 
   # load config if present
   [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
   [ -n "$CONFIG_FILE" ] || try_config_path
 
   # prioritize environment config
-  VERBOSE=${VERBOSE_:-$VERBOSE}
-  DEBUG=${DEBUG_:-$DEBUG}
-  INCLUDE_GLOB="${INCLUDE_GLOB_:-$INCLUDE_GLOB}"
-  INCLUDE_PATH="${INCLUDE_PATH_:-$INCLUDE_PATH}"
-  FAIL_FAST=${FAIL_FAST_:-$FAIL_FAST}
-  REENTER=${REENTER_:-$REENTER}
-  PRUNE_PATH=${PRUNE_PATH_:-$PRUNE_PATH}
+  for var in $config_vars; do
+    restore_variable $var
+  done
 
   # set defaults
-  VERBOSE=${VERBOSE:-}
-  DEBUG=${DEBUG:-}
-  INCLUDE_GLOB=${INCLUDE_GLOB:-"include*.sh"}
-  INCLUDE_PATH="${INCLUDE_PATH:-$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB}"
-  FAIL_FAST=${FAIL_FAST:-1}
-  REENTER=${REENTER:-1}
-  PRUNE_PATH=${PRUNE_PATH:-$PWD/}
+  for var in $config_vars; do
+    set_default $var
+  done
 }
 
 load_includes() {
@@ -201,7 +218,7 @@ subshell() {
 }
 
 prune_path() {
-  [[ -v PRUNE_PATH ]] || PRUNE_PATH=$PWD/
+  [[ -v PRUNE_PATH ]] || eval "PRUNE_PATH=$default_PRUNE_PATH"
   local path=$(realpath "$1")
   echo ${path##$PRUNE_PATH}
 }
@@ -276,6 +293,7 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
 
+  config_defaults
   trap "print_stack_trace || true" ERR
   setup_io
   load_config
