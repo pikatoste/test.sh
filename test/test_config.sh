@@ -60,3 +60,18 @@ load_config
 [ "$VERBOSE" = verbose ]
 [ "$INCLUDE_GLOB" = include_glob ]
 [ "$INCLUDE_PATH" = include_path ]
+
+set_test_name "Empty variables should be respected over defaults"
+FAIL_FAST=
+unset CONFIG_FILE
+unset CONFIG_DIR
+load_config
+[ "$FAIL_FAST" = "" ]
+
+set_test_name "Empty variables should be respected over configuration file"
+FAIL_FAST=
+unset CONFIG_FILE
+unset CONFIG_DIR
+CONFIG_FILE="$TEST_SCRIPT_DIR"/test.sh.config.default
+load_config
+[ "$FAIL_FAST" = "" ]
