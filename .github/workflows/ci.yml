@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      #- master
+      - master
   pull_request:
 
 jobs:
@@ -73,7 +73,7 @@ jobs:
       - name: Set version and tag
         run: |
           VERSION=$(tools/generate-version.sh)
-          TAG=v$VERSION
+          TAG=v${VERSION}
           TAG=${TAG/*SNAPSHOT*/latest}
           if [[ $TAG = latest ]]; then
             git tag -f latest
@@ -120,7 +120,7 @@ jobs:
           /tmp/tools/jekyllize.sh buildinfo/$TAG/coverage/index.html
           [ "$TAG" = latest ] && sed -i -e "s/^unstable_version:.*$/unstable_version: $VERSION/" _config.yml
           [ "$TAG" != latest ] && sed -i -e "s/^stable_version:.*$/stable_version: $VERSION/" _config.yml
-          (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout)
+          (cd buildinfo/$TAG && /tmp/tools/generate-buildinfo-pages.sh ../../build/testout/.main ../../build/testout $VERSION)
           git add .
           git commit -m "Update build info for tag $TAG"
           git push --force --set-upstream origin gh-pages
