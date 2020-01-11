@@ -10,27 +10,13 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
-exit_trap() {
-  if [ $? -eq 0 ]; then
-    display_test_passed
-  else
-    display_test_failed
-  fi
-  rm -f "$PIPE"
-}
-
-setup_io() {
-  PIPE=$(mktemp -u)
-  mkfifo "$PIPE"
-  trap exit_trap EXIT
-  TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
-  TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
-  mkdir -p "$TESTOUT_DIR"
-  local testsh=$(basename "$TESTSH")
-  [ "$VERBOSE" = 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
-  [ "$VERBOSE" != 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee "$TESTOUT_FILE" &
-  exec 3>&1 4>&2 >"$PIPE" 2>&1
-}
+if [[ ! -v SUBSHELL_CMD ]]; then
+  set -o allexport
+  set -o errexit
+  set -o errtrace
+  set -o pipefail
+  export SHELLOPTS
+fi
 
 # TODO: rename to something more apporpiate, such as 'start_test'
 # TODO: call setup/teardown also in online mode
@@ -64,7 +50,7 @@ log() {
   do_log "${GREEN}[test.sh]${NC} $*"
 }
 
-logerr() {
+log_err() {
   do_log "${RED}[test.sh]${NC} $*" >&2
 }
 
@@ -109,7 +95,7 @@ run_tests() {
     local failed=0
     subshell "run_test $test_func" || failed=1
     if [ $failed -ne 0 ]; then
-      logerr "${test_func} FAILED"
+      log_err "${test_func} FAILED"
       failures=$(( $failures + 1 ))
       if [ "$FAIL_FAST" = 1 ]; then
         while [ $# -gt 0 ]; do
@@ -125,83 +111,21 @@ run_tests() {
   return $failures
 }
 
-try_config_path() {
-  CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
-  local current_IFS="$IFS"
-  IFS=":"
-  for path in $CONFIG_PATH; do
-    ! [ -f "$path"/test.sh.config ] || {
-      CONFIG_FILE="$path"/test.sh.config
-      source "$CONFIG_FILE"
-      break
-    }
-  done
-  IFS="$current_IFS"
-}
-
-config_defaults() {
-  default_VERBOSE=
-  default_DEBUG=
-  default_INCLUDE_GLOB='include*.sh'
-  default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
-  default_FAIL_FAST=1
-  default_REENTER=1
-  default_PRUNE_PATH='$PWD/'
-}
-
-load_config() {
-  save_variable() {
-    local var=$1
-    [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
-  }
-
-  restore_variable() {
-    local var=$1
-    local saved_var=saved_$var
-    [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
-  }
-
-  set_default() {
-    local var=$1
-    local default_var=default_$var
-    [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
-  }
-
-  # TODO: write checks on booleans without comparison operators
-  # TODO: use empty/not empty as boolean values, not 0/1
-
-  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH"
-
-  # save environment config
-  for var in $config_vars; do
-    save_variable $var
-  done
-
-  # load config if present
-  [ -z "$CONFIG_FILE" ] || source "$CONFIG_FILE"
-  [ -n "$CONFIG_FILE" ] || try_config_path
-
-  # prioritize environment config
-  for var in $config_vars; do
-    restore_variable $var
-  done
-
-  # set defaults
-  for var in $config_vars; do
-    set_default $var
-  done
-}
-
 load_includes() {
-  local current_IFS="$IFS"
+  load_include_file() {
+    local include_file=$1
+    source "$include_file"
+    [[ -v SUBSHELL_CMD ]] || log "Included: $include_file"
+  }
+
+  trap "IFS=\"$IFS\"" RETURN
   IFS=":"
   for path in $INCLUDE_PATH; do
     # shellcheck disable=SC2066
     for include in "$path"; do
-      [ ! -f "$include" ] || source "$include"
+      [ ! -f "$include" ] || load_include_file "$include"
     done
   done
-  IFS="$current_IFS"
 }
 
 subshell() {
@@ -241,16 +165,16 @@ print_stack_trace() {
     ERRCMD=${FUNCNAME[1]}
     ((i++))
   fi
-  logerr "Error in ${FUNCNAME[$idx]}($(prune_path "${BASH_SOURCE[$idx]}"):${BASH_LINENO[$idx-1]}): '${ERRCMD}' exited with status $err"
+  log_err "Error in ${FUNCNAME[$idx]}($(prune_path "${BASH_SOURCE[$idx]}"):${BASH_LINENO[$idx-1]}): '${ERRCMD}' exited with status $err"
   if [ ${#FUNCNAME[@]} -gt 2 ]
   then
     for ((i=1;i<${#FUNCNAME[@]}-1;i++))
     do
-      logerr " at ${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
+      log_err " at ${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
     done
   fi
   echo "$CURRENT_STACK" | while IFS= read line; do
-    [ -z "$line" ] || logerr " at ${line}"
+    [ -z "$line" ] || log_err " at ${line}"
     ((i++))
   done
 }
@@ -259,7 +183,7 @@ assert_fail_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  logerr "Assertion failed: ${msg:+$msg: }$why in: $what"
+  log_err "Assertion failed: ${msg:+$msg: }$why in: $what"
   return 1
 }
 
@@ -273,13 +197,11 @@ assert_false() {
   ! subshell "$1" || assert_fail_msg "$1" "expected failure but got success" "$2"
 }
 
-if [[ ! -v SUBSHELL_CMD ]]; then
-  set -o allexport
-  set -o errexit
-  set -o errtrace
-  set -o pipefail
-  export SHELLOPTS
-
+if [[ -v SUBSHELL_CMD ]]; then
+  load_includes
+  eval "$SUBSHELL_CMD"
+  exit 0
+else
   # TODO: sort out global var names and control which are exported
   VERSION=@VERSION@
   TEST_SCRIPT="$(readlink -f "$0")"
@@ -293,6 +215,101 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
 
+  exit_trap() {
+    if [ $? -eq 0 ]; then
+      display_test_passed
+    else
+      display_test_failed
+    fi
+    rm -f "$PIPE"
+  }
+
+  setup_io() {
+    PIPE=$(mktemp -u)
+    mkfifo "$PIPE"
+    trap exit_trap EXIT
+    TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
+    TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
+    mkdir -p "$TESTOUT_DIR"
+    local testsh=$(basename "$TESTSH")
+    [ "$VERBOSE" = 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
+    [ "$VERBOSE" != 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee "$TESTOUT_FILE" &
+    exec 3>&1 4>&2 >"$PIPE" 2>&1
+  }
+
+  config_defaults() {
+    default_VERBOSE=
+    default_DEBUG=
+    default_INCLUDE_GLOB='include*.sh'
+    default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
+    default_FAIL_FAST=1
+    default_REENTER=1
+    default_PRUNE_PATH='$PWD/'
+  }
+
+  load_config() {
+    save_variable() {
+      local var=$1
+      [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
+    }
+
+    restore_variable() {
+      local var=$1
+      local saved_var=saved_$var
+      [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
+    }
+
+    set_default() {
+      local var=$1
+      local default_var=default_$var
+      [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
+    }
+
+    load_config_file() {
+      local config_file=$1
+      source "$config_file"
+      log "Loaded config from $config_file"
+    }
+
+    try_config_path() {
+      CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
+      local current_IFS="$IFS"
+      IFS=":"
+      for path in $CONFIG_PATH; do
+        ! [ -f "$path"/test.sh.config ] || {
+          CONFIG_FILE="$path"/test.sh.config
+          load_config_file "$CONFIG_FILE"
+          break
+        }
+      done
+      IFS="$current_IFS"
+    }
+
+    # TODO: write checks on booleans without comparison operators
+    # TODO: use empty/not empty as boolean values, not 0/1
+
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH"
+
+    # save environment config
+    for var in $config_vars; do
+      save_variable $var
+    done
+
+    # load config if present
+    [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
+    [ -n "$CONFIG_FILE" ] || try_config_path
+
+    # prioritize environment config
+    for var in $config_vars; do
+      restore_variable $var
+    done
+
+    # set defaults
+    for var in $config_vars; do
+      set_default $var
+    done
+  }
+
   config_defaults
   trap "print_stack_trace || true" ERR
   setup_io
@@ -300,8 +317,4 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   load_includes
 
   [ "$DEBUG" != 1 ] || set -x
-else
-  load_includes
-  eval "$SUBSHELL_CMD"
-  exit 0
 fi
