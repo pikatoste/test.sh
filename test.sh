@@ -129,15 +129,15 @@ load_includes() {
 }
 
 subshell() {
-  SAVE_STACK="$CURRENT_STACK"
-  trap "CURRENT_STACK=\"$SAVE_STACK\"" RETURN
-  CURRENT_STACK=
-  current_stack 0
-  CURRENT_STACK="$(echo "$CURRENT_STACK"; echo "$SAVE_STACK" )"
+  call_stack() {
+    local_stack 1
+    FOREIGN_STACK=("${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}")
+    declare -p FOREIGN_STACK
+  }
   if [ "$REENTER" = 1 ]; then
-    /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source $TEST_SCRIPT"
+    BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source $TEST_SCRIPT"
   else
-    bash --norc -c "$1"
+    BASH_ENV=<(call_stack) bash --norc -c "$1"
   fi
 }
 
@@ -147,35 +147,27 @@ prune_path() {
   echo ${path##$PRUNE_PATH}
 }
 
-current_stack() {
-    for ((i=${1:-0};i<${#FUNCNAME[@]}-1;i++))
-    do
-      local line=$(echo "${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})")
-      CURRENT_STACK=$([ -z "$CURRENT_STACK" ] || echo "$CURRENT_STACK"; echo "$line")
-    done
+local_stack() {
+  LOCAL_STACK=()
+  for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
+  do
+    local line=$(echo "${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})")
+    LOCAL_STACK+=("$line")
+  done
 }
 
 print_stack_trace() {
   local err=$?
-  local idx=1
-  local i=${1:-0}
+  local frame_idx=1
   ERRCMD=$BASH_COMMAND
   if [ "$IN_ASSERT" = 1 ]; then
-    ((idx++))
     ERRCMD=${FUNCNAME[1]}
-    ((i++))
+    ((frame_idx++))
   fi
-  log_err "Error in ${FUNCNAME[$idx]}($(prune_path "${BASH_SOURCE[$idx]}"):${BASH_LINENO[$idx-1]}): '${ERRCMD}' exited with status $err"
-  if [ ${#FUNCNAME[@]} -gt 2 ]
-  then
-    for ((i=1;i<${#FUNCNAME[@]}-1;i++))
-    do
-      log_err " at ${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
-    done
-  fi
-  echo "$CURRENT_STACK" | while IFS= read line; do
-    [ -z "$line" ] || log_err " at ${line}"
-    ((i++))
+  log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
+  local_stack $frame_idx
+  for frame in "${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}"; do
+    log_err " at $frame"
   done
 }
 
@@ -208,6 +200,7 @@ else
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
   TESTSH="$(readlink -f "$BASH_SOURCE")"
   TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+  FOREIGN_STACK=()
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
