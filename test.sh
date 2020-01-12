@@ -34,8 +34,9 @@ pop_exit_handler() {
 }
 
 err_trap() {
+  local err=$?
   for handler in "${ERR_HANDLERS[@]}"; do
-    eval "$handler" || true
+    ERRCODE=$err eval "$handler" || true
   done
 }
 
@@ -231,7 +232,7 @@ local_stack() {
 }
 
 print_stack_trace() {
-  local err=$?
+  local err=$ERRCODE
   local frame_idx=2
   ERRCMD=$BASH_COMMAND
 #  if [ "$IN_ASSERT" = 1 ]; then
