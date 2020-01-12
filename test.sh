@@ -21,7 +21,7 @@ fi
 exit_trap() {
   local err=$?
   for handler in "${EXIT_HANDLERS[@]}"; do
-    ERRCODE=$err eval "$handler"
+    ERRCODE=$err eval "$handler" || true
   done
 }
 
@@ -35,16 +35,16 @@ pop_exit_handler() {
 
 err_trap() {
   for handler in "${ERR_HANDLERS[@]}"; do
-    eval "$handler"
+    eval "$handler" || true
   done
 }
 
-add_err_handler() {
-  ERR_HANDLERS+=("$1")
+push_err_handler() {
+  ERR_HANDLERS=("$1" "${ERR_HANDLERS[@]}")
 }
 
-remove_err_handler() {
-  unset ERR_HANDLERS[${#ERR_HANDLERS[@]}-1]
+pop_err_handler() {
+  unset ERR_HANDLERS[0]
 }
 
 display_last_test_result() {
@@ -55,20 +55,24 @@ display_last_test_result() {
   fi
 }
 
-# TODO: rename to something more apporpiate, such as 'start_test'
-# TODO: call setup/teardown also in online mode
-set_test_name() {
+start_test() {
+  [[ -v MANAGED || ! -v FIRST_TEST ]] || call_if_exists setup_test_suite
+  [[ -v MANAGED || -v FIRST_TEST ]] || call_teardown teardown_test
+  [[ -v MANAGED ]] || call_if_exists setup_test
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
+  unset FIRST_TEST
 }
 
 display_test_passed() {
   [ -z "$CURRENT_TEST_NAME" ] || echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
+  unset CURRENT_TEST_NAME
 }
 
 display_test_failed() {
   [ -z "$CURRENT_TEST_NAME" ] || echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
+  unset CURRENT_TEST_NAME
 }
 
 display_test_skipped() {
@@ -100,18 +104,18 @@ call_if_exists() {
 }
 
 call_teardown_subshell() {
-  add_err_handler "print_stack_trace || true"
+  push_err_handler "print_stack_trace || true"
   call_if_exists $1
-  remove_err_handler
+  pop_err_handler
 }
 
 call_teardown() {
   if [[ $SUBSHELL != 'never' ]]; then
     subshell "call_teardown_subshell $1" || warn_teardown_failed $2
   else
-    add_err_handler "warn_teardown_failed $2"
+    push_err_handler "warn_teardown_failed $2"
     call_if_exists $1
-    remove_err_handler
+    pop_err_handler
   fi
 }
 
@@ -119,25 +123,24 @@ run_test() {
   teardown_test_called=0
   local test_func=$1
   shift 1
-  [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace || true"
+  [[ ! -v SUBSHELL_CMD ]] || push_err_handler "print_stack_trace || true"
   call_if_exists setup_test
   run_test_teardown_trap() {
     [ $teardown_test_called = 1 ] || call_teardown teardown_test
   }
-  #push_exit_handler run_test_exit_trap
-  add_err_handler run_test_teardown_trap
-  add_err_handler display_test_failed
+  push_exit_handler run_test_teardown_trap
+  push_err_handler display_test_failed
   $test_func
   display_test_passed
-  remove_err_handler
+  pop_err_handler
+  pop_exit_handler
   teardown_test_called=1
   call_teardown teardown_test
-  pop_exit_handler
-  remove_err_handler
-  [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
+  [[ ! -v SUBSHELL_CMD ]] || pop_err_handler
 }
 
 run_tests() {
+  MANAGED=
   discover_tests() {
     # TODO: use a configurable test matching pattern
     declare -F | cut -d \  -f 3 | grep ^test_ || true
@@ -231,10 +234,10 @@ print_stack_trace() {
   local err=$?
   local frame_idx=2
   ERRCMD=$BASH_COMMAND
-  if [ "$IN_ASSERT" = 1 ]; then
-    ERRCMD=${FUNCNAME[2]}
-    ((frame_idx++))
-  fi
+#  if [ "$IN_ASSERT" = 1 ]; then
+#    ERRCMD=${FUNCNAME[2]}
+#    ((frame_idx++))
+#  fi
   log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
   local_stack $frame_idx
@@ -251,14 +254,32 @@ assert_fail_msg() {
   return 1
 }
 
-assert_true() {
+call_assert() {
   IN_ASSERT=1
-  subshell "$1" || assert_fail_msg "$1" "expected success but got failure" "$2"
+  if [[ $SUBSHELL == always ]]; then
+    subshell "$1" || assert_fail_msg "$@"
+  else
+    push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\" || true"
+    eval "$1"
+    pop_err_handler
+  fi
+}
+call_not_assert() {
+  IN_ASSERT=1
+  if [[ $SUBSHELL == always ]]; then
+    ! subshell "$1" || assert_fail_msg "$@"
+  else
+    push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\" || true"
+    ! eval "$1"
+    pop_err_handler
+  fi
+}
+assert_true() {
+  call_assert "$1" "expected success but got failure" "$2"
 }
 
 assert_false() {
-  IN_ASSERT=1
-  ! subshell "$1" || assert_fail_msg "$1" "expected failure but got success" "$2"
+  call_not_assert "$1" "expected success but got failure" "$2"
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
@@ -274,7 +295,9 @@ else
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
   TESTSH="$(readlink -f "$BASH_SOURCE")"
   TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+
   FOREIGN_STACK=()
+  FIRST_TEST=
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
@@ -407,10 +430,12 @@ else
   trap exit_trap EXIT
   trap err_trap ERR
   config_defaults
-  add_err_handler "print_stack_trace || true"
+  push_err_handler "print_stack_trace || true"
   setup_io
   load_config
   load_includes
+  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test"
+  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
   push_exit_handler display_last_test_result
 
   [ "$DEBUG" != 1 ] || set -x

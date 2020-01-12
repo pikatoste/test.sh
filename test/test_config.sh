@@ -1,6 +1,6 @@
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-set_test_name "The configuration file should be loaded from the default location"
+start_test "The configuration file should be loaded from the default location"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -13,7 +13,7 @@ rm "$TEST_SCRIPT_DIR"/../test.sh.config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = default ]
 
-set_test_name "The configuration file should be loaded from CONFIG_FILE"
+start_test "The configuration file should be loaded from CONFIG_FILE"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -25,7 +25,7 @@ load_config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_FILE ]
 
-set_test_name "Configuration file should be loaded from CONFIG_DIR"
+start_test "Configuration file should be loaded from CONFIG_DIR"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -38,7 +38,7 @@ rm "$TEST_SCRIPT_DIR"/test.sh.config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_DIR ]
 
-set_test_name "Configuration through environment variables should be respected"
+start_test "Configuration through environment variables should be respected"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
@@ -49,7 +49,7 @@ load_config
 [ "$INCLUDE_GLOB" = include_glob ]
 [ "$INCLUDE_PATH" = include_path ]
 
-set_test_name "Configuration through environment variables should override the configuration file"
+start_test "Configuration through environment variables should override the configuration file"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
@@ -61,14 +61,14 @@ load_config
 [ "$INCLUDE_GLOB" = include_glob ]
 [ "$INCLUDE_PATH" = include_path ]
 
-set_test_name "Empty variables should be respected over defaults"
+start_test "Empty variables should be respected over defaults"
 FAIL_FAST=
 unset CONFIG_FILE
 unset CONFIG_DIR
 load_config
 [ "$FAIL_FAST" = "" ]
 
-set_test_name "Empty variables should be respected over configuration file"
+start_test "Empty variables should be respected over configuration file"
 FAIL_FAST=
 unset CONFIG_FILE
 unset CONFIG_DIR

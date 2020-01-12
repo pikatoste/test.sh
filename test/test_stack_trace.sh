@@ -4,7 +4,7 @@ teardown_test_suite() {
 }
 
 test_00() {
-  set_test_name test_00
+  start_test test_00
   true
   true
   false

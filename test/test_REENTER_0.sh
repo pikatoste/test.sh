@@ -6,6 +6,6 @@ test_01() {
   true
 }
 
-set_test_name "Test config REENTER=0"
+start_test "Test config REENTER=0"
 CURRENT_TEST_NAME= REENTER=0 run_tests
 # TODO: check ... something
