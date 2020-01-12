@@ -12,7 +12,7 @@ test_01() {
 
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-set_test_name "Failing teardown functions should not break the test"
+start_test "Failing teardown functions should not break the test"
 # run in a different test script to avoid the race condition on the log output
 CURRENT_TEST_NAME= run_tests
 

@@ -1,5 +1,7 @@
 SUBSHELL=always
 
+define_funcs() {
+  eval '
 setup_test_suite() {
   echo setup_test_suite >>"$OUTFILE"
 }
@@ -15,6 +17,15 @@ setup_test() {
 teardown_test() {
   echo teardown_test >>"$OUTFILE"
 }
+  '
+}
+
+unset_funcs() {
+  unset setup_test_suite
+  unset teardown_test_suite
+  unset setup_test
+  unset teardown_test
+}
 
 test_01() {
   [ -z "$test_01_fail" ]
@@ -28,10 +39,12 @@ test_02() {
 
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-set_test_name "run_tests shoud invoke tests and setup methods when there are no failures"
+start_test "run_tests shoud invoke tests and setup methods when there are no failures"
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
+define_funcs
 CURRENT_TEST_NAME= run_tests
+unset_funcs
 
 diff - "$OUTFILE" <<EOF
 setup_test_suite
@@ -44,10 +57,12 @@ teardown_test
 teardown_test_suite
 EOF
 
-set_test_name "run_tests shoud invoke tests and setup methods when there are failures"
+start_test "run_tests shoud invoke tests and setup methods when there are failures"
 rm -rf "$OUTFILE"
 test_02_fail=1
+define_funcs
 ! CURRENT_TEST_NAME= subshell run_tests
+unset_funcs
 
 diff - "$OUTFILE" <<EOF
 setup_test_suite

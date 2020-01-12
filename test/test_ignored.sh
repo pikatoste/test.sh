@@ -1,10 +1,10 @@
 test_01() {
-  set_test_name "test_01"
+  start_test "test_01"
   false
 }
 
 test_02() {
-  set_test_name "test_02"
+  start_test "test_02"
   true
 }
 
