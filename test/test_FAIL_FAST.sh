@@ -26,6 +26,6 @@ rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 
 start_test "not FAIL_FAST should run all tests but signal failure at the end"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
-! FAIL_FAST=0 SUBSHELL=always CURRENT_TEST_NAME= subshell "run_tests test_fail test_ok"
+! FAIL_FAST= SUBSHELL=always CURRENT_TEST_NAME= subshell "run_tests test_fail test_ok"
 [ -f "$TEST_SCRIPT_DIR"/.test_ok ]
 [ -f "$TEST_SCRIPT_DIR"/.test_fail ]

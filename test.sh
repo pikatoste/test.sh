@@ -121,13 +121,13 @@ call_teardown() {
 }
 
 run_test() {
-  teardown_test_called=0
+  teardown_test_called=
   local test_func=$1
   shift 1
   [[ ! -v SUBSHELL_CMD ]] || push_err_handler "print_stack_trace || true"
   call_if_exists setup_test
   run_test_teardown_trap() {
-    [ $teardown_test_called = 1 ] || call_teardown teardown_test
+    [[ $teardown_test_called ]] || call_teardown teardown_test
   }
   push_exit_handler run_test_teardown_trap
   push_err_handler display_test_failed
@@ -147,12 +147,12 @@ run_tests() {
     declare -F | cut -d \  -f 3 | grep ^test_ || true
   }
 
-  teardown_test_suite_called=0
+  teardown_test_suite_called=
   [ $# -gt 0 ] || { local discovered="$(discover_tests)"; [ -z "$discovered" ] || set $discovered; }
   local failures=0
   call_if_exists setup_test_suite
   run_tests_exit_trap() {
-    [ $teardown_test_suite_called = 1 ] || call_teardown teardown_test_suite _suite
+    [[ $teardown_test_suite_called ]] || call_teardown teardown_test_suite _suite
   }
   push_exit_handler run_tests_exit_trap
   while [ $# -gt 0 ]; do
@@ -167,7 +167,7 @@ run_tests() {
     if [ $failed -ne 0 ]; then
       log_err "${test_func} FAILED"
       failures=$(( $failures + 1 ))
-      if [ "$FAIL_FAST" = 1 ]; then
+      if [[ $FAIL_FAST ]]; then
         while [ $# -gt 0 ]; do
           display_test_skipped $1
           shift
@@ -206,7 +206,7 @@ subshell() {
     FOREIGN_STACK=("${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}")
     declare -p FOREIGN_STACK
   }
-  if [ "$REENTER" = 1 ]; then
+  if [[ $REENTER ]]; then
     BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source $TEST_SCRIPT"
   else
     BASH_ENV=<(call_stack) bash --norc -c "$1"
@@ -235,7 +235,7 @@ print_stack_trace() {
   local err=$ERRCODE
   local frame_idx=2
   ERRCMD=$BASH_COMMAND
-#  if [ "$IN_ASSERT" = 1 ]; then
+#  if [[ $IN_ASSERT ]]; then
 #    ERRCMD=${FUNCNAME[2]}
 #    ((frame_idx++))
 #  fi
@@ -314,8 +314,8 @@ else
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
     local testsh=$(basename "$TESTSH")
-    [[ $VERBOSE == 1 ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
-    [[ $VERBOSE != 1 ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
+    [[   $VERBOSE ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
+    [[ ! $VERBOSE ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
@@ -383,9 +383,6 @@ else
       IFS="$current_IFS"
     }
 
-    # TODO: write checks on booleans without comparison operators
-    # TODO: use empty/not empty as boolean values, not 0/1
-
     local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE"
 
     # save environment config
@@ -439,5 +436,5 @@ else
   push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
   push_exit_handler display_last_test_result
 
-  [ "$DEBUG" != 1 ] || set -x
+  [[ ! $DEBUG ]] || set -x
 fi
