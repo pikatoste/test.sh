@@ -217,8 +217,11 @@ prune_path() {
 
 local_stack() {
   LOCAL_STACK=()
+  [[ $STACK_TRACE != no ]] || return 0
   for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
+    [[ $STACK_TRACE != pruned || $(basename "${BASH_SOURCE[$i+1]}") != test.sh ]] || break
+    [[ $STACK_TRACE != compact || $(basename "${BASH_SOURCE[$i+1]}") != test.sh ]] || continue
     local line=$(echo "${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})")
     LOCAL_STACK+=("$line")
   done
@@ -300,6 +303,13 @@ else
         echo "always"
       fi
     }
+    set_default_STACK_TRACE() {
+      if [[ $SUBSHELL != always ]]; then
+        echo "compact"
+      else
+        echo "pruned"
+      fi
+    }
     default_VERBOSE=
     default_DEBUG=
     default_INCLUDE_GLOB='include*.sh'
@@ -308,6 +318,7 @@ else
     default_REENTER=1
     default_PRUNE_PATH='$PWD/'
     default_SUBSHELL='$(set_default_SUBSHELL)'
+    default_STACK_TRACE='$(set_default_STACK_TRACE)'
   }
 
   load_config() {
@@ -351,7 +362,7 @@ else
     # TODO: write checks on booleans without comparison operators
     # TODO: use empty/not empty as boolean values, not 0/1
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE"
 
     # save environment config
     for var in $config_vars; do
@@ -390,6 +401,7 @@ else
       log_warn "Configuration: SUBSHELL set to 'always' because FAIL_FAST is false (was: SUBSHELL=$SUBSHELL)"
       SUBSHELL=always
     fi
+    validate_values STACK_TRACE no pruned compact full
   }
 
   trap exit_trap EXIT
