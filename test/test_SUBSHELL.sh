@@ -1,7 +1,7 @@
 FAIL_FAST=
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-start_test "SUBSHELL should default to 'always' when not FAIL_FAST"
+start_test "SUBSHELL should default to 'always' when FAIL_FAST is false"
 [[ $SUBSHELL = always ]]
 FAIL_FAST=1
 

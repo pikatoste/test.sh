@@ -18,13 +18,13 @@ rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! CURRENT_TEST_NAME= subshell "run_tests test_fail"
 [ -f "$TEST_SCRIPT_DIR"/.test_fail ]
 
-start_test "FAIL_FAST should interrupt the script at the first test failure"
+start_test "When FAIL_FAST is true the first test failure should interrupt the script"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! CURRENT_TEST_NAME= subshell "run_tests test_fail test_ok 3>/dev/null"
 ! [ -f "$TEST_SCRIPT_DIR"/.test_ok ]
 [ -f "$TEST_SCRIPT_DIR"/.test_fail ]
 
-start_test "not FAIL_FAST should run all tests but signal failure at the end"
+start_test "When FAIL_FAST is false failures should not interrupt the script but signal failure at the end"
 rm -f "$TEST_SCRIPT_DIR"/.test_ok "$TEST_SCRIPT_DIR"/.test_fail
 ! FAIL_FAST= SUBSHELL=always CURRENT_TEST_NAME= subshell "run_tests test_fail test_ok"
 [ -f "$TEST_SCRIPT_DIR"/.test_ok ]

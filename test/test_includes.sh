@@ -1,6 +1,6 @@
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-start_test "Include files should be processed at the default locations with default names"
+start_test "Files should be included from the default locations"
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../include_test.sh
 cp "$TEST_SCRIPT_DIR"/_include_test2.sh "$TEST_SCRIPT_DIR"/include_test.sh
 load_includes
@@ -11,7 +11,7 @@ rm "$TEST_SCRIPT_DIR"/include_test.sh
 unset include_test1
 unset include_test2
 
-start_test "Include files should be processed with INCLUDE_GLOB"
+start_test "Files should be included from the default directories with the configured INCLUDE_GLOB"
 unset -f include_test1
 unset -f include_test2
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../__include_test.sh
@@ -27,7 +27,7 @@ rm "$TEST_SCRIPT_DIR"/__include_test.sh
 unset include_test1
 unset include_test2
 
-start_test "Include files should be processed with INCLUDE_PATH"
+start_test "Files should be included from the configured INCLUDE_PATH"
 unset -f include_test1
 unset -f include_test2
 INCLUDE_PATH="$TEST_SCRIPT_DIR/_include*.sh"
