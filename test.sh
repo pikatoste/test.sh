@@ -18,6 +18,43 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   export SHELLOPTS
 fi
 
+exit_trap() {
+  local err=$?
+  for handler in "${EXIT_HANDLERS[@]}"; do
+    ERRCODE=$err eval "$handler"
+  done
+}
+
+push_exit_handler() {
+  EXIT_HANDLERS=("$1" "${EXIT_HANDLERS[@]}")
+}
+
+pop_exit_handler() {
+  unset EXIT_HANDLERS[0]
+}
+
+err_trap() {
+  for handler in "${ERR_HANDLERS[@]}"; do
+    eval "$handler"
+  done
+}
+
+add_err_handler() {
+  ERR_HANDLERS+=("$1")
+}
+
+remove_err_handler() {
+  unset ERR_HANDLERS[${#ERR_HANDLERS[@]}-1]
+}
+
+display_last_test_result() {
+  if [[ $ERRCODE == 0 ]]; then
+    display_test_passed
+  else
+    display_test_failed
+  fi
+}
+
 # TODO: rename to something more apporpiate, such as 'start_test'
 # TODO: call setup/teardown also in online mode
 set_test_name() {
@@ -50,6 +87,10 @@ log() {
   do_log "${GREEN}[test.sh]${NC} $*"
 }
 
+log_warn() {
+  do_log "${BLUE}[test.sh]${NC} $*"
+}
+
 log_err() {
   do_log "${RED}[test.sh]${NC} $*" >&2
 }
@@ -58,42 +99,67 @@ call_if_exists() {
   ! declare -f $1 >/dev/null || $1
 }
 
-call_teardown() {
-  trap "print_stack_trace || true" ERR
+call_teardown_subshell() {
+  add_err_handler "print_stack_trace || true"
   call_if_exists $1
+  remove_err_handler
+}
+
+call_teardown() {
+  if [[ $SUBSHELL != 'never' ]]; then
+    subshell "call_teardown_subshell $1" || warn_teardown_failed $2
+  else
+    add_err_handler "warn_teardown_failed $2"
+    call_if_exists $1
+    remove_err_handler
+  fi
 }
 
 run_test() {
   teardown_test_called=0
   local test_func=$1
   shift 1
+  [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace || true"
   call_if_exists setup_test
-  run_test_exit_trap() {
-    [ $teardown_test_called = 1 ] || subshell "call_teardown teardown_test" || warn_teardown_failed
+  run_test_teardown_trap() {
+    [ $teardown_test_called = 1 ] || call_teardown teardown_test
   }
-  trap run_test_exit_trap EXIT
-  trap "print_stack_trace || true; display_test_failed" ERR
+  #push_exit_handler run_test_exit_trap
+  add_err_handler run_test_teardown_trap
+  add_err_handler display_test_failed
   $test_func
   display_test_passed
+  remove_err_handler
   teardown_test_called=1
-  subshell "call_teardown teardown_test" || warn_teardown_failed
-}
-
-discover_tests() {
-  # TODO: use a configurable test matching pattern
-  declare -F | cut -d \  -f 3 | grep ^test_ || true
+  call_teardown teardown_test
+  pop_exit_handler
+  remove_err_handler
+  [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
 }
 
 run_tests() {
+  discover_tests() {
+    # TODO: use a configurable test matching pattern
+    declare -F | cut -d \  -f 3 | grep ^test_ || true
+  }
+
   teardown_test_suite_called=0
   [ $# -gt 0 ] || { local discovered="$(discover_tests)"; [ -z "$discovered" ] || set $discovered; }
   local failures=0
   call_if_exists setup_test_suite
+  run_tests_exit_trap() {
+    [ $teardown_test_suite_called = 1 ] || call_teardown teardown_test_suite _suite
+  }
+  push_exit_handler run_tests_exit_trap
   while [ $# -gt 0 ]; do
     local test_func=$1
     shift
     local failed=0
-    subshell "run_test $test_func" || failed=1
+    if [[ $SUBSHELL == always ]]; then
+      subshell "run_test $test_func" || failed=1
+    else
+      run_test $test_func
+    fi
     if [ $failed -ne 0 ]; then
       log_err "${test_func} FAILED"
       failures=$(( $failures + 1 ))
@@ -107,7 +173,8 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  subshell "call_teardown teardown_test_suite" || warn_teardown_failed _suite
+  call_teardown teardown_test_suite _suite
+  pop_exit_handler
   return $failures
 }
 
@@ -118,7 +185,7 @@ load_includes() {
     [[ -v SUBSHELL_CMD ]] || log "Included: $include_file"
   }
 
-  trap "IFS=\"$IFS\"" RETURN
+  local saved_IFS=$IFS
   IFS=":"
   for path in $INCLUDE_PATH; do
     # shellcheck disable=SC2066
@@ -126,6 +193,7 @@ load_includes() {
       [ ! -f "$include" ] || load_include_file "$include"
     done
   done
+  IFS=$saved_IFS
 }
 
 subshell() {
@@ -158,13 +226,14 @@ local_stack() {
 
 print_stack_trace() {
   local err=$?
-  local frame_idx=1
+  local frame_idx=2
   ERRCMD=$BASH_COMMAND
   if [ "$IN_ASSERT" = 1 ]; then
-    ERRCMD=${FUNCNAME[1]}
+    ERRCMD=${FUNCNAME[2]}
     ((frame_idx++))
   fi
   log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
+  ((frame_idx++))
   local_stack $frame_idx
   for frame in "${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}"; do
     log_err " at $frame"
@@ -191,6 +260,8 @@ assert_false() {
 
 if [[ -v SUBSHELL_CMD ]]; then
   load_includes
+  trap exit_trap EXIT
+  trap err_trap ERR
   eval "$SUBSHELL_CMD"
   exit 0
 else
@@ -208,29 +279,27 @@ else
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
 
-  exit_trap() {
-    if [ $? -eq 0 ]; then
-      display_test_passed
-    else
-      display_test_failed
-    fi
-    rm -f "$PIPE"
-  }
-
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
-    trap exit_trap EXIT
+    push_exit_handler "rm -f \"$PIPE\""
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
     local testsh=$(basename "$TESTSH")
-    [ "$VERBOSE" = 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
-    [ "$VERBOSE" != 1 ] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee "$TESTOUT_FILE" &
+    [[ $VERBOSE == 1 ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
+    [[ $VERBOSE != 1 ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
   config_defaults() {
+    set_default_SUBSHELL() {
+      if [[ $FAIL_FAST ]]; then
+        echo "teardown"
+      else
+        echo "always"
+      fi
+    }
     default_VERBOSE=
     default_DEBUG=
     default_INCLUDE_GLOB='include*.sh'
@@ -238,6 +307,7 @@ else
     default_FAIL_FAST=1
     default_REENTER=1
     default_PRUNE_PATH='$PWD/'
+    default_SUBSHELL='$(set_default_SUBSHELL)'
   }
 
   load_config() {
@@ -281,7 +351,7 @@ else
     # TODO: write checks on booleans without comparison operators
     # TODO: use empty/not empty as boolean values, not 0/1
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL"
 
     # save environment config
     for var in $config_vars; do
@@ -301,13 +371,35 @@ else
     for var in $config_vars; do
       set_default $var
     done
+
+    # validate config
+    validate_values() {
+      local var=$1
+      local val=${!var}
+      shift
+      local values=
+      # shellcheck disable=SC2071
+      for i in "$@"; do
+        [[ $i != $val ]] || return 0
+      done
+      log_err "Configuration: invalid value in variable $var: '$val', should be one of: $*" && false
+    }
+
+    validate_values SUBSHELL never teardown always
+    if [[ ! $FAIL_FAST && $SUBSHELL != always ]]; then
+      log_warn "Configuration: SUBSHELL set to 'always' because FAIL_FAST is false (was: SUBSHELL=$SUBSHELL)"
+      SUBSHELL=always
+    fi
   }
 
+  trap exit_trap EXIT
+  trap err_trap ERR
   config_defaults
-  trap "print_stack_trace || true" ERR
+  add_err_handler "print_stack_trace || true"
   setup_io
   load_config
   load_includes
+  push_exit_handler display_last_test_result
 
   [ "$DEBUG" != 1 ] || set -x
 fi

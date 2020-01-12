@@ -9,7 +9,8 @@ TESTS ?= \
     test_ignored.sh \
     test_REENTER_0.sh \
     test_teardown_fail.sh \
-    test_inline.sh
+    test_inline.sh \
+    test_SUBSHELL.sh
 
 include Makefile.test
 

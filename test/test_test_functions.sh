@@ -1,3 +1,5 @@
+SUBSHELL=always
+
 setup_test_suite() {
   echo setup_test_suite >>"$OUTFILE"
 }

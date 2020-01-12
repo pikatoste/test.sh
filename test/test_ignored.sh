@@ -10,5 +10,5 @@ test_02() {
 
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-! subshell "FAIL_FAST=1 run_tests"
+! subshell "FAIL_FAST=1 SUBSHELL=always run_tests"
 # TODO: verify that the [ignored] line is printed
