@@ -207,7 +207,7 @@ subshell() {
     declare -p FOREIGN_STACK
   }
   if [[ $REENTER ]]; then
-    BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source $TEST_SCRIPT"
+    BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source \"$TEST_SCRIPT\""
   else
     BASH_ENV=<(call_stack) bash --norc -c "$1"
   fi
@@ -224,8 +224,9 @@ local_stack() {
   [[ $STACK_TRACE != no ]] || return 0
   for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
-    [[ $STACK_TRACE != pruned || $(basename "${BASH_SOURCE[$i+1]}") != test.sh ]] || break
-    [[ $STACK_TRACE != compact || $(basename "${BASH_SOURCE[$i+1]}") != test.sh ]] || continue
+    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
+    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
+    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
     local line=$(echo "${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})")
     LOCAL_STACK+=("$line")
   done
@@ -313,9 +314,8 @@ else
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
-    local testsh=$(basename "$TESTSH")
-    [[   $VERBOSE ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
-    [[ ! $VERBOSE ]] || grep -v "$testsh: pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
+    [[   $VERBOSE ]] || grep -v ": pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
+    [[ ! $VERBOSE ]] || grep -v ": pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
