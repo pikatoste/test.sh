@@ -6,6 +6,6 @@ test_01() {
   true
 }
 
-start_test "Test config REENTER=0"
-CURRENT_TEST_NAME= REENTER=0 run_tests
+start_test "Subshells should not resource files when REENTER is false"
+CURRENT_TEST_NAME= REENTER= run_tests
 # TODO: check ... something

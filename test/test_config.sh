@@ -25,7 +25,7 @@ load_config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_FILE ]
 
-start_test "Configuration file should be loaded from CONFIG_DIR"
+start_test "The configuration file should be loaded from CONFIG_DIR"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
@@ -38,7 +38,7 @@ rm "$TEST_SCRIPT_DIR"/test.sh.config
 [ "$INCLUDE_GLOB" = "*" ]
 [ "$INCLUDE_PATH" = CONFIG_DIR ]
 
-start_test "Configuration through environment variables should be respected"
+start_test "Configuration variables in the environment should be respected"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
@@ -49,7 +49,7 @@ load_config
 [ "$INCLUDE_GLOB" = include_glob ]
 [ "$INCLUDE_PATH" = include_path ]
 
-start_test "Configuration through environment variables should override the configuration file"
+start_test "Configuration variables in the environment should override the configuration file"
 VERBOSE=verbose
 INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
