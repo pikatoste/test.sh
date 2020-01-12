@@ -9,7 +9,7 @@ start_test "SUBSHELL should accept only valid values"
 for i in never teardown always; do
   SUBSHELL=$i load_config
 done
-! CURRENT_TEST_NAME= SUBSHELL=pepe "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh
+! CURRENT_TEST_NAME= SUBSHELL=pepe "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh || false
 
 start_test "When SUBSHELL=never teardown functions should be called"
 CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh
@@ -21,7 +21,7 @@ teardown_test_suite
 EOF
 
 start_test "When SUBSHELL=never a failure in teardown_test should terminate the test with failure"
-! CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test
+! CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test || false
 OUTFILE="$TESTOUT_DIR"/do_test_SUBSHELL.sh.out
 OUTFILE2="$TEST_SCRIPT_DIR"/.do_test_SUBSHELL.out
 grep -v '\[test\.sh\]' "$OUTFILE" >"$OUTFILE2"
@@ -33,7 +33,7 @@ EOF
 rm "$OUTFILE2"
 
 start_test "When SUBSHELL=never a failure in teardown_test_suite should terminate the test with failure"
-! CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test_suite
+! CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test_suite || false
 OUTFILE="$TESTOUT_DIR"/do_test_SUBSHELL.sh.out
 OUTFILE2="$TEST_SCRIPT_DIR"/.do_test_SUBSHELL.out
 grep -v '\[test\.sh\]' "$OUTFILE" >"$OUTFILE2"
