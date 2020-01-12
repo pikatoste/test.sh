@@ -18,7 +18,7 @@ test_03_fail() {
 
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
-! subshell "FAIL_FAST=0 SUBSHELL=always run_tests"
+! subshell "FAIL_FAST= SUBSHELL=always run_tests"
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST"
 ! CURRENT_TEST_NAME= "$TEST_SCRIPT_DIR"/do_test_assert_nosubshell.sh
