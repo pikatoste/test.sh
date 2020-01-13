@@ -1,5 +1,5 @@
 # Adapt html stdin to jekyll theme
 ORIG="$1"
-awk 'BEGIN {print "---"; print "layout: default"; print "---";} {print}' <"$ORIG" >"${1}".tmp
+awk '{if (FNR == 1 && $0 != "---") {print "---"; print "layout: default"; print "---";} print}' <"$ORIG" >"${1}".tmp
 rm "$ORIG"
 mv "${1}".tmp "$ORIG"
