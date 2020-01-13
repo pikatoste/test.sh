@@ -1,5 +1,7 @@
+<!-- BADGE-START -->
 [![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)](https://github.com/pikatoste/test.sh/actions)
 [![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/buildinfo/latest/coverage/)
+<!-- BADGE-END-->
 
 See https://pikatoste.github.io/test.sh/.
 
@@ -36,6 +38,7 @@ same test script.
 Inline mode:
 
 ```shell script
+#!/bin/bash
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
 start_test "This is my first test"
@@ -45,6 +48,7 @@ assert_true true
 Managed mode:
 
 ```shell script
+#!/bin/bash
 test_01() {
   test_name "This is my first test"
   assert_true true
