@@ -26,21 +26,19 @@ If test.sh is included in your project, you may want to reference it relative to
 The sequence to source test.sh is:
 
 ```shell script
-[ "$REENTRANT" != 1 ] || return 0
-source "$(dirname "$(readlink -f "$0")")"/test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 ```
 
-A test script is a collection of tests. In inline mode, tests are delimited by calls to `set_test_name`.
+A test script is a collection of tests. In inline mode, tests are delimited by calls to `start_test`.
 In managed mode, tests are defined by test functions. You should not mix inline and managed mode in the
 same test script.
 
 Inline mode:
 
 ```shell script
-[ "$REENTRANT" != 1 ] || return 0
-source "$(dirname "$(readlink -f "$0")")"/test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
-set_test_name "This is my first test"
+start_test "This is my first test"
 assert_true true
 ```
 
@@ -52,8 +50,7 @@ test_01() {
   assert_true true
 }
 
-[ "$REENTRANT" != 1 ] || return 0
-source "$(dirname "$(readlink -f "$0")")"/test.sh
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
 run_tests
 ```
@@ -97,25 +94,27 @@ The configuration file is sourced, so it can contain any shell code. Normally yo
 put only variable assignments in the configuration file.
 
 If the variable CONFIG_FILE is defined, the configuration file will be loaded from that location.
-Otherwise a file named 'test.sh.config' will be searched in these locations (see section 'Variables reference'):
+Otherwise a file named 'test.sh.config' will be searched in these locations (see section [Predefined variables](#predefined-variables)'):
 
 * $TEST_SCRIPT_DIR
 * $TESTSH_DIR
+
+Boolean variables are considered true when not empty, false otherwise (undefined or empty).
 
 Available configuration variables:
 
 * VERBOSE
 
-  Values: 0 or 1, default 0.
+  Boolean. Default false.
 
-  If set to 1, then the standard output and error are displayed in the main output in addition to
+  If true, then the standard output and error are displayed in the main output in addition to
   being saved to the log file.
 
 * DEBUG
 
-  Values: 0 or 1, default 0.
+  Boolean. Default 0.
 
-  If set to 1, activate 'set -x'.
+  If true, activate 'set -x'.
 
 * INCLUDE_GLOB
 
@@ -132,26 +131,64 @@ Available configuration variables:
 
 * FAIL_FAST
 
-  Values: 0 or 1, default 1. Only used in managed mode.
+  Boolean. Default true. Only used in managed mode.
 
-  If set to 1, failure of a test function will interrupt the script and the remaining test functions will
+  If true, failure of a test function will interrupt the script and the remaining test functions will
   be skipped.
 
-  If set to 0, all test functions will be executed.
+  If false, all test functions will be executed.
 
 * REENTER
 
-  Values: 0 or 1, default 1.
+  Boolean. Default true.
 
-  IF set to 1, when test.sh starts a subshell it will source itself and the test script. This is why the
-  line `[ "$REENTRANT" != 1 ] || return 0` is necessary. test.sh executes code whose exit status must be
-  monitored in subshells; this includes your test functions and assert functions. To not loose track of
-  function source files and to support the test coverage of test.sh itself, the scripts are sourced again.
+  If true, when test.sh starts a subshell it will source again all involved scripts: the test
+  script, test.sh and included files. This redefines functions in the subshell's context and allows
+  stack traces to correctly refer source files and line numbers.
 
-### Variables reference
+  If false, subshells will not source again involved scripts. Functions defined in the calling shell are made
+  available to the subshell because they are exported in the environment. The source file and line number of
+  functions inherited from the environment is lost; stack traces with frames referencing these functions will
+  show 'environment' as the source file and a line number relative to that function's definition
+  _in the environment_, which might be different from the original function's definition in the source file.
+  For example, blank lines are not present in the function definition in the environment.
+
+* PRUNE_PATH
+
+  Default: ${PWD}/
+
+  A pattern that is matched at the beginning of each source path when generating frames in stack traces. The longest
+  match is removed from the path; if there's no match the path not modified.
+
+  For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
+
+* SUBSHELL
+
+  Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
+
+  test.sh executes code whose exit status must be monitored but not terminate the script on failure in
+  a subshell. This includes test functions, teardown functions and assert functions.
+
+  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
+    methods, will terminate the script.
+  * teardown: only start subshells to execute teardown functions. Incompatible with FAIL_FAST false.
+  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
+    FAIL_FAST is false.
+
+* STACK_TRACE
+
+  Values: no, pruned, compact or full. Default: pruned when SUBSHELL=always, compact otherwise.
+
+  * no: do not output stack traces.
+  * pruned: include frames up to the first frame in test.sh.
+  * compact: include all frames except those in test.sh.
+  * full: include all frames.
+
+### Predefined variables
 
 This is the list of variables defined by test.sh:
 
+* VERSION: the version of test.sh.
 * TESTSH_DIR: the directory of test.sh.
 * TEST_SCRIPT_DIR: the directory of the test script.
 * CONFIG_FILE: the location of the effective configuration file.
@@ -180,24 +217,24 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   ```shell script
   test_xxx() {
-    set_test_name "The name of this test"
+    start_test "The name of this test"
     # the test code goes here
   }
   ```
 
-  They should start with a call to `set_test_name` and should not call `set_test_name` more than once.
+  They should start with a call to `start_test` and should not call `start_test` more than once.
   The remaing code is the test itself, which usually includes some of the following:
   * Initialization code
   * Execution code
   * Validation code
   TODO: unfinished
 
-* set_test_name
+* start_test
 
   Syntax:
 
   ```text
-  set_test_name <test name>
+  start_test <test name>
   ```
 
   Defines the start of a test (and the end of the previous test) in inline mode. In managed mode,
