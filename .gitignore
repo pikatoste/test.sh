@@ -3,4 +3,8 @@
 runtest/
 build
 scratch
-coverage
+
+vendor
+.bundle
+_site
+Gemfile*
