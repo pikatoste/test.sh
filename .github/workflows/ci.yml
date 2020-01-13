@@ -104,7 +104,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: coverage
-          path: buildinfo/$TAG/coverage
+          path: buildinfo/${{ env.TAG }}/coverage
       - name: Download test output artifact
         if: env.TAG != ''
         uses: actions/download-artifact@v1
