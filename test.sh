@@ -19,9 +19,8 @@ if [[ ! -v SUBSHELL_CMD ]]; then
 fi
 
 exit_trap() {
-  local err=$?
   for handler in "${EXIT_HANDLERS[@]}"; do
-    ERRCODE=$err eval "$handler" || true
+    eval "$handler" # || true
   done
 }
 
@@ -236,10 +235,10 @@ print_stack_trace() {
   local err=$ERRCODE
   local frame_idx=2
   ERRCMD=$BASH_COMMAND
-#  if [[ $IN_ASSERT ]]; then
-#    ERRCMD=${FUNCNAME[2]}
-#    ((frame_idx++))
-#  fi
+  # this is valid for assert when SUBSHELL=never
+  if [[ $IN_ASSERT ]]; then
+    ((frame_idx++))
+  fi
   log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
   local_stack $frame_idx
@@ -259,7 +258,9 @@ assert_fail_msg() {
 call_assert() {
   IN_ASSERT=1
   if [[ $SUBSHELL == always ]]; then
+    # TODO: disable current print_stack_trace
     subshell "$1" || assert_fail_msg "$@"
+    # TODO: enable print_stack_trace
   else
     push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\" || true"
     eval "$1"
@@ -293,10 +294,10 @@ if [[ -v SUBSHELL_CMD ]]; then
 else
   # TODO: sort out global var names and control which are exported
   VERSION=@VERSION@
-  TEST_SCRIPT="$(readlink -f "$0")"
+  TEST_SCRIPT=$(readlink -f "$0")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-  TESTSH="$(readlink -f "$BASH_SOURCE")"
-  TESTSH_DIR="$(dirname "$(readlink -f "$BASH_SOURCE")")"
+  TESTSH=$(readlink -f "$BASH_SOURCE")
+  TESTSH_DIR=$(dirname "$TESTSH")
 
   FOREIGN_STACK=()
   FIRST_TEST=
@@ -310,7 +311,7 @@ else
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
-    push_exit_handler "rm -f \"$PIPE\""
+    #push_exit_handler "rm -f \"$PIPE\""
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
@@ -425,7 +426,7 @@ else
     validate_values STACK_TRACE no pruned compact full
   }
 
-  trap exit_trap EXIT
+  trap "ERRCODE=\$?; rm -f \$PIPE; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
   push_err_handler "print_stack_trace || true"
