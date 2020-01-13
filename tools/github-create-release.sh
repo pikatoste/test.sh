@@ -15,11 +15,11 @@ trap onerr ERR
 RELEASE_ID=$(curl -sS https://api.github.com/repos/pikatoste/test.sh/releases/tags/$TAG | jq -r '.id | select (.!=null)')
 if [ "$TAG" = latest ]; then
   RELEASE_NAME="Development Build $VERSION"
-  RELEASE_BODY="This is a development build.\nTest output: https://pikatoste.github.io/test.sh/buildinfo/$TAG/testmain.html\nCoverage report: https://pikatoste.github.io/test.sh/buildinfo/$TAG/coverage/"
+  RELEASE_BODY="This is a development build.\nTest output: https://pikatoste.github.io/test.sh/releases/$TAG/buildinfo/testmain.html\nCoverage report: https://pikatoste.github.io/test.sh/releases/$TAG/buildinfo/coverage/"
   RELEASE_PRERELEASE=true
 else
   RELEASE_NAME="Version $VERSION"
-  RELEASE_BODY="This is a stable release.\nTest output: https://pikatoste.github.io/test.sh/buildinfo/$TAG/testmain.html\nCoverage report: https://pikatoste.github.io/test.sh/buildinfo/$TAG/coverage/"
+  RELEASE_BODY="This is a stable release.\nTest output: https://pikatoste.github.io/test.sh/releases/$TAG/buildinfo/testmain.html\nCoverage report: https://pikatoste.github.io/test.sh/releases/$TAG/buildinfo/coverage/"
   RELEASE_PRERELEASE=false
 fi
 RELEASE_BODY=$(cat <<EOF
