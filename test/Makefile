@@ -11,7 +11,8 @@ TESTS ?= \
     test_teardown_fail.sh \
     test_inline.sh \
     test_SUBSHELL.sh \
-    test_STACK_TRACE.sh
+    test_STACK_TRACE.sh \
+    test_error_reporting.sh
 
 include Makefile.test
 
