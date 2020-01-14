@@ -47,6 +47,14 @@ pop_err_handler() {
   unset ERR_HANDLERS[0]
 }
 
+add_err_handler() {
+  ERR_HANDLERS=("${ERR_HANDLERS[@]}" "$1")
+}
+
+remove_err_handler() {
+  ERR_HANDLERS=("${ERR_HANDLERS[@]:0:${#ERR_HANDLERS[@]}-1}")
+}
+
 display_last_test_result() {
   if [[ $ERRCODE == 0 ]]; then
     display_test_passed
@@ -104,9 +112,9 @@ call_if_exists() {
 }
 
 call_teardown_subshell() {
-  push_err_handler "print_stack_trace || true"
+  add_err_handler "print_stack_trace"
   call_if_exists $1
-  pop_err_handler
+  remove_err_handler
 }
 
 call_teardown() {
@@ -122,12 +130,7 @@ call_teardown() {
 run_test() {
   teardown_test_called=
   local test_func=$1
-  # TODO: why shift?
-  shift 1
-  if [[ -v SUBSHELL_CMD ]]; then
-    ERR_HANDLERS=(${ERR_HANDLERS[@]/save_stack})
-    push_err_handler "print_stack_trace || true"
-  fi
+  [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
   call_if_exists setup_test
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || call_teardown teardown_test
@@ -140,7 +143,7 @@ run_test() {
   pop_exit_handler
   teardown_test_called=1
   call_teardown teardown_test
-  [[ ! -v SUBSHELL_CMD ]] || pop_err_handler
+  [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
 }
 
 run_tests() {
@@ -219,13 +222,16 @@ subshell() {
 
 save_stack() {
   if [ ! -f $STACK_FILE ]; then
-    report_stack >$STACK_FILE
+    current_stack >$STACK_FILE
   fi
 }
-report_stack() {
+
+current_stack() {
   local err=$ERRCODE
   local frame_idx=3
   ERRCMD=$BASH_COMMAND
+  local err_string="Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
+  ((frame_idx++))
   local_stack $frame_idx
   for ((i=${#FOREIGN_STACK[@]}-1; i>=0; i--)); do
     echo "${FOREIGN_STACK[i]}"
@@ -233,7 +239,7 @@ report_stack() {
   for ((i=${#LOCAL_STACK[@]}-1; i>=0; i--)); do
     echo "${LOCAL_STACK[i]}"
   done
-  echo "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
+  echo "$err_string"
 }
 
 prune_path() {
@@ -255,27 +261,11 @@ local_stack() {
 }
 
 print_stack_trace() {
-  local err=$ERRCODE
-  local frame_idx=2
-  ERRCMD=$BASH_COMMAND
-  if [ -f $STACK_FILE ]; then
-    log_err "$(tail -1 $STACK_FILE)"
-    tac $STACK_FILE | tail -n +2 | while read frame; do
-    log_err " * at $frame"
-    done
-    rm -f $STACK_FILE
-  else
-    # this is valid for assert when SUBSHELL=never
-    if [[ $IN_ASSERT ]]; then
-      ((frame_idx += $IN_ASSERT))
-    fi
-    log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
-    ((frame_idx++))
-    local_stack $frame_idx
-    for frame in "${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}"; do
-      log_err " at $frame"
-    done
-  fi
+  log_err "$(tail -1 $STACK_FILE)"
+  tac $STACK_FILE | tail -n +2 | while read frame; do
+  log_err " at $frame"
+  done
+  rm -f $STACK_FILE
 }
 
 assert_msg() {
@@ -462,10 +452,11 @@ else
     validate_values STACK_TRACE no pruned compact full
   }
 
-  trap "ERRCODE=\$?; rm -f \$PIPE; exit_trap" EXIT
+  trap "ERRCODE=\$?; rm -f \$PIPE \$STACK_FILE; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
-  push_err_handler "print_stack_trace || true"
+  push_err_handler "print_stack_trace"
+  push_err_handler "save_stack"
   setup_io
   load_config
   load_includes
