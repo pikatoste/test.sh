@@ -42,6 +42,6 @@ grep "Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exite
 # TODO: errors from asserts are broken, and superbroken in the case of shubshells
 start_test "The error message should identify the source, line, command and exit code when triggered in assert"
 ! CURRENT_TEST_NAME= SUBSHELL=never  STACK_TRACE=no PRUNE_PATH='*/' "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh func_assert || false
-grep "Error in assert_true(test.sh:.*): 'false' exited with status 1" "$OUT"
-! CURRENT_TEST_NAME= SUBSHELL=always STACK_TRACE=no PRUNE_PATH='*/' "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh func_assert || false
-grep "Error in assert_true(test.sh:.*): 'return 1' exited with status 1" "$OUT"
+grep "Error in expect_true(test.sh:.*): 'false' exited with status 1" "$OUT"
+! CURRENT_TEST_NAME= SUBSHELL=always STACK_TRACE=full PRUNE_PATH='*/' "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh func_assert || false
+grep "Error in source(test.sh:.*): 'false' exited with status 1" "$OUT"

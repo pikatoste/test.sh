@@ -122,8 +122,12 @@ call_teardown() {
 run_test() {
   teardown_test_called=
   local test_func=$1
+  # TODO: why shift?
   shift 1
-  [[ ! -v SUBSHELL_CMD ]] || push_err_handler "print_stack_trace || true"
+  if [[ -v SUBSHELL_CMD ]]; then
+    ERR_HANDLERS=(${ERR_HANDLERS[@]/save_stack})
+    push_err_handler "print_stack_trace || true"
+  fi
   call_if_exists setup_test
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || call_teardown teardown_test
@@ -205,11 +209,31 @@ subshell() {
     FOREIGN_STACK=("${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}")
     declare -p FOREIGN_STACK
   }
+  rm -f $STACK_FILE
   if [[ $REENTER ]]; then
     BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source \"$TEST_SCRIPT\""
   else
-    BASH_ENV=<(call_stack) bash --norc -c "$1"
+    BASH_ENV=<(call_stack) bash --norc -c "trap save_stack ERR ; $1"
   fi
+}
+
+save_stack() {
+  if [ ! -f $STACK_FILE ]; then
+    report_stack >$STACK_FILE
+  fi
+}
+report_stack() {
+  local err=$ERRCODE
+  local frame_idx=3
+  ERRCMD=$BASH_COMMAND
+  local_stack $frame_idx
+  for ((i=${#FOREIGN_STACK[@]}-1; i>=0; i--)); do
+    echo "${FOREIGN_STACK[i]}"
+  done
+  for ((i=${#LOCAL_STACK[@]}-1; i>=0; i--)); do
+    echo "${LOCAL_STACK[i]}"
+  done
+  echo "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
 }
 
 prune_path() {
@@ -220,8 +244,7 @@ prune_path() {
 
 local_stack() {
   LOCAL_STACK=()
-  [[ $STACK_TRACE != no ]] || return 0
-  for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
+  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
     local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
     [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
@@ -235,60 +258,71 @@ print_stack_trace() {
   local err=$ERRCODE
   local frame_idx=2
   ERRCMD=$BASH_COMMAND
-  # this is valid for assert when SUBSHELL=never
-  if [[ $IN_ASSERT ]]; then
+  if [ -f $STACK_FILE ]; then
+    log_err "$(tail -1 $STACK_FILE)"
+    tac $STACK_FILE | tail -n +2 | while read frame; do
+    log_err " * at $frame"
+    done
+    rm -f $STACK_FILE
+  else
+    # this is valid for assert when SUBSHELL=never
+    if [[ $IN_ASSERT ]]; then
+      ((frame_idx += $IN_ASSERT))
+    fi
+    log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
     ((frame_idx++))
+    local_stack $frame_idx
+    for frame in "${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}"; do
+      log_err " at $frame"
+    done
   fi
-  log_err "Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
-  ((frame_idx++))
-  local_stack $frame_idx
-  for frame in "${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}"; do
-    log_err " at $frame"
-  done
 }
 
-assert_fail_msg() {
+assert_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  log_err "Assertion failed: ${msg:+$msg: }$why in: $what"
-  return 1
+  echo "Assertion failed: ${msg:+$msg: }$why in: $what"
+}
+
+assert_fail_msg() {
+  log_err "$(assert_msg "$@")"
+}
+
+expect_true() {
+  eval "$1"
+}
+
+expect_false() {
+  # TODO: broken, ignored errexit context
+  ! eval "$1" || false
 }
 
 call_assert() {
-  IN_ASSERT=1
+  local expect=$1
+  shift
+  push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\""
   if [[ $SUBSHELL == always ]]; then
-    # TODO: disable current print_stack_trace
-    subshell "$1" || assert_fail_msg "$@"
-    # TODO: enable print_stack_trace
+    $expect "subshell \"$1\""
   else
-    push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\" || true"
-    eval "$1"
-    pop_err_handler
+    $expect "eval \"$1\""
   fi
+  pop_err_handler
 }
-call_not_assert() {
-  IN_ASSERT=1
-  if [[ $SUBSHELL == always ]]; then
-    ! subshell "$1" || assert_fail_msg "$@"
-  else
-    push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\" || true"
-    ! eval "$1"
-    pop_err_handler
-  fi
-}
+
 assert_true() {
-  call_assert "$1" "expected success but got failure" "$2"
+  call_assert expect_true "$1" "expected success but got failure" "$2"
 }
 
 assert_false() {
-  call_not_assert "$1" "expected success but got failure" "$2"
+  call_assert expect_false "$1" "expected success but got failure" "$2"
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
   load_includes
-  trap exit_trap EXIT
+  trap "ERRCODE=\$?; exit_trap" EXIT
   trap err_trap ERR
+  push_err_handler save_stack
   eval "$SUBSHELL_CMD"
   exit 0
 else
@@ -301,6 +335,8 @@ else
 
   FOREIGN_STACK=()
   FIRST_TEST=
+  STACK_FILE=/tmp/stack-$!
+  rm -f $STACK_FILE
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
