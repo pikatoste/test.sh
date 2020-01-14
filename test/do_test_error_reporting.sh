@@ -1,28 +1,28 @@
 func1() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func2
 }
 
 func2() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func_assert
 }
 
 test_01() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func1
 }
 
 teardown_test() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
 }
 
 teardown_test_suite() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
 }
 
 func_assert() {
-  [[ $FAIL_FUNC != $FUNCNAME ]] || assert_true false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || assert_true false
 }
 
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
