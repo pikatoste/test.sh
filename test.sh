@@ -88,7 +88,7 @@ display_test_skipped() {
 }
 
 warn_teardown_failed() {
-  echo -e "${BLUE}WARN: teardown_test$1 failed${NC}" >&3
+  echo -e "${ORANGE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
 do_log() {
@@ -96,11 +96,15 @@ do_log() {
 }
 
 log() {
+  do_log "${BLUE}[test.sh]${NC} $*"
+}
+
+log_ok() {
   do_log "${GREEN}[test.sh]${NC} $*"
 }
 
 log_warn() {
-  do_log "${BLUE}[test.sh]${NC} $*"
+  do_log "${ORANGE}[test.sh]${NC} $*"
 }
 
 log_err() {
@@ -284,7 +288,7 @@ expect_true() {
 }
 
 expect_false() {
-  # TODO: broken, ignored errexit context
+  # TODO: broken when not in subshell, ignored errexit context
   ! eval "$1" || false
 }
 
@@ -326,10 +330,10 @@ else
   FOREIGN_STACK=()
   FIRST_TEST=
   STACK_FILE=/tmp/stack-$!
-  rm -f $STACK_FILE
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
+  ORANGE='\033[0;33m'
   RED='\033[0;31m'
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
