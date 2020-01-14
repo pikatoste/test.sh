@@ -185,7 +185,7 @@ run_tests() {
   teardown_test_suite_called=1
   call_teardown teardown_test_suite _suite
   pop_exit_handler
-  return $failures
+  [[ $failures == 0 ]]
 }
 
 load_includes() {
@@ -460,8 +460,8 @@ else
   setup_io
   load_config
   load_includes
-  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test"
   push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
+  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test"
   push_exit_handler display_last_test_result
 
   [[ ! $DEBUG ]] || set -x
