@@ -1,6 +1,6 @@
 <!-- BADGE-START -->
 [![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)](https://github.com/pikatoste/test.sh/actions)
-[![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/buildinfo/latest/coverage/)
+[![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/releases/latest/buildinfo/coverage/)
 <!-- BADGE-END-->
 
 See https://pikatoste.github.io/test.sh/.
@@ -131,7 +131,7 @@ will fail also.
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
 
-There is a corner cases were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
+There is a corner case were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
 test and `teardown_test` fail.
 
 ### Subshells
@@ -150,7 +150,7 @@ affecting the quality of stack traces. The REENTER configuration option overcome
 ### Stack traces
 
 Errors logged contain a message with the function, source file and line number where the error occurred, optionally
-folowed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
+followed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
 and individual frames in the stack trace can be pruned with configuration option PRUNE_PATH.
 
 Errors are logged for each individual test, teardown functions, and the main script if in managed mode. This means
@@ -170,7 +170,19 @@ Currently there are only two assert
 functions, `assert_true` and `assert_false`. When SUBSHELL is not set to 'always', `assert_false` cannot be used
 to assert failure of a function as it makes use of the `!` operator (see [Implicit assertion](#implicit-assertion)).
 
-## Configuration
+### Predefined variables
+
+test.sh defines these variables, which are available to the test script after test.sh is sourced:
+
+* VERSION: the version of test.sh.
+* TESTSH: full path of the sourced test.sh.
+* TESTSH_DIR: the directory of test.sh.
+* TEST_SCRIPT_DIR: the directory of the test script.
+* CONFIG_FILE: the location of the effective configuration file.
+* TESTOUT_FILE: the log file.
+* TESTOUT_DIR: the directory of the log file.
+
+### Configuration
 
 Configuration is expressed with environment variables. These variables can come from the environment
 or from a configuration file. Variables set in the environment take precedence over those defined
@@ -185,7 +197,7 @@ Otherwise a file named 'test.sh.config' will be searched in these locations (see
 * $TEST_SCRIPT_DIR
 * $TESTSH_DIR
 
-Boolean variables are considered true when not empty, false otherwise (undefined or empty).
+Boolean variables are considered true when not empty and false otherwise (undefined or empty).
 
 Available configuration variables:
 
@@ -282,17 +294,7 @@ Available configuration variables:
 
   For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
 
-## Predefined variables
-
-This is the list of variables defined by test.sh:
-
-* VERSION: the version of test.sh.
-* TESTSH_DIR: the directory of test.sh.
-* TEST_SCRIPT_DIR: the directory of the test script.
-* CONFIG_FILE: the location of the effective configuration file.
-* TESTOUT_FILE: the log file.
-
-## Function reference
+### Function reference
 
 This is the list of functions defined by test.sh that you can use in a test script.
 
