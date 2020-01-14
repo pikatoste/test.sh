@@ -19,9 +19,11 @@ if [[ ! -v SUBSHELL_CMD ]]; then
 fi
 
 exit_trap() {
+  add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
     eval "$handler" # || true
   done
+  remove_err_handler
 }
 
 push_exit_handler() {
@@ -338,6 +340,11 @@ else
   BLUE='\033[0;34m'
   NC='\033[0m' # No Color'
 
+  cleanup() {
+    exec 1>&- 2>&- || true
+    fg || true
+  }
+
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
@@ -462,6 +469,7 @@ else
   push_err_handler "print_stack_trace"
   push_err_handler "save_stack"
   setup_io
+  push_exit_handler cleanup
   load_config
   load_includes
   push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
