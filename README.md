@@ -13,12 +13,12 @@ Only GNU bash is supported.
 
 ## Installation
 
-Download test.sh from a [prebuilt release](https://pikatoste.github.io/test.sh/releases/) and copy it to your project or put it in a central location,
-such as /opt/test.sh/test.sh.
+Download test.sh from a [prebuilt release](https://pikatoste.github.io/test.sh/releases/) and copy it to your project
+or put it in a central location, such as /opt/test.sh/test.sh.
 
 Or you can install test.sh from sources:
 
-* First, build test.sh:
+* Build test.sh:
 
     ```shell script
     make
@@ -28,13 +28,14 @@ Or you can install test.sh from sources:
 
 ## Usage
 
-You must source test.sh in your test script, **after function definitions and before any commands**.
-If test.sh is included in your project, you may want to reference it relative to the script location.
-The sequence to source test.sh is:
+Source test.sh in your test script **after function definitions and before any commands**.
+If test.sh is included in your project you may want to reference it relative to the script location:
 
 ```shell script
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 ```
+
+  **NOTE:** use `$BASH_SOURCE` instead of `$0` to reference the main script.
 
 A test script is a collection of tests. In inline mode, tests are delimited by calls to `start_test`.
 In managed mode, tests are defined by test functions. You should not mix inline and managed mode in the
@@ -74,26 +75,102 @@ The output of a test script is a colorized summary with the result of each test.
 The standard output and error are redirected to a log file named after the test script with the
 suffix '.out' appended and located in directory 'testout' relative to the test script. For example, if your
 test script is `test/test_something.sh`, the output will be logged to `test/testout/test_something.sh.out`.
+Test failures will cause a stack trace to be logged. Lines in the log file coming from test.sh (not from the test
+script or the commands it executes) are prefixed with the string '[testsh]', which is colorized to show the
+category of the message: blue for info, orange for warnings and red for errors.
 
 Currently test.sh does not deal with running test scripts; for this purpose you can use
 [Makefile.test](https://github.com/box/Makefile.test).
 
-### Notifying failure
+### Implicit assertion
 
-test.sh sets -o errexit, so any command that does not return success will be considered as
+test.sh sets `-o errexit`, so any command that does not return success will be considered as
 a failure. In inline mode, the first failure terminates the script; in managed mode this behaviour
 depends on the configuration variable FAIL_FAST. In either case, a failure of an individual test
 will cause the script to return failure.
 
-Test failures will cause a stack trace to be logged.
+There are some pitfalls with `-o errexit` to be aware of. Bash ignores this setting in the following situations:
 
-In managed mode, each test function is executed in its own subshell. Assertions are evaluated in a subshell also.
-This subshell inherits the environment, which includes both variables and functions, and the shell
-options. One implication of this is that you cannot affect the environment of the test script from a test function.
-Another consecuence is that bash looses track of the source files where functions are defined, affecting the
-quality of stack traces. In order to overcome this, the REENTER feature has been defined.
+* In the condition of an `if`, `while` or `until`.
+* In expressions using `||` or ` &&` except the last command.
+* In negated commands, i.e. preceded by '!'.
 
-### Configuration
+In all of the above situations expressions that evaluate to false will not trigger exit. Moreover, as any command
+executed as part of the expression runs in _ignored errexit context_, if the command is a function then the
+result of all commands in the function but the last are ignored. This means that if you have a validation function
+such as:
+
+```shell script
+validate() {
+  # check 1
+  [[ $A = a ]]
+  # check 2
+  [[ $B = b ]]
+}
+```
+
+then, expressions of the form `if validate; then ... fi`, `while validate; do ... done`, `validate || echo "error"`,
+`! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
+of the negated expression will not trigger exit even if it evaluates to false.
+
+### setup/teardown
+
+The following semantics apply to the setup & teardown functions:
+
+* `setup_test_suite`: if present, it will be called once before any test and `setup_test` functions. Failure in this
+function will fail the test immediatelly, i.e. no tests will be executed.
+
+* `teardown_test_suite`: if present, it will be called once after all tests and `teardown_test` functions. A failure
+in this function will be reported as a warning in the main output and an error will be logged, but will not make
+the test script to fail.
+
+* `setup_test`: if present, it will be called before every test. A failure in this function will fail the
+test but will not prevent other tests from executing (if FAIL_FAST is false). Because the test fails, the script
+will fail also.
+
+* `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
+as a warning in the main output and an error will be logged, but will not make the test to fail.
+
+There is a corner cases were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
+test and `teardown_test` fail.
+
+### Subshells
+
+If allowed by the SUBSHELL confiuration option, test.sh will execute in a subshell (i.e. `bash -c`)
+code whose exit status must be monitored but not terminate the script on failure.
+This includes test functions, teardown functions and assert functions.
+
+When code is executed in a subshell it cannot affect the environment of the caller. For example, variables set in
+a test function evaluated in a subshell will not be seen from other test functions or the main script.
+
+Subshells inherit the environment of the caller, which includes variables, functions and the shell
+options. Subshells loose trak of source files and line numbers of functions inherited from the environment,
+affecting the quality of stack traces. The REENTER configuration option overcomes this limitation.
+
+### Stack traces
+
+Errors logged contain a message with the function, source file and line number where the error occurred, optionally
+folowed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
+and individual frames in the stack trace can be pruned with configuration option PRUNE_PATH.
+
+Errors are logged for each individual test, teardown functions, and the main script if in managed mode. This means
+that the same log file can contain more than one error.
+
+If you use `return` with a value other than 0 inside a function to trigger failure, the stack trace will attribute
+the return statement to the calling function instead of the function to which the return belongs.
+For this reason, using return to indicate failure is discouraged.
+
+### Assertions
+
+Explicit assertions were originally conceived as an aid in locating the origin of failures. The error reporting
+facilities currently implemented have alleviated this need and as a result assertions have not received much
+attention.
+
+Currently there are only two assert
+functions, `assert_true` and `assert_false`. When SUBSHELL is not set to 'always', `assert_false` cannot be used
+to assert failure of a function as it makes use of the `!` operator (see [Implicit assertion](#implicit-assertion)).
+
+## Configuration
 
 Configuration is expressed with environment variables. These variables can come from the environment
 or from a configuration file. Variables set in the environment take precedence over those defined
@@ -147,6 +224,31 @@ Available configuration variables:
 
   If false, all test functions will be executed.
 
+* SUBSHELL
+
+  Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
+
+  test.sh can execute in a subshell code whose exit status must be monitored but not terminate the script on failure.
+  This includes test functions, teardown functions and assert functions. Code executed in a
+  subshell cannot affect the environment of the caller.
+
+  In managed mode, each test function is executed in its own subshell. Assertions are evaluated in a subshell also.
+  This subshell inherits the environment, which includes both variables and functions, and the shell
+  options. One implication of this is that you cannot affect the environment of the test script from a test function.
+  Another consequence is that bash looses track of the source files where functions are defined, affecting the
+  quality of stack traces. The REENTER cnofiguration option overcomes this limitation.
+
+
+  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
+    methods, will terminate the script. In this mode, `teardown_test_suite` will not get called when both a test and
+    `teardown_test` fail.
+  * teardown: only start subshells to execute teardown functions. `teardown_test` and `teardown_test_suite` are
+    always called in this mode and failures in these functions don't fail the test not interrupt the script.
+    Incompatible with FAIL_FAST false.
+  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
+    FAIL_FAST is false. `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
+    these functions don't fail the test not interrupt the script
+
 * REENTER
 
   Boolean. Default true.
@@ -155,34 +257,12 @@ Available configuration variables:
   script, test.sh and included files. This redefines functions in the subshell's context and allows
   stack traces to correctly refer source files and line numbers.
 
-  If false, subshells will not source again involved scripts. Functions defined in the calling shell are made
+  If false, subshells will not source again involved scripts. Functions defined in the calling shell are
   available to the subshell because they are exported in the environment. The source file and line number of
   functions inherited from the environment is lost; stack traces with frames referencing these functions will
   show 'environment' as the source file and a line number relative to that function's definition
   _in the environment_, which might be different from the original function's definition in the source file.
   For example, blank lines are not present in the function definition in the environment.
-
-* PRUNE_PATH
-
-  Default: ${PWD}/
-
-  A pattern that is matched at the beginning of each source path when generating frames in stack traces. The longest
-  match is removed from the path; if there's no match the path not modified.
-
-  For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
-
-* SUBSHELL
-
-  Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
-
-  test.sh executes code whose exit status must be monitored but not terminate the script on failure in
-  a subshell. This includes test functions, teardown functions and assert functions.
-
-  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
-    methods, will terminate the script.
-  * teardown: only start subshells to execute teardown functions. Incompatible with FAIL_FAST false.
-  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false.
 
 * STACK_TRACE
 
@@ -193,7 +273,16 @@ Available configuration variables:
   * compact: include all frames except those in test.sh.
   * full: include all frames.
 
-### Predefined variables
+* PRUNE_PATH
+
+  Default: ${PWD}/
+
+  A pattern that is matched at the beginning of each source path when generating frames in stack traces. The longest
+  match is removed from the path; if there's no match the path not modified.
+
+  For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
+
+## Predefined variables
 
 This is the list of variables defined by test.sh:
 
@@ -203,7 +292,7 @@ This is the list of variables defined by test.sh:
 * CONFIG_FILE: the location of the effective configuration file.
 * TESTOUT_FILE: the log file.
 
-### Function reference
+## Function reference
 
 This is the list of functions defined by test.sh that you can use in a test script.
 
@@ -231,12 +320,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   }
   ```
 
-  They should start with a call to `start_test` and should not call `start_test` more than once.
-  The remaing code is the test itself, which usually includes some of the following:
-  * Initialization code
-  * Execution code
-  * Validation code
-  TODO: unfinished
+  It should start with a call to `start_test` and should not call `start_test` more than once.
 
 * start_test
 
