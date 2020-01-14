@@ -10,9 +10,10 @@ ansi2html() {
 
 cat >testmain.md <<EOF
 ---
-layout: default
+layout: release
+version: $VERSION
 ---
-# Main test output of version $VERSION
+# Main test output
 
 EOF
 
@@ -28,9 +29,10 @@ for testlog in "$TESTOUT_DIR"/*; do
   testname=$(basename -s .out "$testlog")
   testlogmd="$testname".md
   echo --- >"$testlogmd"
-  echo "layout: default" >>"$testlogmd"
+  echo "layout: release" >>"$testlogmd"
+  echo "version: $VERSION" >>"$testlogmd"
   echo --- >>"$testlogmd"
-  echo "# Output of $testname:" >>"$testlogmd"
+  echo "# Output of $testname" >>"$testlogmd"
   echo >>"$testlogmd"
   ansi2html <"$testlog" >>"$testlogmd"
   echo "* [$testname]($testname.html)" >>testmain.md
