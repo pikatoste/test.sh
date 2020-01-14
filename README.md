@@ -13,13 +13,18 @@ Only GNU bash is supported.
 
 ## Installation
 
-First, build test.sh:
+Download test.sh from a [prebuilt release](https://pikatoste.github.io/test.sh/releases/) and copy it to your project or put it in a central location,
+such as /opt/test.sh/test.sh.
 
-```shell script
-make
-```
+Or you can install test.sh from sources:
 
-Then copy `build/test.sh` to your project or put it in a central location, such as /opt/test.sh/test.sh.
+* First, build test.sh:
+
+    ```shell script
+    make
+    ```
+
+* Then copy `build/test.sh` to your project or put it in a central location, such as /opt/test.sh/test.sh.
 
 ## Usage
 
