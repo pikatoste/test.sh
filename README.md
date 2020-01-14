@@ -1,9 +1,9 @@
 <!-- BADGE-START -->
 [![](https://github.com/pikatoste/test.sh/workflows/CI/badge.svg)](https://github.com/pikatoste/test.sh/actions)
 [![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/releases/latest/buildinfo/coverage/)
-<!-- BADGE-END-->
 
 See https://pikatoste.github.io/test.sh/.
+<!-- BADGE-END-->
 
 # test.sh
 
