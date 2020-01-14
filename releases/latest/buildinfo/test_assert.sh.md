@@ -300,24 +300,12 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
-<span class="f2">[test.sh]</span> Start test: assert_true should fail when the assertion is false
-<span class="f1">[test.sh]</span> Assertion failed: nok: expected success but got failure in: false
-<span class="f1">[test.sh]</span> Error in assert_true(runtest/test.sh:301): 'return 1' exited with status 1
-<span class="f1">[test.sh]</span>  at test_02_fail(runtest/test/test_assert.sh:10)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_assert.sh:19)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_assert.sh:19)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:21)
-<span class="f1">[test.sh]</span> test_02_fail FAILED
-<span class="f2">[test.sh]</span> Start test: assert_false shoud fail when the assertion is true
-<span class="f1">[test.sh]</span> Assertion failed: ok: expected success but got failure in: true
-<span class="f1">[test.sh]</span> Error in assert_false(runtest/test.sh:305): 'return 1' exited with status 1
-<span class="f1">[test.sh]</span>  at test_03_fail(runtest/test/test_assert.sh:15)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_assert.sh:19)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_assert.sh:19)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:21)
-<span class="f1">[test.sh]</span> test_03_fail FAILED
-<span class="f2">[test.sh]</span> Start test: Failed assertions should interrupt the test when FAIL_FAST is true
+<span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
+<span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
+<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: false
+<span class="f4">[test.sh]</span> Start test: assert_false shoud fail when the assertion is true
+<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: true
+<span class="f4">[test.sh]</span> Start test: Failed assertions should interrupt the test when FAIL_FAST is true
 <span class="f2">* Assertions should not fail when the assertion succeeds</span>
 <span class="f1">* assert_true should fail when the assertion is false</span>
 </pre>

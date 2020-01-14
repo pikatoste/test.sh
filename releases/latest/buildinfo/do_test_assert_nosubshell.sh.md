@@ -300,10 +300,10 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
-<span class="f2">[test.sh]</span> Start test: assert_true should fail when the assertion is false
+<span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
+<span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
 <span class="f1">[test.sh]</span> Assertion failed: nok: expected success but got failure in: false
-<span class="f1">[test.sh]</span> Error in assert_true(runtest/test.sh:301): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in expect_true(runtest/test.sh:307): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at test_02_fail(runtest/test/do_test_assert_nosubshell.sh:13)
 <span class="f1">[test.sh]</span>  at main(runtest/test/do_test_assert_nosubshell.sh:24)
 </pre>

@@ -300,8 +300,8 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are no failures
-<span class="f2">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are failures
+<span class="f4">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are no failures
+<span class="f4">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are failures
 <span class="f1">[test.sh]</span> Error in test_02(runtest/test/test_test_functions.sh:36): '[ -z &quot;$test_02_fail&quot; ]' exited with status 1
 <span class="f1">[test.sh]</span> test_02 FAILED
 </pre>

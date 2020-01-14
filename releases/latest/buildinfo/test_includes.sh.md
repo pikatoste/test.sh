@@ -300,22 +300,22 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Files should be included from the default locations
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/include_test.sh
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/include_test.sh
+<span class="f4">[test.sh]</span> Start test: Files should be included from the default locations
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/include_test.sh
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/include_test.sh
 included!
 included!
-<span class="f2">[test.sh]</span> Start test: Files should be included from the default directories with the configured INCLUDE_GLOB
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/__include_test.sh
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/__include_test.sh
+<span class="f4">[test.sh]</span> Start test: Files should be included from the default directories with the configured INCLUDE_GLOB
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/__include_test.sh
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/__include_test.sh
 included!
 included!
-<span class="f2">[test.sh]</span> Start test: Files should be included from the configured INCLUDE_PATH
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test1.sh
-<span class="f2">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test2.sh
+<span class="f4">[test.sh]</span> Start test: Files should be included from the configured INCLUDE_PATH
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test1.sh
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test2.sh
 included!
 included!
-<span class="f2">[test.sh]</span> Start test: Included files should not be reported when reincluded
+<span class="f4">[test.sh]</span> Start test: Included files should not be reported when reincluded
 </pre>
 </body>
 </html>

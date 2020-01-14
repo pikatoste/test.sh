@@ -300,10 +300,10 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Inline test failures should display the failed test in the main output
+<span class="f4">[test.sh]</span> Start test: Inline test failures should display the failed test in the main output
 <span class="f2">* do_test_inline ok</span>
 <span class="f1">* do_test_inline fail</span>
-<span class="f2">[test.sh]</span> Start test: Inline tests should invoke setup and teardown functions
+<span class="f4">[test.sh]</span> Start test: Inline tests should invoke setup and teardown functions
 <span class="f2">* do_test_inline ok</span>
 <span class="f1">* do_test_inline fail</span>
 </pre>

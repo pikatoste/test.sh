@@ -300,15 +300,15 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Any command that fails in the body of a test function should make the test to fail
+<span class="f4">[test.sh]</span> Start test: Any command that fails in the body of a test function should make the test to fail
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:18)
-<span class="f2">[test.sh]</span> Start test: When FAIL_FAST is true the first test failure should interrupt the script
+<span class="f4">[test.sh]</span> Start test: When FAIL_FAST is true the first test failure should interrupt the script
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:23)
-<span class="f2">[test.sh]</span> Start test: When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
+<span class="f4">[test.sh]</span> Start test: When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)

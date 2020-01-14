@@ -300,7 +300,7 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Failing teardown functions should not break the test
+<span class="f4">[test.sh]</span> Start test: Failing teardown functions should not break the test
 <span class="f1">[test.sh]</span> Error in teardown_test(runtest/test/test_teardown_fail.sh:6): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_teardown_fail.sh:13)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:17)

@@ -1,6 +1,6 @@
 ---
 layout: default
-version: 0.1.0-SNAPSHOT-0b29adf
+version: 0.1.0-SNAPSHOT-18c8e53
 tag: latest
 ---
 # Release version {{ page.version }}

@@ -300,7 +300,7 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: Subshells should not resource files when REENTER is false
+<span class="f4">[test.sh]</span> Start test: Subshells should not resource files when REENTER is false
 </pre>
 </body>
 </html>

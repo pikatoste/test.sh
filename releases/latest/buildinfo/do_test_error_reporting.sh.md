@@ -300,10 +300,10 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: false
-<span class="f1">[test.sh]</span> Error in assert_true(test.sh:301): 'return 1' exited with status 1
-<span class="f1">[test.sh]</span> test_01 FAILED
-<span class="f1">[test.sh]</span> Error in main(do_test_error_reporting.sh:37): 'return $failures' exited with status 1
+<span class="f4">[test.sh]</span> Start test: do_test_error_reporting inline
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f4">[test.sh]</span> Start test: do_test_error_reporting inline maybe not reached
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
 </pre>
 </body>
 </html>

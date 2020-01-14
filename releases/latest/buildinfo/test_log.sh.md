@@ -300,9 +300,9 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: The log file should contain test stdout and stderr
-<span class="f4">WARN: teardown_test_suite failed</span>
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f4">[test.sh]</span> Start test: The log file should contain test stdout and stderr
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
 output
 stderr
 </pre>

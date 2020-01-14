@@ -300,7 +300,7 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: test_01
+<span class="f4">[test.sh]</span> Start test: test_01
 <span class="f1">[test.sh]</span> Error in test_01(runtest/test/test_ignored.sh:3): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_ignored.sh:11)
 <span class="f1">[test.sh]</span>  at source(runtest/test/test_ignored.sh:11)

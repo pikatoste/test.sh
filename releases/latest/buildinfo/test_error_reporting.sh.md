@@ -300,46 +300,29 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when there are no subshells
+<span class="f4">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when there are no subshells
 <span class="f1">[test.sh]</span> Error in func2(do_test_error_reporting.sh:7): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in func1(do_test_error_reporting.sh:2): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
-<span class="f2">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when there are subshells
+<span class="f4">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when there are subshells
 <span class="f1">[test.sh]</span> Error in func2(do_test_error_reporting.sh:7): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in func1(do_test_error_reporting.sh:2): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
-<span class="f2">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in teardown_test
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f4">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in teardown_test
+<span class="f3">WARN: teardown_test failed</span>
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test failed</span>
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test failed</span>
 <span class="f1">* do_test_error_reporting inline</span>
-<span class="f4">WARN: teardown_test failed</span>
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test failed</span>
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f4">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test failed</span>
 <span class="f2">* do_test_error_reporting inline</span>
 <span class="f2">* do_test_error_reporting inline maybe not reached</span>
-<span class="f4">WARN: teardown_test failed</span>
-<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f2">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in teardown_test_suite
-<span class="f4">WARN: teardown_test_suite failed</span>
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
-<span class="f4">WARN: teardown_test_suite failed</span>
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
-<span class="f2">* do_test_error_reporting inline</span>
-<span class="f2">* do_test_error_reporting inline maybe not reached</span>
-<span class="f4">WARN: teardown_test_suite failed</span>
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): '[[ $FAIL_FUNC != $FUNCNAME ]]' exited with status 1
-<span class="f2">* do_test_error_reporting inline</span>
-<span class="f2">* do_test_error_reporting inline maybe not reached</span>
-<span class="f4">WARN: teardown_test_suite failed</span>
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
-<span class="f2">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in assert
-<span class="f1">[test.sh]</span> Error in assert_true(test.sh:301): 'false' exited with status 1
-<span class="f1">[test.sh]</span> Error in assert_true(test.sh:301): 'return 1' exited with status 1
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f1">[test.sh]</span> Error in main(runtest/test/test_error_reporting.sh:29): 'grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1&quot; &quot;$OUT&quot;' exited with status 1
 </pre>
 </body>
 </html>

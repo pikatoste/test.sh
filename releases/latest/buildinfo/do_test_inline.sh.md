@@ -300,8 +300,8 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f2">[test.sh]</span> Start test: do_test_inline ok
-<span class="f2">[test.sh]</span> Start test: do_test_inline fail
+<span class="f4">[test.sh]</span> Start test: do_test_inline ok
+<span class="f4">[test.sh]</span> Start test: do_test_inline fail
 <span class="f1">[test.sh]</span> Error in main(runtest/test/do_test_inline.sh:22): 'false' exited with status 1
 </pre>
 </body>
