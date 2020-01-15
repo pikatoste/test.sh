@@ -16,14 +16,15 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   set -o errtrace
   set -o pipefail
   export SHELLOPTS
+  #shopt -s checkjobs
 fi
 
 exit_trap() {
-  add_err_handler cleanup
+  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
-    eval "$handler" # || true
+    eval "$handler"
   done
-  remove_err_handler
+  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || remove_err_handler
 }
 
 push_exit_handler() {
@@ -67,8 +68,8 @@ display_last_test_result() {
 
 start_test() {
   [[ -v MANAGED || ! -v FIRST_TEST ]] || call_if_exists setup_test_suite
-  [[ -v MANAGED || -v FIRST_TEST ]] || call_teardown teardown_test
-  [[ -v MANAGED ]] || call_if_exists setup_test
+  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown teardown_test; }
+  [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
@@ -278,10 +279,10 @@ assert_msg() {
   local what="$1"
   local why="$2"
   local msg="$3"
-  echo "Assertion failed: ${msg:+$msg: }$why in: $what"
+  echo "Assertion failed: ${msg:+$msg: }$why in: '$what'"
 }
 
-assert_fail_msg() {
+assert_err_msg() {
   log_err "$(assert_msg "$@")"
 }
 
@@ -297,7 +298,7 @@ expect_false() {
 call_assert() {
   local expect=$1
   shift
-  push_err_handler "assert_fail_msg \"$1\" \"$2\" \"$3\""
+  push_err_handler "assert_err_msg \"$1\" \"$2\" \"$3\""
   if [[ $SUBSHELL == always ]]; then
     $expect "subshell \"$1\""
   else
@@ -311,10 +312,10 @@ assert_true() {
 }
 
 assert_false() {
-  call_assert expect_false "$1" "expected success but got failure" "$2"
+  call_assert expect_false "$1" "expected failure but got success" "$2"
 }
 
-if [[ -v SUBSHELL_CMD ]]; then
+if [[ -v SUBSHELL_CMD && $SUBSHELL_CMD != fork ]]; then
   load_includes
   trap "ERRCODE=\$?; exit_trap" EXIT
   trap err_trap ERR
@@ -331,7 +332,7 @@ else
 
   FOREIGN_STACK=()
   FIRST_TEST=
-  STACK_FILE=/tmp/stack-$!
+  STACK_FILE=/tmp/stack-$$
 
   # TODO: configure whether to colorize output
   GREEN='\033[0;32m'
@@ -342,7 +343,8 @@ else
 
   cleanup() {
     exec 1>&- 2>&- || true
-    fg || true
+    wait
+    rm -f $STACK_FILE
   }
 
   setup_io() {
@@ -463,17 +465,17 @@ else
     validate_values STACK_TRACE no pruned compact full
   }
 
-  trap "ERRCODE=\$?; rm -f \$PIPE \$STACK_FILE; exit_trap" EXIT
+  trap "ERRCODE=\$?; rm -f \$PIPE; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
   push_err_handler "print_stack_trace"
   push_err_handler "save_stack"
   setup_io
-  push_exit_handler cleanup
+  push_exit_handler "cleanup"
   load_config
   load_includes
   push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
-  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test"
+  push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
   push_exit_handler display_last_test_result
 
   [[ ! $DEBUG ]] || set -x
