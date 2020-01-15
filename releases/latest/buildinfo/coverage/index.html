@@ -1,5 +1,6 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
 <!DOCTYPE html>
 <html xmlns='http://www.w3.org/1999/xhtml'>
@@ -17,26 +18,26 @@ layout: default
       <img src="./assets/0.10.2/loading.gif" alt="loading"/>
     </div>
     <div id="wrapper" style="display:none;">
-      <div class="timestamp">Generated <abbr class="timeago" title="2020-01-14T16:27:10+00:00">2020-01-14T16:27:10+00:00</abbr></div>
+      <div class="timestamp">Generated <abbr class="timeago" title="2020-01-15T17:49:28+00:00">2020-01-15T17:49:28+00:00</abbr></div>
       <ul class="group_tabs"></ul>
 
       <div id="content">
         <div class="file_list_container" id="AllFiles">
   <h2>
     <span class="group_name">All Files</span>
-    (<span class="covered_percent"><span class="green">98.46%</span></span>
+    (<span class="covered_percent"><span class="green">98.49%</span></span>
      covered at
      <span class="covered_strength">
        <span class="green">
-         49.5
+         50.22
        </span>
     </span> hits/line)
   </h2>
   <a name="AllFiles"></a>
   <div>
     <b>25</b> files in total.
-    <b>714</b> relevant lines. 
-    <span class="green"><b>703</b> lines covered</span> and
+    <b>730</b> relevant lines. 
+    <span class="green"><b>719</b> lines covered</span> and
     <span class="red"><b>11</b> lines missed </span>
   </div>
   <table class="file_list">
@@ -55,12 +56,12 @@ layout: default
       
       <tr>
         <td class="strong"><a href="#cf3720b7e3b89d3985223930383e9451b577db4e" class="src_link" title="test.sh">test.sh</a></td>
-        <td class="green strong">99.6 %</td>
-        <td>492</td>
-        <td>249</td>
-        <td>248</td>
+        <td class="green strong">99.61 %</td>
+        <td>502</td>
+        <td>255</td>
+        <td>254</td>
         <td>1</td>
-        <td>135.0</td>
+        <td>136.9</td>
       </tr>
       
       <tr>
@@ -120,7 +121,7 @@ layout: default
         <td>17</td>
         <td>17</td>
         <td>0</td>
-        <td>29.2</td>
+        <td>29.1</td>
       </tr>
       
       <tr>
@@ -226,9 +227,9 @@ layout: default
       <tr>
         <td class="strong"><a href="#de8bc87d158233f652cc7b4d0ce88bdf4fd74f9e" class="src_link" title="test/test_error_reporting.sh">test/test_error_reporting.sh</a></td>
         <td class="green strong">100.0 %</td>
+        <td>82</td>
         <td>72</td>
-        <td>62</td>
-        <td>62</td>
+        <td>72</td>
         <td>0</td>
         <td>3.1</td>
       </tr>
@@ -322,10 +323,10 @@ layout: default
         <div class="source_table" id="cf3720b7e3b89d3985223930383e9451b577db4e">
   <div class="header">
     <h3>test.sh</h3>
-    <h4><span class="green">99.6 %</span> covered</h4>
+    <h4><span class="green">99.61 %</span> covered</h4>
     <div>
-      <b>249</b> relevant lines. 
-      <span class="green"><b>248</b> lines covered</span> and
+      <b>255</b> relevant lines. 
+      <span class="green"><b>254</b> lines covered</span> and
       <span class="red"><b>1</b> lines missed.</span>
     </div>
   </div>
@@ -498,7 +499,7 @@ layout: default
         <li class="covered" data-hits="1" data-linenumber="28">
           <span class="hits">1</span>
           
-          <code class="ruby">  echo &quot;This is test.sh version 0.1.0-SNAPSHOT-18c8e53&quot;</code>
+          <code class="ruby">  echo &quot;This is test.sh version 0.1.0-SNAPSHOT-8dfdff3&quot;</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="29">
@@ -564,1357 +565,1357 @@ layout: default
         <li class="never" data-hits="" data-linenumber="39">
           
           
-          <code class="ruby">fi</code>
+          <code class="ruby">  #shopt -s checkjobs</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="40">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">fi</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="41">
           
           
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="42">
+          
+          
           <code class="ruby">exit_trap() {</code>
         </li>
       
-        <li class="covered" data-hits="183" data-linenumber="42">
-          <span class="hits">183</span>
+        <li class="covered" data-hits="337" data-linenumber="43">
+          <span class="hits">337</span>
+          
+          <code class="ruby">  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || add_err_handler cleanup</code>
+        </li>
+      
+        <li class="covered" data-hits="231" data-linenumber="44">
+          <span class="hits">231</span>
           
           <code class="ruby">  for handler in &quot;${EXIT_HANDLERS[@]}&quot;; do</code>
         </li>
       
-        <li class="covered" data-hits="404" data-linenumber="43">
-          <span class="hits">404</span>
+        <li class="covered" data-hits="520" data-linenumber="45">
+          <span class="hits">520</span>
           
-          <code class="ruby">    eval &quot;$handler&quot; # || true</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="44">
-          
-          
-          <code class="ruby">  done</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="45">
-          
-          
-          <code class="ruby">}</code>
+          <code class="ruby">    eval &quot;$handler&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="46">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">  done</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="47">
+        <li class="covered" data-hits="328" data-linenumber="47">
+          <span class="hits">328</span>
           
-          
-          <code class="ruby">push_exit_handler() {</code>
+          <code class="ruby">  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || remove_err_handler</code>
         </li>
       
-        <li class="covered" data-hits="220" data-linenumber="48">
-          <span class="hits">220</span>
+        <li class="never" data-hits="" data-linenumber="48">
           
-          <code class="ruby">  EXIT_HANDLERS=(&quot;$1&quot; &quot;${EXIT_HANDLERS[@]}&quot;)</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="49">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="50">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">push_exit_handler() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="51">
+        <li class="covered" data-hits="270" data-linenumber="51">
+          <span class="hits">270</span>
           
-          
-          <code class="ruby">pop_exit_handler() {</code>
+          <code class="ruby">  EXIT_HANDLERS=(&quot;$1&quot; &quot;${EXIT_HANDLERS[@]}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="39" data-linenumber="52">
-          <span class="hits">39</span>
+        <li class="never" data-hits="" data-linenumber="52">
           
-          <code class="ruby">  unset EXIT_HANDLERS[0]</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="53">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="54">
           
           
+          <code class="ruby">pop_exit_handler() {</code>
+        </li>
+      
+        <li class="covered" data-hits="39" data-linenumber="55">
+          <span class="hits">39</span>
+          
+          <code class="ruby">  unset EXIT_HANDLERS[0]</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="56">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="57">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="55">
+        <li class="never" data-hits="" data-linenumber="58">
           
           
           <code class="ruby">err_trap() {</code>
         </li>
       
-        <li class="covered" data-hits="68" data-linenumber="56">
-          <span class="hits">68</span>
+        <li class="covered" data-hits="67" data-linenumber="59">
+          <span class="hits">67</span>
           
           <code class="ruby">  local err=$?</code>
         </li>
       
-        <li class="covered" data-hits="168" data-linenumber="57">
-          <span class="hits">168</span>
+        <li class="covered" data-hits="167" data-linenumber="60">
+          <span class="hits">167</span>
           
           <code class="ruby">  for handler in &quot;${ERR_HANDLERS[@]}&quot;; do</code>
         </li>
       
-        <li class="covered" data-hits="504" data-linenumber="58">
-          <span class="hits">504</span>
+        <li class="covered" data-hits="501" data-linenumber="61">
+          <span class="hits">501</span>
           
           <code class="ruby">    ERRCODE=$err eval &quot;$handler&quot; || true</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="59">
-          
-          
-          <code class="ruby">  done</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="60">
-          
-          
-          <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="61">
-          
-          
-          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="62">
           
           
-          <code class="ruby">push_err_handler() {</code>
+          <code class="ruby">  done</code>
         </li>
       
-        <li class="covered" data-hits="317" data-linenumber="63">
-          <span class="hits">317</span>
+        <li class="never" data-hits="" data-linenumber="63">
           
-          <code class="ruby">  ERR_HANDLERS=(&quot;$1&quot; &quot;${ERR_HANDLERS[@]}&quot;)</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="64">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="65">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">push_err_handler() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="66">
+        <li class="covered" data-hits="317" data-linenumber="66">
+          <span class="hits">317</span>
           
-          
-          <code class="ruby">pop_err_handler() {</code>
+          <code class="ruby">  ERR_HANDLERS=(&quot;$1&quot; &quot;${ERR_HANDLERS[@]}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="41" data-linenumber="67">
-          <span class="hits">41</span>
+        <li class="never" data-hits="" data-linenumber="67">
           
-          <code class="ruby">  unset ERR_HANDLERS[0]</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="68">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="69">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">pop_err_handler() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="70">
+        <li class="covered" data-hits="42" data-linenumber="70">
+          <span class="hits">42</span>
           
-          
-          <code class="ruby">add_err_handler() {</code>
+          <code class="ruby">  unset ERR_HANDLERS[0]</code>
         </li>
       
-        <li class="covered" data-hits="135" data-linenumber="71">
-          <span class="hits">135</span>
+        <li class="never" data-hits="" data-linenumber="71">
           
-          <code class="ruby">  ERR_HANDLERS=(&quot;${ERR_HANDLERS[@]}&quot; &quot;$1&quot;)</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="72">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="73">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">add_err_handler() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="74">
+        <li class="covered" data-hits="149" data-linenumber="74">
+          <span class="hits">149</span>
           
-          
-          <code class="ruby">remove_err_handler() {</code>
+          <code class="ruby">  ERR_HANDLERS=(&quot;${ERR_HANDLERS[@]}&quot; &quot;$1&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="104" data-linenumber="75">
-          <span class="hits">104</span>
+        <li class="never" data-hits="" data-linenumber="75">
           
-          <code class="ruby">  ERR_HANDLERS=(&quot;${ERR_HANDLERS[@]:0:${#ERR_HANDLERS[@]}-1}&quot;)</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="76">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="77">
           
           
+          <code class="ruby">remove_err_handler() {</code>
+        </li>
+      
+        <li class="covered" data-hits="115" data-linenumber="78">
+          <span class="hits">115</span>
+          
+          <code class="ruby">  ERR_HANDLERS=(&quot;${ERR_HANDLERS[@]:0:${#ERR_HANDLERS[@]}-1}&quot;)</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="79">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="80">
+          
+          
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="78">
-          
-          
-          <code class="ruby">display_last_test_result() {</code>
-        </li>
-      
-        <li class="covered" data-hits="48" data-linenumber="79">
-          <span class="hits">48</span>
-          
-          <code class="ruby">  if [[ $ERRCODE == 0 ]]; then</code>
-        </li>
-      
-        <li class="covered" data-hits="23" data-linenumber="80">
-          <span class="hits">23</span>
-          
-          <code class="ruby">    display_test_passed</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="81">
           
           
-          <code class="ruby">  else</code>
+          <code class="ruby">display_last_test_result() {</code>
         </li>
       
-        <li class="covered" data-hits="25" data-linenumber="82">
-          <span class="hits">25</span>
+        <li class="covered" data-hits="48" data-linenumber="82">
+          <span class="hits">48</span>
           
-          <code class="ruby">    display_test_failed</code>
+          <code class="ruby">  if [[ $ERRCODE == 0 ]]; then</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="83">
+        <li class="covered" data-hits="23" data-linenumber="83">
+          <span class="hits">23</span>
           
-          
-          <code class="ruby">  fi</code>
+          <code class="ruby">    display_test_passed</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="84">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby">  else</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="85">
+        <li class="covered" data-hits="25" data-linenumber="85">
+          <span class="hits">25</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">    display_test_failed</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="86">
           
           
+          <code class="ruby">  fi</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="87">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="88">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="89">
+          
+          
           <code class="ruby">start_test() {</code>
         </li>
       
-        <li class="covered" data-hits="141" data-linenumber="87">
+        <li class="covered" data-hits="141" data-linenumber="90">
           <span class="hits">141</span>
           
           <code class="ruby">  [[ -v MANAGED || ! -v FIRST_TEST ]] || call_if_exists setup_test_suite</code>
         </li>
       
-        <li class="covered" data-hits="157" data-linenumber="88">
-          <span class="hits">157</span>
+        <li class="covered" data-hits="194" data-linenumber="91">
+          <span class="hits">194</span>
           
-          <code class="ruby">  [[ -v MANAGED || -v FIRST_TEST ]] || call_teardown teardown_test</code>
+          <code class="ruby">  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown teardown_test; }</code>
         </li>
       
-        <li class="covered" data-hits="118" data-linenumber="89">
-          <span class="hits">118</span>
+        <li class="covered" data-hits="175" data-linenumber="92">
+          <span class="hits">175</span>
           
-          <code class="ruby">  [[ -v MANAGED ]] || call_if_exists setup_test</code>
+          <code class="ruby">  [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }</code>
         </li>
       
-        <li class="covered" data-hits="98" data-linenumber="90">
+        <li class="covered" data-hits="98" data-linenumber="93">
           <span class="hits">98</span>
           
           <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || display_test_passed</code>
         </li>
       
-        <li class="covered" data-hits="61" data-linenumber="91">
+        <li class="covered" data-hits="61" data-linenumber="94">
           <span class="hits">61</span>
           
           <code class="ruby">  CURRENT_TEST_NAME=&quot;$1&quot;</code>
         </li>
       
-        <li class="covered" data-hits="122" data-linenumber="92">
+        <li class="covered" data-hits="122" data-linenumber="95">
           <span class="hits">122</span>
           
           <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || log &quot;Start test: $CURRENT_TEST_NAME&quot;</code>
         </li>
       
-        <li class="covered" data-hits="61" data-linenumber="93">
+        <li class="covered" data-hits="61" data-linenumber="96">
           <span class="hits">61</span>
           
           <code class="ruby">  unset FIRST_TEST</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="94">
+        <li class="never" data-hits="" data-linenumber="97">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="95">
+        <li class="never" data-hits="" data-linenumber="98">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="96">
-          
-          
-          <code class="ruby">display_test_passed() {</code>
-        </li>
-      
-        <li class="covered" data-hits="130" data-linenumber="97">
-          <span class="hits">130</span>
-          
-          <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || echo -e &quot;${GREEN}* ${CURRENT_TEST_NAME}${NC}&quot; &gt;&amp;3</code>
-        </li>
-      
-        <li class="covered" data-hits="77" data-linenumber="98">
-          <span class="hits">77</span>
-          
-          <code class="ruby">  unset CURRENT_TEST_NAME</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="99">
           
           
+          <code class="ruby">display_test_passed() {</code>
+        </li>
+      
+        <li class="covered" data-hits="130" data-linenumber="100">
+          <span class="hits">130</span>
+          
+          <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || echo -e &quot;${GREEN}* ${CURRENT_TEST_NAME}${NC}&quot; &gt;&amp;3</code>
+        </li>
+      
+        <li class="covered" data-hits="77" data-linenumber="101">
+          <span class="hits">77</span>
+          
+          <code class="ruby">  unset CURRENT_TEST_NAME</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="102">
+          
+          
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="100">
+        <li class="never" data-hits="" data-linenumber="103">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="101">
-          
-          
-          <code class="ruby">display_test_failed() {</code>
-        </li>
-      
-        <li class="covered" data-hits="56" data-linenumber="102">
-          <span class="hits">56</span>
-          
-          <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || echo -e &quot;${RED}* ${CURRENT_TEST_NAME}${NC}&quot; &gt;&amp;3</code>
-        </li>
-      
-        <li class="covered" data-hits="48" data-linenumber="103">
-          <span class="hits">48</span>
-          
-          <code class="ruby">  unset CURRENT_TEST_NAME</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="104">
           
           
+          <code class="ruby">display_test_failed() {</code>
+        </li>
+      
+        <li class="covered" data-hits="56" data-linenumber="105">
+          <span class="hits">56</span>
+          
+          <code class="ruby">  [ -z &quot;$CURRENT_TEST_NAME&quot; ] || echo -e &quot;${RED}* ${CURRENT_TEST_NAME}${NC}&quot; &gt;&amp;3</code>
+        </li>
+      
+        <li class="covered" data-hits="48" data-linenumber="106">
+          <span class="hits">48</span>
+          
+          <code class="ruby">  unset CURRENT_TEST_NAME</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="107">
+          
+          
           <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="105">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="106">
-          
-          
-          <code class="ruby">display_test_skipped() {</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="107">
-          <span class="hits">1</span>
-          
-          <code class="ruby">  echo -e &quot;${BLUE}* [skipped] $1${NC}&quot; &gt;&amp;3</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="108">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="109">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">display_test_skipped() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="110">
+        <li class="covered" data-hits="1" data-linenumber="110">
+          <span class="hits">1</span>
           
-          
-          <code class="ruby">warn_teardown_failed() {</code>
+          <code class="ruby">  echo -e &quot;${BLUE}* [skipped] $1${NC}&quot; &gt;&amp;3</code>
         </li>
       
-        <li class="covered" data-hits="29" data-linenumber="111">
-          <span class="hits">29</span>
+        <li class="never" data-hits="" data-linenumber="111">
           
-          <code class="ruby">  echo -e &quot;${ORANGE}WARN: teardown_test$1 failed${NC}&quot; &gt;&amp;3</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="112">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="113">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">warn_teardown_failed() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="114">
+        <li class="covered" data-hits="27" data-linenumber="114">
+          <span class="hits">27</span>
           
-          
-          <code class="ruby">do_log() {</code>
+          <code class="ruby">  echo -e &quot;${ORANGE}WARN: teardown_test$1 failed${NC}&quot; &gt;&amp;3</code>
         </li>
       
-        <li class="covered" data-hits="203" data-linenumber="115">
-          <span class="hits">203</span>
+        <li class="never" data-hits="" data-linenumber="115">
           
-          <code class="ruby">  echo -e &quot;$*&quot;</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="116">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="117">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">do_log() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="118">
+        <li class="covered" data-hits="202" data-linenumber="118">
+          <span class="hits">202</span>
           
-          
-          <code class="ruby">log() {</code>
+          <code class="ruby">  echo -e &quot;$*&quot;</code>
         </li>
       
-        <li class="covered" data-hits="72" data-linenumber="119">
-          <span class="hits">72</span>
+        <li class="never" data-hits="" data-linenumber="119">
           
-          <code class="ruby">  do_log &quot;${BLUE}[test.sh]${NC} $*&quot;</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="120">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="121">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">log() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="122">
+        <li class="covered" data-hits="72" data-linenumber="122">
+          <span class="hits">72</span>
           
-          
-          <code class="ruby">log_ok() {</code>
+          <code class="ruby">  do_log &quot;${BLUE}[test.sh]${NC} $*&quot;</code>
         </li>
       
-        <li class="missed" data-hits="0" data-linenumber="123">
+        <li class="never" data-hits="" data-linenumber="123">
           
           
-          <code class="ruby">  do_log &quot;${GREEN}[test.sh]${NC} $*&quot;</code>
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="124">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="125">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">log_ok() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="126">
+        <li class="missed" data-hits="0" data-linenumber="126">
           
           
-          <code class="ruby">log_warn() {</code>
+          <code class="ruby">  do_log &quot;${GREEN}[test.sh]${NC} $*&quot;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="127">
-          <span class="hits">1</span>
+        <li class="never" data-hits="" data-linenumber="127">
           
-          <code class="ruby">  do_log &quot;${ORANGE}[test.sh]${NC} $*&quot;</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="128">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="129">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">log_warn() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="130">
+        <li class="covered" data-hits="1" data-linenumber="130">
+          <span class="hits">1</span>
           
-          
-          <code class="ruby">log_err() {</code>
+          <code class="ruby">  do_log &quot;${ORANGE}[test.sh]${NC} $*&quot;</code>
         </li>
       
-        <li class="covered" data-hits="130" data-linenumber="131">
-          <span class="hits">130</span>
+        <li class="never" data-hits="" data-linenumber="131">
           
-          <code class="ruby">  do_log &quot;${RED}[test.sh]${NC} $*&quot; &gt;&amp;2</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="132">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="133">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">log_err() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="134">
+        <li class="covered" data-hits="129" data-linenumber="134">
+          <span class="hits">129</span>
           
-          
-          <code class="ruby">call_if_exists() {</code>
+          <code class="ruby">  do_log &quot;${RED}[test.sh]${NC} $*&quot; &gt;&amp;2</code>
         </li>
       
-        <li class="covered" data-hits="378" data-linenumber="135">
-          <span class="hits">378</span>
+        <li class="never" data-hits="" data-linenumber="135">
           
-          <code class="ruby">  ! declare -f $1 &gt;/dev/null || $1</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="136">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="137">
           
           
+          <code class="ruby">call_if_exists() {</code>
+        </li>
+      
+        <li class="covered" data-hits="378" data-linenumber="138">
+          <span class="hits">378</span>
+          
+          <code class="ruby">  ! declare -f $1 &gt;/dev/null || $1</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="139">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="140">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="138">
+        <li class="never" data-hits="" data-linenumber="141">
           
           
           <code class="ruby">call_teardown_subshell() {</code>
         </li>
       
-        <li class="covered" data-hits="116" data-linenumber="139">
+        <li class="covered" data-hits="116" data-linenumber="142">
           <span class="hits">116</span>
           
           <code class="ruby">  add_err_handler &quot;print_stack_trace&quot;</code>
         </li>
       
-        <li class="covered" data-hits="116" data-linenumber="140">
+        <li class="covered" data-hits="116" data-linenumber="143">
           <span class="hits">116</span>
           
           <code class="ruby">  call_if_exists $1</code>
         </li>
       
-        <li class="covered" data-hits="99" data-linenumber="141">
+        <li class="covered" data-hits="99" data-linenumber="144">
           <span class="hits">99</span>
           
           <code class="ruby">  remove_err_handler</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="142">
+        <li class="never" data-hits="" data-linenumber="145">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="143">
+        <li class="never" data-hits="" data-linenumber="146">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="144">
-          
-          
-          <code class="ruby">call_teardown() {</code>
-        </li>
-      
-        <li class="covered" data-hits="147" data-linenumber="145">
-          <span class="hits">147</span>
-          
-          <code class="ruby">  if [[ $SUBSHELL != &#39;never&#39; ]]; then</code>
-        </li>
-      
-        <li class="covered" data-hits="138" data-linenumber="146">
-          <span class="hits">138</span>
-          
-          <code class="ruby">    subshell &quot;call_teardown_subshell $1&quot; || warn_teardown_failed $2</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="147">
           
           
+          <code class="ruby">call_teardown() {</code>
+        </li>
+      
+        <li class="covered" data-hits="147" data-linenumber="148">
+          <span class="hits">147</span>
+          
+          <code class="ruby">  if [[ $SUBSHELL != &#39;never&#39; ]]; then</code>
+        </li>
+      
+        <li class="covered" data-hits="138" data-linenumber="149">
+          <span class="hits">138</span>
+          
+          <code class="ruby">    subshell &quot;call_teardown_subshell $1&quot; || warn_teardown_failed $2</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="150">
+          
+          
           <code class="ruby">  else</code>
         </li>
       
-        <li class="covered" data-hits="28" data-linenumber="148">
+        <li class="covered" data-hits="28" data-linenumber="151">
           <span class="hits">28</span>
           
           <code class="ruby">    push_err_handler &quot;warn_teardown_failed $2&quot;</code>
         </li>
       
-        <li class="covered" data-hits="28" data-linenumber="149">
+        <li class="covered" data-hits="28" data-linenumber="152">
           <span class="hits">28</span>
           
           <code class="ruby">    call_if_exists $1</code>
         </li>
       
-        <li class="covered" data-hits="19" data-linenumber="150">
-          <span class="hits">19</span>
+        <li class="covered" data-hits="20" data-linenumber="153">
+          <span class="hits">20</span>
           
           <code class="ruby">    pop_err_handler</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="151">
-          
-          
-          <code class="ruby">  fi</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="152">
-          
-          
-          <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="153">
-          
-          
-          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="154">
           
           
+          <code class="ruby">  fi</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="155">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="156">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="157">
+          
+          
           <code class="ruby">run_test() {</code>
-        </li>
-      
-        <li class="covered" data-hits="38" data-linenumber="155">
-          <span class="hits">38</span>
-          
-          <code class="ruby">  teardown_test_called=</code>
-        </li>
-      
-        <li class="covered" data-hits="38" data-linenumber="156">
-          <span class="hits">38</span>
-          
-          <code class="ruby">  local test_func=$1</code>
-        </li>
-      
-        <li class="covered" data-hits="57" data-linenumber="157">
-          <span class="hits">57</span>
-          
-          <code class="ruby">  [[ ! -v SUBSHELL_CMD ]] || add_err_handler &quot;print_stack_trace&quot;</code>
         </li>
       
         <li class="covered" data-hits="38" data-linenumber="158">
           <span class="hits">38</span>
           
+          <code class="ruby">  teardown_test_called=</code>
+        </li>
+      
+        <li class="covered" data-hits="38" data-linenumber="159">
+          <span class="hits">38</span>
+          
+          <code class="ruby">  local test_func=$1</code>
+        </li>
+      
+        <li class="covered" data-hits="57" data-linenumber="160">
+          <span class="hits">57</span>
+          
+          <code class="ruby">  [[ ! -v SUBSHELL_CMD ]] || add_err_handler &quot;print_stack_trace&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="38" data-linenumber="161">
+          <span class="hits">38</span>
+          
           <code class="ruby">  call_if_exists setup_test</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="159">
+        <li class="never" data-hits="" data-linenumber="162">
           
           
           <code class="ruby">  run_test_teardown_trap() {</code>
         </li>
       
-        <li class="covered" data-hits="42" data-linenumber="160">
+        <li class="covered" data-hits="42" data-linenumber="163">
           <span class="hits">42</span>
           
           <code class="ruby">    [[ $teardown_test_called ]] || call_teardown teardown_test</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="161">
+        <li class="never" data-hits="" data-linenumber="164">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="covered" data-hits="38" data-linenumber="162">
+        <li class="covered" data-hits="38" data-linenumber="165">
           <span class="hits">38</span>
           
           <code class="ruby">  push_exit_handler run_test_teardown_trap</code>
         </li>
       
-        <li class="covered" data-hits="38" data-linenumber="163">
+        <li class="covered" data-hits="38" data-linenumber="166">
           <span class="hits">38</span>
           
           <code class="ruby">  push_err_handler display_test_failed</code>
         </li>
       
-        <li class="covered" data-hits="38" data-linenumber="164">
+        <li class="covered" data-hits="38" data-linenumber="167">
           <span class="hits">38</span>
           
           <code class="ruby">  $test_func</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="165">
+        <li class="covered" data-hits="17" data-linenumber="168">
           <span class="hits">17</span>
           
           <code class="ruby">  display_test_passed</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="166">
+        <li class="covered" data-hits="17" data-linenumber="169">
           <span class="hits">17</span>
           
           <code class="ruby">  pop_err_handler</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="167">
+        <li class="covered" data-hits="17" data-linenumber="170">
           <span class="hits">17</span>
           
           <code class="ruby">  pop_exit_handler</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="168">
+        <li class="covered" data-hits="17" data-linenumber="171">
           <span class="hits">17</span>
           
           <code class="ruby">  teardown_test_called=1</code>
         </li>
       
-        <li class="covered" data-hits="17" data-linenumber="169">
+        <li class="covered" data-hits="17" data-linenumber="172">
           <span class="hits">17</span>
           
           <code class="ruby">  call_teardown teardown_test</code>
         </li>
       
-        <li class="covered" data-hits="20" data-linenumber="170">
+        <li class="covered" data-hits="20" data-linenumber="173">
           <span class="hits">20</span>
           
           <code class="ruby">  [[ ! -v SUBSHELL_CMD ]] || remove_err_handler</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="171">
+        <li class="never" data-hits="" data-linenumber="174">
           
           
           <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="172">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="173">
-          
-          
-          <code class="ruby">run_tests() {</code>
-        </li>
-      
-        <li class="covered" data-hits="35" data-linenumber="174">
-          <span class="hits">35</span>
-          
-          <code class="ruby">  MANAGED=</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="175">
           
           
-          <code class="ruby">  discover_tests() {</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="176">
           
           
-          <code class="ruby">    # TODO: use a configurable test matching pattern</code>
+          <code class="ruby">run_tests() {</code>
         </li>
       
-        <li class="covered" data-hits="96" data-linenumber="177">
-          <span class="hits">96</span>
+        <li class="covered" data-hits="35" data-linenumber="177">
+          <span class="hits">35</span>
           
-          <code class="ruby">    declare -F | cut -d \  -f 3 | grep ^test_ || true</code>
+          <code class="ruby">  MANAGED=</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="178">
           
           
-          <code class="ruby">  }</code>
+          <code class="ruby">  discover_tests() {</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="179">
           
           
+          <code class="ruby">    # TODO: use a configurable test matching pattern</code>
+        </li>
+      
+        <li class="covered" data-hits="96" data-linenumber="180">
+          <span class="hits">96</span>
+          
+          <code class="ruby">    declare -F | cut -d \  -f 3 | grep ^test_ || true</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="181">
+          
+          
+          <code class="ruby">  }</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="182">
+          
+          
           <code class="ruby"></code>
-        </li>
-      
-        <li class="covered" data-hits="35" data-linenumber="180">
-          <span class="hits">35</span>
-          
-          <code class="ruby">  teardown_test_suite_called=</code>
-        </li>
-      
-        <li class="covered" data-hits="163" data-linenumber="181">
-          <span class="hits">163</span>
-          
-          <code class="ruby">  [ $# -gt 0 ] || { local discovered=&quot;$(discover_tests)&quot;; [ -z &quot;$discovered&quot; ] || set $discovered; }</code>
-        </li>
-      
-        <li class="covered" data-hits="35" data-linenumber="182">
-          <span class="hits">35</span>
-          
-          <code class="ruby">  local failures=0</code>
         </li>
       
         <li class="covered" data-hits="35" data-linenumber="183">
           <span class="hits">35</span>
           
+          <code class="ruby">  teardown_test_suite_called=</code>
+        </li>
+      
+        <li class="covered" data-hits="163" data-linenumber="184">
+          <span class="hits">163</span>
+          
+          <code class="ruby">  [ $# -gt 0 ] || { local discovered=&quot;$(discover_tests)&quot;; [ -z &quot;$discovered&quot; ] || set $discovered; }</code>
+        </li>
+      
+        <li class="covered" data-hits="35" data-linenumber="185">
+          <span class="hits">35</span>
+          
+          <code class="ruby">  local failures=0</code>
+        </li>
+      
+        <li class="covered" data-hits="35" data-linenumber="186">
+          <span class="hits">35</span>
+          
           <code class="ruby">  call_if_exists setup_test_suite</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="184">
+        <li class="covered" data-hits="12" data-linenumber="187">
           <span class="hits">12</span>
           
           <code class="ruby">  run_tests_exit_trap() {</code>
         </li>
       
-        <li class="covered" data-hits="30" data-linenumber="185">
+        <li class="covered" data-hits="30" data-linenumber="188">
           <span class="hits">30</span>
           
           <code class="ruby">    [[ $teardown_test_suite_called ]] || call_teardown teardown_test_suite _suite</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="186">
+        <li class="never" data-hits="" data-linenumber="189">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="covered" data-hits="35" data-linenumber="187">
+        <li class="covered" data-hits="35" data-linenumber="190">
           <span class="hits">35</span>
           
           <code class="ruby">  push_exit_handler run_tests_exit_trap</code>
         </li>
       
-        <li class="covered" data-hits="56" data-linenumber="188">
+        <li class="covered" data-hits="56" data-linenumber="191">
           <span class="hits">56</span>
           
           <code class="ruby">  while [ $# -gt 0 ]; do</code>
         </li>
       
-        <li class="covered" data-hits="39" data-linenumber="189">
+        <li class="covered" data-hits="39" data-linenumber="192">
           <span class="hits">39</span>
           
           <code class="ruby">    local test_func=$1</code>
         </li>
       
-        <li class="covered" data-hits="39" data-linenumber="190">
+        <li class="covered" data-hits="39" data-linenumber="193">
           <span class="hits">39</span>
           
           <code class="ruby">    shift</code>
         </li>
       
-        <li class="covered" data-hits="39" data-linenumber="191">
+        <li class="covered" data-hits="39" data-linenumber="194">
           <span class="hits">39</span>
           
           <code class="ruby">    local failed=0</code>
         </li>
       
-        <li class="covered" data-hits="39" data-linenumber="192">
+        <li class="covered" data-hits="39" data-linenumber="195">
           <span class="hits">39</span>
           
           <code class="ruby">    if [[ $SUBSHELL == always ]]; then</code>
         </li>
       
-        <li class="covered" data-hits="29" data-linenumber="193">
+        <li class="covered" data-hits="29" data-linenumber="196">
           <span class="hits">29</span>
           
           <code class="ruby">      subshell &quot;run_test $test_func&quot; || failed=1</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="194">
+        <li class="never" data-hits="" data-linenumber="197">
           
           
           <code class="ruby">    else</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="195">
+        <li class="covered" data-hits="22" data-linenumber="198">
           <span class="hits">22</span>
           
           <code class="ruby">      run_test $test_func</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="196">
+        <li class="never" data-hits="" data-linenumber="199">
           
           
           <code class="ruby">    fi</code>
         </li>
       
-        <li class="covered" data-hits="28" data-linenumber="197">
+        <li class="covered" data-hits="28" data-linenumber="200">
           <span class="hits">28</span>
           
           <code class="ruby">    if [ $failed -ne 0 ]; then</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="198">
+        <li class="covered" data-hits="12" data-linenumber="201">
           <span class="hits">12</span>
           
           <code class="ruby">      log_err &quot;${test_func} FAILED&quot;</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="199">
+        <li class="covered" data-hits="12" data-linenumber="202">
           <span class="hits">12</span>
           
           <code class="ruby">      failures=$(( $failures + 1 ))</code>
         </li>
       
-        <li class="covered" data-hits="12" data-linenumber="200">
+        <li class="covered" data-hits="12" data-linenumber="203">
           <span class="hits">12</span>
           
           <code class="ruby">      if [[ $FAIL_FAST ]]; then</code>
         </li>
       
-        <li class="covered" data-hits="8" data-linenumber="201">
+        <li class="covered" data-hits="8" data-linenumber="204">
           <span class="hits">8</span>
           
           <code class="ruby">        while [ $# -gt 0 ]; do</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="202">
+        <li class="covered" data-hits="1" data-linenumber="205">
           <span class="hits">1</span>
           
           <code class="ruby">          display_test_skipped $1</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="203">
+        <li class="covered" data-hits="1" data-linenumber="206">
           <span class="hits">1</span>
           
           <code class="ruby">          shift</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="204">
+        <li class="never" data-hits="" data-linenumber="207">
           
           
           <code class="ruby">        done</code>
         </li>
       
-        <li class="covered" data-hits="7" data-linenumber="205">
+        <li class="covered" data-hits="7" data-linenumber="208">
           <span class="hits">7</span>
           
           <code class="ruby">        break</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="206">
+        <li class="never" data-hits="" data-linenumber="209">
           
           
           <code class="ruby">      fi</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="207">
+        <li class="never" data-hits="" data-linenumber="210">
           
           
           <code class="ruby">    fi</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="208">
+        <li class="never" data-hits="" data-linenumber="211">
           
           
           <code class="ruby">  done</code>
         </li>
       
-        <li class="covered" data-hits="24" data-linenumber="209">
+        <li class="covered" data-hits="24" data-linenumber="212">
           <span class="hits">24</span>
           
           <code class="ruby">  teardown_test_suite_called=1</code>
         </li>
       
-        <li class="covered" data-hits="24" data-linenumber="210">
+        <li class="covered" data-hits="24" data-linenumber="213">
           <span class="hits">24</span>
           
           <code class="ruby">  call_teardown teardown_test_suite _suite</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="211">
+        <li class="covered" data-hits="22" data-linenumber="214">
           <span class="hits">22</span>
           
           <code class="ruby">  pop_exit_handler</code>
         </li>
       
-        <li class="covered" data-hits="22" data-linenumber="212">
+        <li class="covered" data-hits="22" data-linenumber="215">
           <span class="hits">22</span>
           
           <code class="ruby">  [[ $failures == 0 ]]</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="213">
+        <li class="never" data-hits="" data-linenumber="216">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="214">
+        <li class="never" data-hits="" data-linenumber="217">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="215">
+        <li class="never" data-hits="" data-linenumber="218">
           
           
           <code class="ruby">load_includes() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="216">
+        <li class="never" data-hits="" data-linenumber="219">
           
           
           <code class="ruby">  load_include_file() {</code>
         </li>
       
-        <li class="covered" data-hits="18" data-linenumber="217">
+        <li class="covered" data-hits="18" data-linenumber="220">
           <span class="hits">18</span>
           
           <code class="ruby">    local include_file=$1</code>
         </li>
       
-        <li class="covered" data-hits="18" data-linenumber="218">
+        <li class="covered" data-hits="18" data-linenumber="221">
           <span class="hits">18</span>
           
           <code class="ruby">    source &quot;$include_file&quot;</code>
         </li>
       
-        <li class="covered" data-hits="24" data-linenumber="219">
+        <li class="covered" data-hits="24" data-linenumber="222">
           <span class="hits">24</span>
           
           <code class="ruby">    [[ -v SUBSHELL_CMD ]] || log &quot;Included: $include_file&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="220">
+        <li class="never" data-hits="" data-linenumber="223">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="221">
+        <li class="never" data-hits="" data-linenumber="224">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="193" data-linenumber="222">
+        <li class="covered" data-hits="193" data-linenumber="225">
           <span class="hits">193</span>
           
           <code class="ruby">  local saved_IFS=$IFS</code>
         </li>
       
-        <li class="covered" data-hits="193" data-linenumber="223">
+        <li class="covered" data-hits="193" data-linenumber="226">
           <span class="hits">193</span>
           
           <code class="ruby">  IFS=&quot;:&quot;</code>
         </li>
       
-        <li class="covered" data-hits="378" data-linenumber="224">
+        <li class="covered" data-hits="378" data-linenumber="227">
           <span class="hits">378</span>
           
           <code class="ruby">  for path in $INCLUDE_PATH; do</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="225">
+        <li class="never" data-hits="" data-linenumber="228">
           
           
           <code class="ruby">    # shellcheck disable=SC2066</code>
         </li>
       
-        <li class="covered" data-hits="378" data-linenumber="226">
+        <li class="covered" data-hits="378" data-linenumber="229">
           <span class="hits">378</span>
           
           <code class="ruby">    for include in &quot;$path&quot;; do</code>
         </li>
       
-        <li class="covered" data-hits="396" data-linenumber="227">
+        <li class="covered" data-hits="396" data-linenumber="230">
           <span class="hits">396</span>
           
           <code class="ruby">      [ ! -f &quot;$include&quot; ] || load_include_file &quot;$include&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="228">
+        <li class="never" data-hits="" data-linenumber="231">
           
           
           <code class="ruby">    done</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="229">
+        <li class="never" data-hits="" data-linenumber="232">
           
           
           <code class="ruby">  done</code>
         </li>
       
-        <li class="covered" data-hits="193" data-linenumber="230">
+        <li class="covered" data-hits="193" data-linenumber="233">
           <span class="hits">193</span>
           
           <code class="ruby">  IFS=$saved_IFS</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="231">
+        <li class="never" data-hits="" data-linenumber="234">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="232">
+        <li class="never" data-hits="" data-linenumber="235">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="233">
+        <li class="never" data-hits="" data-linenumber="236">
           
           
           <code class="ruby">subshell() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="234">
+        <li class="never" data-hits="" data-linenumber="237">
           
           
           <code class="ruby">  call_stack() {</code>
         </li>
       
-        <li class="covered" data-hits="145" data-linenumber="235">
+        <li class="covered" data-hits="145" data-linenumber="238">
           <span class="hits">145</span>
           
           <code class="ruby">    local_stack 1</code>
         </li>
       
-        <li class="covered" data-hits="145" data-linenumber="236">
+        <li class="covered" data-hits="145" data-linenumber="239">
           <span class="hits">145</span>
           
           <code class="ruby">    FOREIGN_STACK=(&quot;${LOCAL_STACK[@]}&quot; &quot;${FOREIGN_STACK[@]}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="145" data-linenumber="237">
+        <li class="covered" data-hits="145" data-linenumber="240">
           <span class="hits">145</span>
           
           <code class="ruby">    declare -p FOREIGN_STACK</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="238">
+        <li class="never" data-hits="" data-linenumber="241">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="covered" data-hits="145" data-linenumber="239">
+        <li class="covered" data-hits="145" data-linenumber="242">
           <span class="hits">145</span>
           
           <code class="ruby">  rm -f $STACK_FILE</code>
         </li>
       
-        <li class="covered" data-hits="145" data-linenumber="240">
+        <li class="covered" data-hits="145" data-linenumber="243">
           <span class="hits">145</span>
           
           <code class="ruby">  if [[ $REENTER ]]; then</code>
         </li>
       
-        <li class="covered" data-hits="430" data-linenumber="241">
+        <li class="covered" data-hits="430" data-linenumber="244">
           <span class="hits">430</span>
           
           <code class="ruby">    BASH_ENV=&lt;(call_stack) /bin/bash --norc -c &quot;SUBSHELL_CMD=\&quot;$1\&quot; source \&quot;$TEST_SCRIPT\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="242">
+        <li class="never" data-hits="" data-linenumber="245">
           
           
           <code class="ruby">  else</code>
         </li>
       
-        <li class="covered" data-hits="6" data-linenumber="243">
+        <li class="covered" data-hits="6" data-linenumber="246">
           <span class="hits">6</span>
           
           <code class="ruby">    BASH_ENV=&lt;(call_stack) bash --norc -c &quot;trap save_stack ERR ; $1&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="244">
+        <li class="never" data-hits="" data-linenumber="247">
           
           
           <code class="ruby">  fi</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="245">
+        <li class="never" data-hits="" data-linenumber="248">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="246">
+        <li class="never" data-hits="" data-linenumber="249">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="247">
-          
-          
-          <code class="ruby">save_stack() {</code>
-        </li>
-      
-        <li class="covered" data-hits="68" data-linenumber="248">
-          <span class="hits">68</span>
-          
-          <code class="ruby">  if [ ! -f $STACK_FILE ]; then</code>
-        </li>
-      
-        <li class="covered" data-hits="67" data-linenumber="249">
-          <span class="hits">67</span>
-          
-          <code class="ruby">    current_stack &gt;$STACK_FILE</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="250">
           
           
-          <code class="ruby">  fi</code>
+          <code class="ruby">save_stack() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="251">
+        <li class="covered" data-hits="67" data-linenumber="251">
+          <span class="hits">67</span>
           
-          
-          <code class="ruby">}</code>
+          <code class="ruby">  if [ ! -f $STACK_FILE ]; then</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="252">
+        <li class="covered" data-hits="66" data-linenumber="252">
+          <span class="hits">66</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">    current_stack &gt;$STACK_FILE</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="253">
           
           
+          <code class="ruby">  fi</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="254">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="255">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="256">
+          
+          
           <code class="ruby">current_stack() {</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="254">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="66" data-linenumber="257">
+          <span class="hits">66</span>
           
           <code class="ruby">  local err=$ERRCODE</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="255">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="66" data-linenumber="258">
+          <span class="hits">66</span>
           
           <code class="ruby">  local frame_idx=3</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="256">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="66" data-linenumber="259">
+          <span class="hits">66</span>
           
           <code class="ruby">  ERRCMD=$BASH_COMMAND</code>
         </li>
       
-        <li class="covered" data-hits="134" data-linenumber="257">
-          <span class="hits">134</span>
+        <li class="covered" data-hits="132" data-linenumber="260">
+          <span class="hits">132</span>
           
           <code class="ruby">  local err_string=&quot;Error in ${FUNCNAME[$frame_idx]}($(prune_path &quot;${BASH_SOURCE[$frame_idx]}&quot;):${BASH_LINENO[$frame_idx-1]}): &#39;${ERRCMD}&#39; exited with status $err&quot;</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="258">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="66" data-linenumber="261">
+          <span class="hits">66</span>
           
           <code class="ruby">  ((frame_idx++))</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="259">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="66" data-linenumber="262">
+          <span class="hits">66</span>
           
           <code class="ruby">  local_stack $frame_idx</code>
         </li>
       
-        <li class="covered" data-hits="194" data-linenumber="260">
-          <span class="hits">194</span>
+        <li class="covered" data-hits="192" data-linenumber="263">
+          <span class="hits">192</span>
           
           <code class="ruby">  for ((i=${#FOREIGN_STACK[@]}-1; i&gt;=0; i--)); do</code>
         </li>
       
-        <li class="covered" data-hits="30" data-linenumber="261">
+        <li class="covered" data-hits="30" data-linenumber="264">
           <span class="hits">30</span>
           
           <code class="ruby">    echo &quot;${FOREIGN_STACK[i]}&quot;</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="262">
-          
-          
-          <code class="ruby">  done</code>
-        </li>
-      
-        <li class="covered" data-hits="188" data-linenumber="263">
-          <span class="hits">188</span>
-          
-          <code class="ruby">  for ((i=${#LOCAL_STACK[@]}-1; i&gt;=0; i--)); do</code>
-        </li>
-      
-        <li class="covered" data-hits="27" data-linenumber="264">
-          <span class="hits">27</span>
-          
-          <code class="ruby">    echo &quot;${LOCAL_STACK[i]}&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="265">
@@ -1923,1090 +1924,1090 @@ layout: default
           <code class="ruby">  done</code>
         </li>
       
-        <li class="covered" data-hits="67" data-linenumber="266">
-          <span class="hits">67</span>
+        <li class="covered" data-hits="186" data-linenumber="266">
+          <span class="hits">186</span>
           
-          <code class="ruby">  echo &quot;$err_string&quot;</code>
+          <code class="ruby">  for ((i=${#LOCAL_STACK[@]}-1; i&gt;=0; i--)); do</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="267">
+        <li class="covered" data-hits="27" data-linenumber="267">
+          <span class="hits">27</span>
           
-          
-          <code class="ruby">}</code>
+          <code class="ruby">    echo &quot;${LOCAL_STACK[i]}&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="268">
           
           
+          <code class="ruby">  done</code>
+        </li>
+      
+        <li class="covered" data-hits="66" data-linenumber="269">
+          <span class="hits">66</span>
+          
+          <code class="ruby">  echo &quot;$err_string&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="270">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="271">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="269">
+        <li class="never" data-hits="" data-linenumber="272">
           
           
           <code class="ruby">prune_path() {</code>
         </li>
       
-        <li class="covered" data-hits="207" data-linenumber="270">
-          <span class="hits">207</span>
+        <li class="covered" data-hits="206" data-linenumber="273">
+          <span class="hits">206</span>
           
           <code class="ruby">  [[ -v PRUNE_PATH ]] || eval &quot;PRUNE_PATH=$default_PRUNE_PATH&quot;</code>
         </li>
       
-        <li class="covered" data-hits="414" data-linenumber="271">
-          <span class="hits">414</span>
+        <li class="covered" data-hits="412" data-linenumber="274">
+          <span class="hits">412</span>
           
           <code class="ruby">  local path=$(realpath &quot;$1&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="207" data-linenumber="272">
-          <span class="hits">207</span>
+        <li class="covered" data-hits="206" data-linenumber="275">
+          <span class="hits">206</span>
           
           <code class="ruby">  echo ${path##$PRUNE_PATH}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="273">
+        <li class="never" data-hits="" data-linenumber="276">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="274">
+        <li class="never" data-hits="" data-linenumber="277">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="275">
-          
-          
-          <code class="ruby">local_stack() {</code>
-        </li>
-      
-        <li class="covered" data-hits="212" data-linenumber="276">
-          <span class="hits">212</span>
-          
-          <code class="ruby">  LOCAL_STACK=()</code>
-        </li>
-      
-        <li class="covered" data-hits="1306" data-linenumber="277">
-          <span class="hits">1306</span>
-          
-          <code class="ruby">  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i&lt;${#FUNCNAME[@]}-1; i++))</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="278">
           
           
+          <code class="ruby">local_stack() {</code>
+        </li>
+      
+        <li class="covered" data-hits="211" data-linenumber="279">
+          <span class="hits">211</span>
+          
+          <code class="ruby">  LOCAL_STACK=()</code>
+        </li>
+      
+        <li class="covered" data-hits="1305" data-linenumber="280">
+          <span class="hits">1305</span>
+          
+          <code class="ruby">  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i&lt;${#FUNCNAME[@]}-1; i++))</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="281">
+          
+          
           <code class="ruby">  do</code>
         </li>
       
-        <li class="covered" data-hits="888" data-linenumber="279">
+        <li class="covered" data-hits="888" data-linenumber="282">
           <span class="hits">888</span>
           
           <code class="ruby">    local source_basename=$(basename &quot;${BASH_SOURCE[$i+1]}&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="525" data-linenumber="280">
+        <li class="covered" data-hits="525" data-linenumber="283">
           <span class="hits">525</span>
           
           <code class="ruby">    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break</code>
         </li>
       
-        <li class="covered" data-hits="1026" data-linenumber="281">
+        <li class="covered" data-hits="1026" data-linenumber="284">
           <span class="hits">1026</span>
           
           <code class="ruby">    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue</code>
         </li>
       
-        <li class="covered" data-hits="420" data-linenumber="282">
+        <li class="covered" data-hits="420" data-linenumber="285">
           <span class="hits">420</span>
           
           <code class="ruby">    local line=$(echo &quot;${FUNCNAME[$i+1]}($(prune_path &quot;${BASH_SOURCE[$i+1]}&quot;):${BASH_LINENO[$i]})&quot;)</code>
         </li>
       
-        <li class="covered" data-hits="140" data-linenumber="283">
+        <li class="covered" data-hits="140" data-linenumber="286">
           <span class="hits">140</span>
           
           <code class="ruby">    LOCAL_STACK+=(&quot;$line&quot;)</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="284">
+        <li class="never" data-hits="" data-linenumber="287">
           
           
           <code class="ruby">  done</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="285">
+        <li class="never" data-hits="" data-linenumber="288">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="286">
+        <li class="never" data-hits="" data-linenumber="289">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="287">
+        <li class="never" data-hits="" data-linenumber="290">
           
           
           <code class="ruby">print_stack_trace() {</code>
         </li>
       
-        <li class="covered" data-hits="124" data-linenumber="288">
-          <span class="hits">124</span>
+        <li class="covered" data-hits="122" data-linenumber="291">
+          <span class="hits">122</span>
           
           <code class="ruby">  log_err &quot;$(tail -1 $STACK_FILE)&quot;</code>
         </li>
       
-        <li class="covered" data-hits="235" data-linenumber="289">
-          <span class="hits">235</span>
+        <li class="covered" data-hits="232" data-linenumber="292">
+          <span class="hits">232</span>
           
           <code class="ruby">  tac $STACK_FILE | tail -n +2 | while read frame; do</code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="290">
+        <li class="covered" data-hits="49" data-linenumber="293">
           <span class="hits">49</span>
           
           <code class="ruby">  log_err &quot; at $frame&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="291">
+        <li class="never" data-hits="" data-linenumber="294">
           
           
           <code class="ruby">  done</code>
         </li>
       
-        <li class="covered" data-hits="62" data-linenumber="292">
-          <span class="hits">62</span>
+        <li class="covered" data-hits="61" data-linenumber="295">
+          <span class="hits">61</span>
           
           <code class="ruby">  rm -f $STACK_FILE</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="293">
+        <li class="never" data-hits="" data-linenumber="296">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="294">
+        <li class="never" data-hits="" data-linenumber="297">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="295">
+        <li class="never" data-hits="" data-linenumber="298">
           
           
           <code class="ruby">assert_msg() {</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="296">
+        <li class="covered" data-hits="5" data-linenumber="299">
           <span class="hits">5</span>
           
           <code class="ruby">  local what=&quot;$1&quot;</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="297">
+        <li class="covered" data-hits="5" data-linenumber="300">
           <span class="hits">5</span>
           
           <code class="ruby">  local why=&quot;$2&quot;</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="298">
+        <li class="covered" data-hits="5" data-linenumber="301">
           <span class="hits">5</span>
           
           <code class="ruby">  local msg=&quot;$3&quot;</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="299">
+        <li class="covered" data-hits="5" data-linenumber="302">
           <span class="hits">5</span>
           
-          <code class="ruby">  echo &quot;Assertion failed: ${msg:+$msg: }$why in: $what&quot;</code>
+          <code class="ruby">  echo &quot;Assertion failed: ${msg:+$msg: }$why in: &#39;$what&#39;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="300">
+        <li class="never" data-hits="" data-linenumber="303">
           
           
           <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="301">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="302">
-          
-          
-          <code class="ruby">assert_fail_msg() {</code>
-        </li>
-      
-        <li class="covered" data-hits="10" data-linenumber="303">
-          <span class="hits">10</span>
-          
-          <code class="ruby">  log_err &quot;$(assert_msg &quot;$@&quot;)&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="304">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="305">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">assert_err_msg() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="306">
+        <li class="covered" data-hits="10" data-linenumber="306">
+          <span class="hits">10</span>
           
-          
-          <code class="ruby">expect_true() {</code>
+          <code class="ruby">  log_err &quot;$(assert_msg &quot;$@&quot;)&quot;</code>
         </li>
       
-        <li class="covered" data-hits="23" data-linenumber="307">
-          <span class="hits">23</span>
+        <li class="never" data-hits="" data-linenumber="307">
           
-          <code class="ruby">  eval &quot;$1&quot;</code>
+          
+          <code class="ruby">}</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="308">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="309">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">expect_true() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="310">
+        <li class="covered" data-hits="23" data-linenumber="310">
+          <span class="hits">23</span>
           
-          
-          <code class="ruby">expect_false() {</code>
+          <code class="ruby">  eval &quot;$1&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="311">
           
           
-          <code class="ruby">  # TODO: broken when not in subshell, ignored errexit context</code>
+          <code class="ruby">}</code>
         </li>
       
-        <li class="covered" data-hits="11" data-linenumber="312">
-          <span class="hits">11</span>
+        <li class="never" data-hits="" data-linenumber="312">
           
-          <code class="ruby">  ! eval &quot;$1&quot; || false</code>
+          
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="313">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby">expect_false() {</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="314">
           
           
+          <code class="ruby">  # TODO: broken when not in subshell, ignored errexit context</code>
+        </li>
+      
+        <li class="covered" data-hits="11" data-linenumber="315">
+          <span class="hits">11</span>
+          
+          <code class="ruby">  ! eval &quot;$1&quot; || false</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="316">
+          
+          
+          <code class="ruby">}</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="317">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="315">
+        <li class="never" data-hits="" data-linenumber="318">
           
           
           <code class="ruby">call_assert() {</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="316">
+        <li class="covered" data-hits="10" data-linenumber="319">
           <span class="hits">10</span>
           
           <code class="ruby">  local expect=$1</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="317">
+        <li class="covered" data-hits="10" data-linenumber="320">
           <span class="hits">10</span>
           
           <code class="ruby">  shift</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="318">
+        <li class="covered" data-hits="10" data-linenumber="321">
           <span class="hits">10</span>
           
-          <code class="ruby">  push_err_handler &quot;assert_fail_msg \&quot;$1\&quot; \&quot;$2\&quot; \&quot;$3\&quot;&quot;</code>
+          <code class="ruby">  push_err_handler &quot;assert_err_msg \&quot;$1\&quot; \&quot;$2\&quot; \&quot;$3\&quot;&quot;</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="319">
+        <li class="covered" data-hits="10" data-linenumber="322">
           <span class="hits">10</span>
           
           <code class="ruby">  if [[ $SUBSHELL == always ]]; then</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="320">
+        <li class="covered" data-hits="1" data-linenumber="323">
           <span class="hits">1</span>
           
           <code class="ruby">    $expect &quot;subshell \&quot;$1\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="321">
+        <li class="never" data-hits="" data-linenumber="324">
           
           
           <code class="ruby">  else</code>
         </li>
       
-        <li class="covered" data-hits="9" data-linenumber="322">
+        <li class="covered" data-hits="9" data-linenumber="325">
           <span class="hits">9</span>
           
           <code class="ruby">    $expect &quot;eval \&quot;$1\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="323">
+        <li class="never" data-hits="" data-linenumber="326">
           
           
           <code class="ruby">  fi</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="324">
+        <li class="covered" data-hits="5" data-linenumber="327">
           <span class="hits">5</span>
           
           <code class="ruby">  pop_err_handler</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="325">
+        <li class="never" data-hits="" data-linenumber="328">
           
           
           <code class="ruby">}</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="326">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="327">
-          
-          
-          <code class="ruby">assert_true() {</code>
-        </li>
-      
-        <li class="covered" data-hits="7" data-linenumber="328">
-          <span class="hits">7</span>
-          
-          <code class="ruby">  call_assert expect_true &quot;$1&quot; &quot;expected success but got failure&quot; &quot;$2&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="329">
           
           
-          <code class="ruby">}</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="330">
           
           
-          <code class="ruby"></code>
+          <code class="ruby">assert_true() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="331">
+        <li class="covered" data-hits="7" data-linenumber="331">
+          <span class="hits">7</span>
           
-          
-          <code class="ruby">assert_false() {</code>
+          <code class="ruby">  call_assert expect_true &quot;$1&quot; &quot;expected success but got failure&quot; &quot;$2&quot;</code>
         </li>
       
-        <li class="covered" data-hits="3" data-linenumber="332">
-          <span class="hits">3</span>
-          
-          <code class="ruby">  call_assert expect_false &quot;$1&quot; &quot;expected success but got failure&quot; &quot;$2&quot;</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="333">
+        <li class="never" data-hits="" data-linenumber="332">
           
           
           <code class="ruby">}</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="334">
+        <li class="never" data-hits="" data-linenumber="333">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="191" data-linenumber="335">
-          <span class="hits">191</span>
+        <li class="never" data-hits="" data-linenumber="334">
           
-          <code class="ruby">if [[ -v SUBSHELL_CMD ]]; then</code>
+          
+          <code class="ruby">assert_false() {</code>
         </li>
       
-        <li class="covered" data-hits="141" data-linenumber="336">
-          <span class="hits">141</span>
+        <li class="covered" data-hits="3" data-linenumber="335">
+          <span class="hits">3</span>
           
-          <code class="ruby">  load_includes</code>
+          <code class="ruby">  call_assert expect_false &quot;$1&quot; &quot;expected failure but got success&quot; &quot;$2&quot;</code>
         </li>
       
-        <li class="covered" data-hits="141" data-linenumber="337">
-          <span class="hits">141</span>
+        <li class="never" data-hits="" data-linenumber="336">
           
-          <code class="ruby">  trap &quot;ERRCODE=\$?; exit_trap&quot; EXIT</code>
+          
+          <code class="ruby">}</code>
         </li>
       
-        <li class="covered" data-hits="141" data-linenumber="338">
-          <span class="hits">141</span>
+        <li class="never" data-hits="" data-linenumber="337">
           
-          <code class="ruby">  trap err_trap ERR</code>
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="covered" data-hits="332" data-linenumber="338">
+          <span class="hits">332</span>
+          
+          <code class="ruby">if [[ -v SUBSHELL_CMD &amp;&amp; $SUBSHELL_CMD != fork ]]; then</code>
         </li>
       
         <li class="covered" data-hits="141" data-linenumber="339">
           <span class="hits">141</span>
           
+          <code class="ruby">  load_includes</code>
+        </li>
+      
+        <li class="covered" data-hits="141" data-linenumber="340">
+          <span class="hits">141</span>
+          
+          <code class="ruby">  trap &quot;ERRCODE=\$?; exit_trap&quot; EXIT</code>
+        </li>
+      
+        <li class="covered" data-hits="141" data-linenumber="341">
+          <span class="hits">141</span>
+          
+          <code class="ruby">  trap err_trap ERR</code>
+        </li>
+      
+        <li class="covered" data-hits="141" data-linenumber="342">
+          <span class="hits">141</span>
+          
           <code class="ruby">  push_err_handler save_stack</code>
         </li>
       
-        <li class="covered" data-hits="285" data-linenumber="340">
+        <li class="covered" data-hits="285" data-linenumber="343">
           <span class="hits">285</span>
           
           <code class="ruby">  eval &quot;$SUBSHELL_CMD&quot;</code>
         </li>
       
-        <li class="covered" data-hits="104" data-linenumber="341">
+        <li class="covered" data-hits="104" data-linenumber="344">
           <span class="hits">104</span>
           
           <code class="ruby">  exit 0</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="342">
+        <li class="never" data-hits="" data-linenumber="345">
           
           
           <code class="ruby">else</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="343">
+        <li class="never" data-hits="" data-linenumber="346">
           
           
           <code class="ruby">  # TODO: sort out global var names and control which are exported</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="344">
+        <li class="covered" data-hits="50" data-linenumber="347">
           <span class="hits">50</span>
           
-          <code class="ruby">  VERSION=0.1.0-SNAPSHOT-18c8e53</code>
-        </li>
-      
-        <li class="covered" data-hits="100" data-linenumber="345">
-          <span class="hits">100</span>
-          
-          <code class="ruby">  TEST_SCRIPT=$(readlink -f &quot;$0&quot;)</code>
-        </li>
-      
-        <li class="covered" data-hits="100" data-linenumber="346">
-          <span class="hits">100</span>
-          
-          <code class="ruby">  TEST_SCRIPT_DIR=$(dirname &quot;$TEST_SCRIPT&quot;)</code>
-        </li>
-      
-        <li class="covered" data-hits="100" data-linenumber="347">
-          <span class="hits">100</span>
-          
-          <code class="ruby">  TESTSH=$(readlink -f &quot;$BASH_SOURCE&quot;)</code>
+          <code class="ruby">  VERSION=0.1.0-SNAPSHOT-8dfdff3</code>
         </li>
       
         <li class="covered" data-hits="100" data-linenumber="348">
           <span class="hits">100</span>
           
+          <code class="ruby">  TEST_SCRIPT=$(readlink -f &quot;$0&quot;)</code>
+        </li>
+      
+        <li class="covered" data-hits="100" data-linenumber="349">
+          <span class="hits">100</span>
+          
+          <code class="ruby">  TEST_SCRIPT_DIR=$(dirname &quot;$TEST_SCRIPT&quot;)</code>
+        </li>
+      
+        <li class="covered" data-hits="100" data-linenumber="350">
+          <span class="hits">100</span>
+          
+          <code class="ruby">  TESTSH=$(readlink -f &quot;$BASH_SOURCE&quot;)</code>
+        </li>
+      
+        <li class="covered" data-hits="100" data-linenumber="351">
+          <span class="hits">100</span>
+          
           <code class="ruby">  TESTSH_DIR=$(dirname &quot;$TESTSH&quot;)</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="349">
+        <li class="never" data-hits="" data-linenumber="352">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="350">
+        <li class="covered" data-hits="50" data-linenumber="353">
           <span class="hits">50</span>
           
           <code class="ruby">  FOREIGN_STACK=()</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="351">
+        <li class="covered" data-hits="50" data-linenumber="354">
           <span class="hits">50</span>
           
           <code class="ruby">  FIRST_TEST=</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="352">
+        <li class="covered" data-hits="50" data-linenumber="355">
           <span class="hits">50</span>
           
-          <code class="ruby">  STACK_FILE=/tmp/stack-$!</code>
+          <code class="ruby">  STACK_FILE=/tmp/stack-$$</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="353">
+        <li class="never" data-hits="" data-linenumber="356">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="354">
+        <li class="never" data-hits="" data-linenumber="357">
           
           
           <code class="ruby">  # TODO: configure whether to colorize output</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="355">
+        <li class="covered" data-hits="50" data-linenumber="358">
           <span class="hits">50</span>
           
           <code class="ruby">  GREEN=&#39;\033[0;32m&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="356">
+        <li class="covered" data-hits="50" data-linenumber="359">
           <span class="hits">50</span>
           
           <code class="ruby">  ORANGE=&#39;\033[0;33m&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="357">
+        <li class="covered" data-hits="50" data-linenumber="360">
           <span class="hits">50</span>
           
           <code class="ruby">  RED=&#39;\033[0;31m&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="358">
+        <li class="covered" data-hits="50" data-linenumber="361">
           <span class="hits">50</span>
           
           <code class="ruby">  BLUE=&#39;\033[0;34m&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="359">
+        <li class="covered" data-hits="50" data-linenumber="362">
           <span class="hits">50</span>
           
           <code class="ruby">  NC=&#39;\033[0m&#39; # No Color&#39;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="360">
+        <li class="never" data-hits="" data-linenumber="363">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="361">
-          
-          
-          <code class="ruby">  setup_io() {</code>
-        </li>
-      
-        <li class="covered" data-hits="100" data-linenumber="362">
-          <span class="hits">100</span>
-          
-          <code class="ruby">    PIPE=$(mktemp -u)</code>
-        </li>
-      
-        <li class="covered" data-hits="50" data-linenumber="363">
-          <span class="hits">50</span>
-          
-          <code class="ruby">    mkfifo &quot;$PIPE&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="364">
           
           
-          <code class="ruby">    #push_exit_handler &quot;rm -f \&quot;$PIPE\&quot;&quot;</code>
+          <code class="ruby">  cleanup() {</code>
         </li>
       
         <li class="covered" data-hits="50" data-linenumber="365">
           <span class="hits">50</span>
           
-          <code class="ruby">    TESTOUT_DIR=&quot;$TEST_SCRIPT_DIR&quot;/testout</code>
+          <code class="ruby">    exec 1&gt;&amp;- 2&gt;&amp;- || true</code>
         </li>
       
-        <li class="covered" data-hits="100" data-linenumber="366">
-          <span class="hits">100</span>
+        <li class="covered" data-hits="50" data-linenumber="366">
+          <span class="hits">50</span>
           
-          <code class="ruby">    TESTOUT_FILE=&quot;$TESTOUT_DIR&quot;/&quot;$(basename &quot;$TEST_SCRIPT&quot;)&quot;.out</code>
+          <code class="ruby">    wait</code>
         </li>
       
         <li class="covered" data-hits="50" data-linenumber="367">
           <span class="hits">50</span>
           
-          <code class="ruby">    mkdir -p &quot;$TESTOUT_DIR&quot;</code>
+          <code class="ruby">    rm -f $STACK_FILE</code>
         </li>
       
-        <li class="covered" data-hits="150" data-linenumber="368">
-          <span class="hits">150</span>
-          
-          <code class="ruby">    [[   $VERBOSE ]] || grep -v &quot;: pop_scope: &quot; &lt;&quot;$PIPE&quot; | cat &gt;&quot;$TESTOUT_FILE&quot; &amp;</code>
-        </li>
-      
-        <li class="covered" data-hits="50" data-linenumber="369">
-          <span class="hits">50</span>
-          
-          <code class="ruby">    [[ ! $VERBOSE ]] || grep -v &quot;: pop_scope: &quot; &lt;&quot;$PIPE&quot; | tee  &quot;$TESTOUT_FILE&quot; &amp;</code>
-        </li>
-      
-        <li class="covered" data-hits="50" data-linenumber="370">
-          <span class="hits">50</span>
-          
-          <code class="ruby">    exec 3&gt;&amp;1 4&gt;&amp;2 &gt;&quot;$PIPE&quot; 2&gt;&amp;1</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="371">
+        <li class="never" data-hits="" data-linenumber="368">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="372">
+        <li class="never" data-hits="" data-linenumber="369">
           
           
           <code class="ruby"></code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="370">
+          
+          
+          <code class="ruby">  setup_io() {</code>
+        </li>
+      
+        <li class="covered" data-hits="100" data-linenumber="371">
+          <span class="hits">100</span>
+          
+          <code class="ruby">    PIPE=$(mktemp -u)</code>
+        </li>
+      
+        <li class="covered" data-hits="50" data-linenumber="372">
+          <span class="hits">50</span>
+          
+          <code class="ruby">    mkfifo &quot;$PIPE&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="373">
           
           
-          <code class="ruby">  config_defaults() {</code>
+          <code class="ruby">    #push_exit_handler &quot;rm -f \&quot;$PIPE\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="374">
+        <li class="covered" data-hits="50" data-linenumber="374">
+          <span class="hits">50</span>
           
-          
-          <code class="ruby">    set_default_SUBSHELL() {</code>
+          <code class="ruby">    TESTOUT_DIR=&quot;$TEST_SCRIPT_DIR&quot;/testout</code>
         </li>
       
-        <li class="covered" data-hits="11" data-linenumber="375">
-          <span class="hits">11</span>
+        <li class="covered" data-hits="100" data-linenumber="375">
+          <span class="hits">100</span>
           
-          <code class="ruby">      if [[ $FAIL_FAST ]]; then</code>
+          <code class="ruby">    TESTOUT_FILE=&quot;$TESTOUT_DIR&quot;/&quot;$(basename &quot;$TEST_SCRIPT&quot;)&quot;.out</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="376">
-          <span class="hits">10</span>
+        <li class="covered" data-hits="50" data-linenumber="376">
+          <span class="hits">50</span>
           
-          <code class="ruby">        echo &quot;teardown&quot;</code>
+          <code class="ruby">    mkdir -p &quot;$TESTOUT_DIR&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="377">
+        <li class="covered" data-hits="150" data-linenumber="377">
+          <span class="hits">150</span>
           
-          
-          <code class="ruby">      else</code>
+          <code class="ruby">    [[   $VERBOSE ]] || grep -v &quot;: pop_scope: &quot; &lt;&quot;$PIPE&quot; | cat &gt;&quot;$TESTOUT_FILE&quot; &amp;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="378">
-          <span class="hits">1</span>
+        <li class="covered" data-hits="50" data-linenumber="378">
+          <span class="hits">50</span>
           
-          <code class="ruby">        echo &quot;always&quot;</code>
+          <code class="ruby">    [[ ! $VERBOSE ]] || grep -v &quot;: pop_scope: &quot; &lt;&quot;$PIPE&quot; | tee  &quot;$TESTOUT_FILE&quot; &amp;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="379">
+        <li class="covered" data-hits="50" data-linenumber="379">
+          <span class="hits">50</span>
           
-          
-          <code class="ruby">      fi</code>
+          <code class="ruby">    exec 3&gt;&amp;1 4&gt;&amp;2 &gt;&quot;$PIPE&quot; 2&gt;&amp;1</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="380">
           
           
-          <code class="ruby">    }</code>
+          <code class="ruby">  }</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="381">
           
           
-          <code class="ruby">    set_default_STACK_TRACE() {</code>
+          <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="13" data-linenumber="382">
-          <span class="hits">13</span>
+        <li class="never" data-hits="" data-linenumber="382">
           
-          <code class="ruby">      if [[ $SUBSHELL != always ]]; then</code>
+          
+          <code class="ruby">  config_defaults() {</code>
         </li>
       
-        <li class="covered" data-hits="10" data-linenumber="383">
+        <li class="never" data-hits="" data-linenumber="383">
+          
+          
+          <code class="ruby">    set_default_SUBSHELL() {</code>
+        </li>
+      
+        <li class="covered" data-hits="11" data-linenumber="384">
+          <span class="hits">11</span>
+          
+          <code class="ruby">      if [[ $FAIL_FAST ]]; then</code>
+        </li>
+      
+        <li class="covered" data-hits="10" data-linenumber="385">
           <span class="hits">10</span>
           
-          <code class="ruby">        echo &quot;compact&quot;</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="384">
-          
-          
-          <code class="ruby">      else</code>
-        </li>
-      
-        <li class="covered" data-hits="3" data-linenumber="385">
-          <span class="hits">3</span>
-          
-          <code class="ruby">        echo &quot;pruned&quot;</code>
+          <code class="ruby">        echo &quot;teardown&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="386">
           
           
+          <code class="ruby">      else</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="387">
+          <span class="hits">1</span>
+          
+          <code class="ruby">        echo &quot;always&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="388">
+          
+          
           <code class="ruby">      fi</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="387">
+        <li class="never" data-hits="" data-linenumber="389">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="388">
+        <li class="never" data-hits="" data-linenumber="390">
+          
+          
+          <code class="ruby">    set_default_STACK_TRACE() {</code>
+        </li>
+      
+        <li class="covered" data-hits="13" data-linenumber="391">
+          <span class="hits">13</span>
+          
+          <code class="ruby">      if [[ $SUBSHELL != always ]]; then</code>
+        </li>
+      
+        <li class="covered" data-hits="10" data-linenumber="392">
+          <span class="hits">10</span>
+          
+          <code class="ruby">        echo &quot;compact&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="393">
+          
+          
+          <code class="ruby">      else</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="394">
+          <span class="hits">3</span>
+          
+          <code class="ruby">        echo &quot;pruned&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="395">
+          
+          
+          <code class="ruby">      fi</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="396">
+          
+          
+          <code class="ruby">    }</code>
+        </li>
+      
+        <li class="covered" data-hits="50" data-linenumber="397">
           <span class="hits">50</span>
           
           <code class="ruby">    default_VERBOSE=</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="389">
+        <li class="covered" data-hits="50" data-linenumber="398">
           <span class="hits">50</span>
           
           <code class="ruby">    default_DEBUG=</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="390">
+        <li class="covered" data-hits="50" data-linenumber="399">
           <span class="hits">50</span>
           
           <code class="ruby">    default_INCLUDE_GLOB=&#39;include*.sh&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="391">
+        <li class="covered" data-hits="50" data-linenumber="400">
           <span class="hits">50</span>
           
           <code class="ruby">    default_INCLUDE_PATH=&#39;$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="392">
+        <li class="covered" data-hits="50" data-linenumber="401">
           <span class="hits">50</span>
           
           <code class="ruby">    default_FAIL_FAST=1</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="393">
+        <li class="covered" data-hits="50" data-linenumber="402">
           <span class="hits">50</span>
           
           <code class="ruby">    default_REENTER=1</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="394">
+        <li class="covered" data-hits="50" data-linenumber="403">
           <span class="hits">50</span>
           
           <code class="ruby">    default_PRUNE_PATH=&#39;$PWD/&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="395">
+        <li class="covered" data-hits="50" data-linenumber="404">
           <span class="hits">50</span>
           
           <code class="ruby">    default_SUBSHELL=&#39;$(set_default_SUBSHELL)&#39;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="396">
+        <li class="covered" data-hits="50" data-linenumber="405">
           <span class="hits">50</span>
           
           <code class="ruby">    default_STACK_TRACE=&#39;$(set_default_STACK_TRACE)&#39;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="397">
+        <li class="never" data-hits="" data-linenumber="406">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="398">
+        <li class="never" data-hits="" data-linenumber="407">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="399">
+        <li class="never" data-hits="" data-linenumber="408">
           
           
           <code class="ruby">  load_config() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="400">
+        <li class="never" data-hits="" data-linenumber="409">
           
           
           <code class="ruby">    save_variable() {</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="401">
+        <li class="covered" data-hits="594" data-linenumber="410">
           <span class="hits">594</span>
           
           <code class="ruby">      local var=$1</code>
         </li>
       
-        <li class="covered" data-hits="1536" data-linenumber="402">
+        <li class="covered" data-hits="1536" data-linenumber="411">
           <span class="hits">1536</span>
           
           <code class="ruby">      [[ ! -v $var ]] || eval &quot;saved_$var=\&quot;${!var}\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="403">
+        <li class="never" data-hits="" data-linenumber="412">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="404">
+        <li class="never" data-hits="" data-linenumber="413">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="405">
+        <li class="never" data-hits="" data-linenumber="414">
           
           
           <code class="ruby">    restore_variable() {</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="406">
+        <li class="covered" data-hits="594" data-linenumber="415">
           <span class="hits">594</span>
           
           <code class="ruby">      local var=$1</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="407">
+        <li class="covered" data-hits="594" data-linenumber="416">
           <span class="hits">594</span>
           
           <code class="ruby">      local saved_var=saved_$var</code>
         </li>
       
-        <li class="covered" data-hits="1536" data-linenumber="408">
+        <li class="covered" data-hits="1536" data-linenumber="417">
           <span class="hits">1536</span>
           
           <code class="ruby">      [[ ! -v $saved_var ]] || eval &quot;$var=\&quot;${!saved_var}\&quot;&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="409">
+        <li class="never" data-hits="" data-linenumber="418">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="410">
+        <li class="never" data-hits="" data-linenumber="419">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="411">
+        <li class="never" data-hits="" data-linenumber="420">
           
           
           <code class="ruby">    set_default() {</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="412">
+        <li class="covered" data-hits="594" data-linenumber="421">
           <span class="hits">594</span>
           
           <code class="ruby">      local var=$1</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="413">
+        <li class="covered" data-hits="594" data-linenumber="422">
           <span class="hits">594</span>
           
           <code class="ruby">      local default_var=default_$var</code>
         </li>
       
-        <li class="covered" data-hits="1074" data-linenumber="414">
+        <li class="covered" data-hits="1074" data-linenumber="423">
           <span class="hits">1074</span>
           
           <code class="ruby">      [[ -v $var ]] || eval &quot;$var=$(eval &quot;echo -n ${!default_var}&quot;)&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="415">
+        <li class="never" data-hits="" data-linenumber="424">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="416">
+        <li class="never" data-hits="" data-linenumber="425">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="417">
+        <li class="never" data-hits="" data-linenumber="426">
           
           
           <code class="ruby">    load_config_file() {</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="418">
+        <li class="covered" data-hits="5" data-linenumber="427">
           <span class="hits">5</span>
           
           <code class="ruby">      local config_file=$1</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="419">
+        <li class="covered" data-hits="5" data-linenumber="428">
           <span class="hits">5</span>
           
           <code class="ruby">      source &quot;$config_file&quot;</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="420">
+        <li class="covered" data-hits="5" data-linenumber="429">
           <span class="hits">5</span>
           
           <code class="ruby">      log &quot;Loaded config from $config_file&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="421">
+        <li class="never" data-hits="" data-linenumber="430">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="422">
+        <li class="never" data-hits="" data-linenumber="431">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="423">
-          
-          
-          <code class="ruby">    try_config_path() {</code>
-        </li>
-      
-        <li class="covered" data-hits="63" data-linenumber="424">
-          <span class="hits">63</span>
-          
-          <code class="ruby">      CONFIG_PATH=&quot;$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="63" data-linenumber="425">
-          <span class="hits">63</span>
-          
-          <code class="ruby">      local current_IFS=&quot;$IFS&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="63" data-linenumber="426">
-          <span class="hits">63</span>
-          
-          <code class="ruby">      IFS=&quot;:&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="186" data-linenumber="427">
-          <span class="hits">186</span>
-          
-          <code class="ruby">      for path in $CONFIG_PATH; do</code>
-        </li>
-      
-        <li class="covered" data-hits="186" data-linenumber="428">
-          <span class="hits">186</span>
-          
-          <code class="ruby">        ! [ -f &quot;$path&quot;/test.sh.config ] || {</code>
-        </li>
-      
-        <li class="covered" data-hits="2" data-linenumber="429">
-          <span class="hits">2</span>
-          
-          <code class="ruby">          CONFIG_FILE=&quot;$path&quot;/test.sh.config</code>
-        </li>
-      
-        <li class="covered" data-hits="2" data-linenumber="430">
-          <span class="hits">2</span>
-          
-          <code class="ruby">          load_config_file &quot;$CONFIG_FILE&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="2" data-linenumber="431">
-          <span class="hits">2</span>
-          
-          <code class="ruby">          break</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="432">
           
           
-          <code class="ruby">        }</code>
+          <code class="ruby">    try_config_path() {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="433">
+        <li class="covered" data-hits="63" data-linenumber="433">
+          <span class="hits">63</span>
           
-          
-          <code class="ruby">      done</code>
+          <code class="ruby">      CONFIG_PATH=&quot;$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD&quot;</code>
         </li>
       
         <li class="covered" data-hits="63" data-linenumber="434">
           <span class="hits">63</span>
           
-          <code class="ruby">      IFS=&quot;$current_IFS&quot;</code>
+          <code class="ruby">      local current_IFS=&quot;$IFS&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="435">
+        <li class="covered" data-hits="63" data-linenumber="435">
+          <span class="hits">63</span>
           
-          
-          <code class="ruby">    }</code>
+          <code class="ruby">      IFS=&quot;:&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="436">
+        <li class="covered" data-hits="186" data-linenumber="436">
+          <span class="hits">186</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">      for path in $CONFIG_PATH; do</code>
         </li>
       
-        <li class="covered" data-hits="66" data-linenumber="437">
-          <span class="hits">66</span>
+        <li class="covered" data-hits="186" data-linenumber="437">
+          <span class="hits">186</span>
           
-          <code class="ruby">    local config_vars=&quot;VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE&quot;</code>
+          <code class="ruby">        ! [ -f &quot;$path&quot;/test.sh.config ] || {</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="438">
+        <li class="covered" data-hits="2" data-linenumber="438">
+          <span class="hits">2</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">          CONFIG_FILE=&quot;$path&quot;/test.sh.config</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="439">
+        <li class="covered" data-hits="2" data-linenumber="439">
+          <span class="hits">2</span>
           
-          
-          <code class="ruby">    # save environment config</code>
+          <code class="ruby">          load_config_file &quot;$CONFIG_FILE&quot;</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="440">
-          <span class="hits">594</span>
+        <li class="covered" data-hits="2" data-linenumber="440">
+          <span class="hits">2</span>
           
-          <code class="ruby">    for var in $config_vars; do</code>
+          <code class="ruby">          break</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="441">
-          <span class="hits">594</span>
+        <li class="never" data-hits="" data-linenumber="441">
           
-          <code class="ruby">      save_variable $var</code>
+          
+          <code class="ruby">        }</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="442">
           
           
-          <code class="ruby">    done</code>
+          <code class="ruby">      done</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="443">
+        <li class="covered" data-hits="63" data-linenumber="443">
+          <span class="hits">63</span>
           
-          
-          <code class="ruby"></code>
+          <code class="ruby">      IFS=&quot;$current_IFS&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="444">
           
           
-          <code class="ruby">    # load config if present</code>
+          <code class="ruby">    }</code>
         </li>
       
-        <li class="covered" data-hits="69" data-linenumber="445">
-          <span class="hits">69</span>
+        <li class="never" data-hits="" data-linenumber="445">
           
-          <code class="ruby">    [ -z &quot;$CONFIG_FILE&quot; ] || load_config_file &quot;$CONFIG_FILE&quot;</code>
+          
+          <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="129" data-linenumber="446">
-          <span class="hits">129</span>
+        <li class="covered" data-hits="66" data-linenumber="446">
+          <span class="hits">66</span>
           
-          <code class="ruby">    [ -n &quot;$CONFIG_FILE&quot; ] || try_config_path</code>
+          <code class="ruby">    local config_vars=&quot;VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE&quot;</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="447">
@@ -3018,7 +3019,7 @@ layout: default
         <li class="never" data-hits="" data-linenumber="448">
           
           
-          <code class="ruby">    # prioritize environment config</code>
+          <code class="ruby">    # save environment config</code>
         </li>
       
         <li class="covered" data-hits="594" data-linenumber="449">
@@ -3030,7 +3031,7 @@ layout: default
         <li class="covered" data-hits="594" data-linenumber="450">
           <span class="hits">594</span>
           
-          <code class="ruby">      restore_variable $var</code>
+          <code class="ruby">      save_variable $var</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="451">
@@ -3048,238 +3049,298 @@ layout: default
         <li class="never" data-hits="" data-linenumber="453">
           
           
-          <code class="ruby">    # set defaults</code>
+          <code class="ruby">    # load config if present</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="454">
-          <span class="hits">594</span>
+        <li class="covered" data-hits="69" data-linenumber="454">
+          <span class="hits">69</span>
           
-          <code class="ruby">    for var in $config_vars; do</code>
+          <code class="ruby">    [ -z &quot;$CONFIG_FILE&quot; ] || load_config_file &quot;$CONFIG_FILE&quot;</code>
         </li>
       
-        <li class="covered" data-hits="594" data-linenumber="455">
-          <span class="hits">594</span>
+        <li class="covered" data-hits="129" data-linenumber="455">
+          <span class="hits">129</span>
           
-          <code class="ruby">      set_default $var</code>
+          <code class="ruby">    [ -n &quot;$CONFIG_FILE&quot; ] || try_config_path</code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="456">
           
           
-          <code class="ruby">    done</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="457">
           
           
+          <code class="ruby">    # prioritize environment config</code>
+        </li>
+      
+        <li class="covered" data-hits="594" data-linenumber="458">
+          <span class="hits">594</span>
+          
+          <code class="ruby">    for var in $config_vars; do</code>
+        </li>
+      
+        <li class="covered" data-hits="594" data-linenumber="459">
+          <span class="hits">594</span>
+          
+          <code class="ruby">      restore_variable $var</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="460">
+          
+          
+          <code class="ruby">    done</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="461">
+          
+          
           <code class="ruby"></code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="458">
+        <li class="never" data-hits="" data-linenumber="462">
           
           
-          <code class="ruby">    # validate config</code>
+          <code class="ruby">    # set defaults</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="459">
+        <li class="covered" data-hits="594" data-linenumber="463">
+          <span class="hits">594</span>
           
-          
-          <code class="ruby">    validate_values() {</code>
+          <code class="ruby">    for var in $config_vars; do</code>
         </li>
       
-        <li class="covered" data-hits="131" data-linenumber="460">
-          <span class="hits">131</span>
+        <li class="covered" data-hits="594" data-linenumber="464">
+          <span class="hits">594</span>
           
-          <code class="ruby">      local var=$1</code>
+          <code class="ruby">      set_default $var</code>
         </li>
       
-        <li class="covered" data-hits="131" data-linenumber="461">
-          <span class="hits">131</span>
+        <li class="never" data-hits="" data-linenumber="465">
           
-          <code class="ruby">      local val=${!var}</code>
+          
+          <code class="ruby">    done</code>
         </li>
       
-        <li class="covered" data-hits="131" data-linenumber="462">
-          <span class="hits">131</span>
-          
-          <code class="ruby">      shift</code>
-        </li>
-      
-        <li class="covered" data-hits="131" data-linenumber="463">
-          <span class="hits">131</span>
-          
-          <code class="ruby">      local values=</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="464">
+        <li class="never" data-hits="" data-linenumber="466">
           
           
-          <code class="ruby">      # shellcheck disable=SC2071</code>
-        </li>
-      
-        <li class="covered" data-hits="272" data-linenumber="465">
-          <span class="hits">272</span>
-          
-          <code class="ruby">      for i in &quot;$@&quot;; do</code>
-        </li>
-      
-        <li class="covered" data-hits="401" data-linenumber="466">
-          <span class="hits">401</span>
-          
-          <code class="ruby">        [[ $i != $val ]] || return 0</code>
+          <code class="ruby"></code>
         </li>
       
         <li class="never" data-hits="" data-linenumber="467">
           
           
+          <code class="ruby">    # validate config</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="468">
+          
+          
+          <code class="ruby">    validate_values() {</code>
+        </li>
+      
+        <li class="covered" data-hits="131" data-linenumber="469">
+          <span class="hits">131</span>
+          
+          <code class="ruby">      local var=$1</code>
+        </li>
+      
+        <li class="covered" data-hits="131" data-linenumber="470">
+          <span class="hits">131</span>
+          
+          <code class="ruby">      local val=${!var}</code>
+        </li>
+      
+        <li class="covered" data-hits="131" data-linenumber="471">
+          <span class="hits">131</span>
+          
+          <code class="ruby">      shift</code>
+        </li>
+      
+        <li class="covered" data-hits="131" data-linenumber="472">
+          <span class="hits">131</span>
+          
+          <code class="ruby">      local values=</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="473">
+          
+          
+          <code class="ruby">      # shellcheck disable=SC2071</code>
+        </li>
+      
+        <li class="covered" data-hits="272" data-linenumber="474">
+          <span class="hits">272</span>
+          
+          <code class="ruby">      for i in &quot;$@&quot;; do</code>
+        </li>
+      
+        <li class="covered" data-hits="401" data-linenumber="475">
+          <span class="hits">401</span>
+          
+          <code class="ruby">        [[ $i != $val ]] || return 0</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="476">
+          
+          
           <code class="ruby">      done</code>
         </li>
       
-        <li class="covered" data-hits="5" data-linenumber="468">
+        <li class="covered" data-hits="5" data-linenumber="477">
           <span class="hits">5</span>
           
           <code class="ruby">      log_err &quot;Configuration: invalid value in variable $var: &#39;$val&#39;, should be one of: $*&quot; &amp;&amp; false</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="469">
+        <li class="never" data-hits="" data-linenumber="478">
           
           
           <code class="ruby">    }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="470">
+        <li class="never" data-hits="" data-linenumber="479">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="66" data-linenumber="471">
+        <li class="covered" data-hits="66" data-linenumber="480">
           <span class="hits">66</span>
           
           <code class="ruby">    validate_values SUBSHELL never teardown always</code>
         </li>
       
-        <li class="covered" data-hits="73" data-linenumber="472">
+        <li class="covered" data-hits="73" data-linenumber="481">
           <span class="hits">73</span>
           
           <code class="ruby">    if [[ ! $FAIL_FAST &amp;&amp; $SUBSHELL != always ]]; then</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="473">
+        <li class="covered" data-hits="1" data-linenumber="482">
           <span class="hits">1</span>
           
           <code class="ruby">      log_warn &quot;Configuration: SUBSHELL set to &#39;always&#39; because FAIL_FAST is false (was: SUBSHELL=$SUBSHELL)&quot;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="474">
+        <li class="covered" data-hits="1" data-linenumber="483">
           <span class="hits">1</span>
           
           <code class="ruby">      SUBSHELL=always</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="475">
+        <li class="never" data-hits="" data-linenumber="484">
           
           
           <code class="ruby">    fi</code>
         </li>
       
-        <li class="covered" data-hits="65" data-linenumber="476">
+        <li class="covered" data-hits="65" data-linenumber="485">
           <span class="hits">65</span>
           
           <code class="ruby">    validate_values STACK_TRACE no pruned compact full</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="477">
+        <li class="never" data-hits="" data-linenumber="486">
           
           
           <code class="ruby">  }</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="478">
+        <li class="never" data-hits="" data-linenumber="487">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="479">
+        <li class="covered" data-hits="50" data-linenumber="488">
           <span class="hits">50</span>
           
-          <code class="ruby">  trap &quot;ERRCODE=\$?; rm -f \$PIPE \$STACK_FILE; exit_trap&quot; EXIT</code>
+          <code class="ruby">  trap &quot;ERRCODE=\$?; rm -f \$PIPE; exit_trap&quot; EXIT</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="480">
+        <li class="covered" data-hits="50" data-linenumber="489">
           <span class="hits">50</span>
           
           <code class="ruby">  trap err_trap ERR</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="481">
+        <li class="covered" data-hits="50" data-linenumber="490">
           <span class="hits">50</span>
           
           <code class="ruby">  config_defaults</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="482">
+        <li class="covered" data-hits="50" data-linenumber="491">
           <span class="hits">50</span>
           
           <code class="ruby">  push_err_handler &quot;print_stack_trace&quot;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="483">
+        <li class="covered" data-hits="50" data-linenumber="492">
           <span class="hits">50</span>
           
           <code class="ruby">  push_err_handler &quot;save_stack&quot;</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="484">
+        <li class="covered" data-hits="50" data-linenumber="493">
           <span class="hits">50</span>
           
           <code class="ruby">  setup_io</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="485">
+        <li class="covered" data-hits="50" data-linenumber="494">
+          <span class="hits">50</span>
+          
+          <code class="ruby">  push_exit_handler &quot;cleanup&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="50" data-linenumber="495">
           <span class="hits">50</span>
           
           <code class="ruby">  load_config</code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="486">
+        <li class="covered" data-hits="49" data-linenumber="496">
           <span class="hits">49</span>
           
           <code class="ruby">  load_includes</code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="487">
+        <li class="covered" data-hits="49" data-linenumber="497">
           <span class="hits">49</span>
           
           <code class="ruby">  push_exit_handler &quot;[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite&quot;</code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="488">
+        <li class="covered" data-hits="49" data-linenumber="498">
           <span class="hits">49</span>
           
-          <code class="ruby">  push_exit_handler &quot;[[ -v MANAGED ]] || call_teardown teardown_test&quot;</code>
+          <code class="ruby">  push_exit_handler &quot;[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test&quot;</code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="489">
+        <li class="covered" data-hits="49" data-linenumber="499">
           <span class="hits">49</span>
           
           <code class="ruby">  push_exit_handler display_last_test_result</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="490">
+        <li class="never" data-hits="" data-linenumber="500">
           
           
           <code class="ruby"></code>
         </li>
       
-        <li class="covered" data-hits="49" data-linenumber="491">
+        <li class="covered" data-hits="49" data-linenumber="501">
           <span class="hits">49</span>
           
           <code class="ruby">  [[ ! $DEBUG ]] || set -x</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="492">
+        <li class="never" data-hits="" data-linenumber="502">
           
           
           <code class="ruby">fi</code>
@@ -3891,8 +3952,8 @@ layout: default
           <code class="ruby">teardown_test() {</code>
         </li>
       
-        <li class="covered" data-hits="50" data-linenumber="17">
-          <span class="hits">50</span>
+        <li class="covered" data-hits="47" data-linenumber="17">
+          <span class="hits">47</span>
           
           <code class="ruby">  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false</code>
         </li>
@@ -3915,8 +3976,8 @@ layout: default
           <code class="ruby">teardown_test_suite() {</code>
         </li>
       
-        <li class="covered" data-hits="35" data-linenumber="21">
-          <span class="hits">35</span>
+        <li class="covered" data-hits="36" data-linenumber="21">
+          <span class="hits">36</span>
           
           <code class="ruby">  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false</code>
         </li>
@@ -5861,8 +5922,8 @@ layout: default
     <h3>test/test_error_reporting.sh</h3>
     <h4><span class="green">100.0 %</span> covered</h4>
     <div>
-      <b>62</b> relevant lines. 
-      <span class="green"><b>62</b> lines covered</span> and
+      <b>72</b> relevant lines. 
+      <span class="green"><b>72</b> lines covered</span> and
       <span class="red"><b>0</b> lines missed.</span>
     </div>
   </div>
@@ -6008,34 +6069,34 @@ layout: default
           <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="6" data-linenumber="24">
+        <li class="covered" data-hits="3" data-linenumber="24">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="25">
           <span class="hits">6</span>
           
           <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test]</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="25">
+        <li class="covered" data-hits="1" data-linenumber="26">
           <span class="hits">1</span>
           
           <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="6" data-linenumber="26">
-          <span class="hits">6</span>
+        <li class="covered" data-hits="3" data-linenumber="27">
+          <span class="hits">3</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="27">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
         </li>
       
         <li class="covered" data-hits="6" data-linenumber="28">
           <span class="hits">6</span>
           
-          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test]</code>
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test] || false</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="29">
@@ -6044,148 +6105,148 @@ layout: default
           <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="30">
+        <li class="covered" data-hits="3" data-linenumber="30">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="31">
+          <span class="hits">6</span>
+          
+          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test]</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="32">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="33">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 2 ]]</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="34">
           
           
           <code class="ruby"></code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="31">
-          <span class="hits">1</span>
-          
-          <code class="ruby">start_test &quot;The error message should identify the source, line, command and exit code when triggered in teardown_test_suite&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="32">
-          <span class="hits">6</span>
-          
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="33">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="34">
-          <span class="hits">6</span>
-          
-          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite]</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="35">
           <span class="hits">1</span>
           
-          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+          <code class="ruby">start_test &quot;The error message should identify the source, line, command and exit code when triggered in teardown_test_suite&quot;</code>
         </li>
       
         <li class="covered" data-hits="6" data-linenumber="36">
           <span class="hits">6</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite] || false</code>
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite] || false</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="37">
-          
-          
-          <code class="ruby"># TODO: investigar este caso raruno, el comando reportado pasa a ser &#39;[[ $FAIL_FUNC != $FUNCNAME ]]&#39; en lugar de &#39;false&#39;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="38">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="39">
-          <span class="hits">6</span>
-          
-          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite]</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="40">
+        <li class="covered" data-hits="1" data-linenumber="37">
           <span class="hits">1</span>
           
           <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="41">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="42">
-          <span class="hits">1</span>
-          
-          <code class="ruby">start_test &quot;The error message should identify the source, line, command and exit code when triggered in assert&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="5" data-linenumber="43">
-          <span class="hits">5</span>
-          
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never  STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [func_assert] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="44">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in expect_true(test.sh:.*): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="5" data-linenumber="45">
-          <span class="hits">5</span>
-          
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always STACK_TRACE=full PRUNE_PATH=&#39;*/&#39; &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [func_assert] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="46">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in source(test.sh:.*): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="47">
-          
-          
-          <code class="ruby"></code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="48">
-          <span class="hits">1</span>
-          
-          <code class="ruby">start_test &quot;Errors in test and teardown functions should be reported&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="49">
+        <li class="covered" data-hits="6" data-linenumber="38">
           <span class="hits">6</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite]</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="50">
+        <li class="covered" data-hits="1" data-linenumber="39">
           <span class="hits">1</span>
           
-          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="never" data-hits="" data-linenumber="51">
+        <li class="covered" data-hits="6" data-linenumber="40">
+          <span class="hits">6</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="41">
           
           
           <code class="ruby"># TODO: investigar este caso raruno, el comando reportado pasa a ser &#39;[[ $FAIL_FUNC != $FUNCNAME ]]&#39; en lugar de &#39;false&#39;</code>
         </li>
       
+        <li class="covered" data-hits="1" data-linenumber="42">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="43">
+          <span class="hits">6</span>
+          
+          <code class="ruby">  CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [teardown_test_suite]</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="44">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="45">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="46">
+          <span class="hits">1</span>
+          
+          <code class="ruby">start_test &quot;The error message should identify the source, line, command and exit code when triggered in assert&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="5" data-linenumber="47">
+          <span class="hits">5</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never  STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [func_assert] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="48">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in expect_true(test.sh:.*): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="5" data-linenumber="49">
+          <span class="hits">5</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always STACK_TRACE=full PRUNE_PATH=&#39;*/&#39; &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [func_assert] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="50">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in source(test.sh:.*): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="51">
+          
+          
+          <code class="ruby"></code>
+        </li>
+      
         <li class="covered" data-hits="1" data-linenumber="52">
           <span class="hits">1</span>
           
-          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+          <code class="ruby">start_test &quot;Errors in test and teardown functions should be reported&quot;</code>
         </li>
       
         <li class="covered" data-hits="6" data-linenumber="53">
           <span class="hits">6</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="54">
@@ -6194,112 +6255,172 @@ layout: default
           <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="55">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="56">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="57">
-          <span class="hits">6</span>
-          
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="58">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="59">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="60">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="6" data-linenumber="61">
-          <span class="hits">6</span>
-          
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="62">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="never" data-hits="" data-linenumber="63">
+        <li class="never" data-hits="" data-linenumber="55">
           
           
           <code class="ruby"># TODO: investigar este caso raruno, el comando reportado pasa a ser &#39;[[ $FAIL_FUNC != $FUNCNAME ]]&#39; en lugar de &#39;false&#39;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="64">
+        <li class="covered" data-hits="1" data-linenumber="56">
           <span class="hits">1</span>
           
           <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="6" data-linenumber="65">
+        <li class="covered" data-hits="3" data-linenumber="57">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="58">
           <span class="hits">6</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="59">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="60">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="61">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="62">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="63">
+          <span class="hits">6</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=     &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="64">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="65">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="66">
           <span class="hits">1</span>
           
-          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="67">
-          <span class="hits">1</span>
-          
-          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
-        </li>
-      
-        <li class="covered" data-hits="1" data-linenumber="68">
-          <span class="hits">1</span>
-          
           <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="6" data-linenumber="69">
-          <span class="hits">6</span>
+        <li class="covered" data-hits="3" data-linenumber="67">
+          <span class="hits">3</span>
           
-          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="70">
+        <li class="covered" data-hits="6" data-linenumber="68">
+          <span class="hits">6</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="69">
           <span class="hits">1</span>
           
           <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="never" data-hits="" data-linenumber="70">
+          
+          
+          <code class="ruby"># TODO: investigar este caso raruno, el comando reportado pasa a ser &#39;[[ $FAIL_FUNC != $FUNCNAME ]]&#39; en lugar de &#39;false&#39;</code>
         </li>
       
         <li class="covered" data-hits="1" data-linenumber="71">
           <span class="hits">1</span>
           
+          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="72">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="73">
+          <span class="hits">6</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="74">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="75">
+          <span class="hits">1</span>
+          
           <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
         </li>
       
-        <li class="covered" data-hits="1" data-linenumber="72">
+        <li class="covered" data-hits="1" data-linenumber="76">
           <span class="hits">1</span>
           
           <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="77">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
+        </li>
+      
+        <li class="covered" data-hits="6" data-linenumber="78">
+          <span class="hits">6</span>
+          
+          <code class="ruby">! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH=&#39;*/&#39; INLINE=true &quot;$TEST_SCRIPT_DIR&quot;/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="79">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in test_01(do_test_error_reporting.sh:12): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="80">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="1" data-linenumber="81">
+          <span class="hits">1</span>
+          
+          <code class="ruby">grep &quot;Error in teardown_test_suite(do_test_error_reporting.sh:21): &#39;false&#39; exited with status 1&quot; &quot;$OUT&quot;</code>
+        </li>
+      
+        <li class="covered" data-hits="3" data-linenumber="82">
+          <span class="hits">3</span>
+          
+          <code class="ruby">[[ $(grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): &#39;.*&#39; exited with status 1&quot; &quot;$OUT&quot; | wc -l) = 1 ]]</code>
         </li>
       
     </ol>

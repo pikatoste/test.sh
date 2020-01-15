@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Output of test_assert.sh:
+# Output of test_assert.sh
 
 <html>
 <head>
@@ -302,9 +303,9 @@ span { display: inline-block; }
 <pre>
 <span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
 <span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
-<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: false
+<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: 'false'
 <span class="f4">[test.sh]</span> Start test: assert_false shoud fail when the assertion is true
-<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: true
+<span class="f1">[test.sh]</span> Assertion failed: expected failure but got success in: 'true'
 <span class="f4">[test.sh]</span> Start test: Failed assertions should interrupt the test when FAIL_FAST is true
 <span class="f2">* Assertions should not fail when the assertion succeeds</span>
 <span class="f1">* assert_true should fail when the assertion is false</span>

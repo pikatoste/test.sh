@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Output of do_test_error_reporting.sh:
+# Output of do_test_error_reporting.sh
 
 <html>
 <head>
@@ -301,9 +302,9 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: do_test_error_reporting inline
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f4">[test.sh]</span> Start test: do_test_error_reporting inline maybe not reached
-<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
 </pre>
 </body>
 </html>

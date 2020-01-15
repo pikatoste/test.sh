@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Main test output of version 0.1.0-SNAPSHOT-18c8e53
+# Main test output
 
 <html>
 <head>
@@ -307,7 +308,7 @@ cp -a test runtest
 make -C runtest/test PRUNE_PATH=$PWD/
 make[1]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
 make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
-  [test_script.sh] This is test.sh version 0.1.0-SNAPSHOT-18c8e53
+  [test_script.sh] This is test.sh version 0.1.0-SNAPSHOT-8dfdff3
   [test_script.sh] See https://github.com/pikatoste/test.sh
  PASSED: test_script.sh
   [test_config.sh] <span class="f2">* The configuration file should be loaded from the default location
@@ -366,16 +367,16 @@ make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
  PASSED: test_STACK_TRACE.sh
   [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when there are no subshells
 </span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when there are subshells</span>
-  [test_error_reporting.sh] <span class="f1">* The error message should identify the source, line, command and exit code when triggered in teardown_test
-</span> FAILED: test_error_reporting.sh
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test
+</span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test_suite
+</span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in assert</span>
+  [test_error_reporting.sh] <span class="f2">* Errors in test and teardown functions should be reported</span>
+ PASSED: test_error_reporting.sh
 ---------------------------------
-Failed 1 out of 14 tests
+All 14 tests passed
 ---------------------------------
-/home/runner/work/test.sh/test.sh/runtest/test/.Makefile.test/Makefile.test:66: recipe for target 'actualCheck' failed
 make[2]: Leaving directory '/home/runner/work/test.sh/test.sh/runtest/test'
-Makefile.test:89: recipe for target 'check' failed
 make[1]: Leaving directory '/home/runner/work/test.sh/test.sh/runtest/test'
-Makefile:9: recipe for target 'test' failed
 </pre>
 </body>
 </html>

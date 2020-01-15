@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Output of do_test_assert_nosubshell.sh:
+# Output of do_test_assert_nosubshell.sh
 
 <html>
 <head>
@@ -302,8 +303,8 @@ span { display: inline-block; }
 <pre>
 <span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
 <span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
-<span class="f1">[test.sh]</span> Assertion failed: nok: expected success but got failure in: false
-<span class="f1">[test.sh]</span> Error in expect_true(runtest/test.sh:307): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Assertion failed: nok: expected success but got failure in: 'false'
+<span class="f1">[test.sh]</span> Error in expect_true(runtest/test.sh:310): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at test_02_fail(runtest/test/do_test_assert_nosubshell.sh:13)
 <span class="f1">[test.sh]</span>  at main(runtest/test/do_test_assert_nosubshell.sh:24)
 </pre>

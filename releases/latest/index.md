@@ -1,6 +1,6 @@
 ---
-layout: default
-version: 0.1.0-SNAPSHOT-18c8e53
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 tag: latest
 ---
 # Release version {{ page.version }}

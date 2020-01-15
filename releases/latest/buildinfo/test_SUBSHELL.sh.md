@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Output of test_SUBSHELL.sh:
+# Output of test_SUBSHELL.sh
 
 <html>
 <head>

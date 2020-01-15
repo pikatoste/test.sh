@@ -1,13 +1,15 @@
+---
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
+---
 <!-- BADGE-START -->
 <!-- BADGE-END-->
 
-See https://pikatoste.github.io/test.sh/.
-
 # test.sh
 
-test.sh is a shell library for writing tests as shell scripts.
+test.sh is a bash library for writing tests as shell scripts.
 
-Only GNU bash is supported.
+Only GNU bash is supported. test.sh has been developed and tested with bash version 4.4.20.
 
 ## Installation
 
@@ -90,10 +92,10 @@ will cause the script to return failure.
 There are some pitfalls with `-o errexit` to be aware of. Bash ignores this setting in the following situations:
 
 * In the condition of an `if`, `while` or `until`.
-* In expressions using `||` or ` &&` except the last command.
+* In expressions using `||` or `&&` except the last command.
 * In negated commands, i.e. preceded by '!'.
 
-In all of the above situations expressions that evaluate to false will not trigger exit. Moreover, as any command
+In all of the above situations, expressions that evaluate to false will not trigger exit. Moreover, as any command
 executed as part of the expression runs in _ignored errexit context_, if the command is a function then the
 result of all commands in the function but the last are ignored. This means that if you have a validation function
 such as:
@@ -129,12 +131,12 @@ will fail also.
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
 
-There is a corner cases were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
+There is a corner case were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
 test and `teardown_test` fail.
 
 ### Subshells
 
-If allowed by the SUBSHELL confiuration option, test.sh will execute in a subshell (i.e. `bash -c`)
+If allowed by the SUBSHELL configuration option, test.sh will execute in a subshell (i.e. `bash -c`)
 code whose exit status must be monitored but not terminate the script on failure.
 This includes test functions, teardown functions and assert functions.
 
@@ -142,13 +144,13 @@ When code is executed in a subshell it cannot affect the environment of the call
 a test function evaluated in a subshell will not be seen from other test functions or the main script.
 
 Subshells inherit the environment of the caller, which includes variables, functions and the shell
-options. Subshells loose trak of source files and line numbers of functions inherited from the environment,
+options. Subshells loose track of source files and line numbers of functions inherited from the environment,
 affecting the quality of stack traces. The REENTER configuration option overcomes this limitation.
 
 ### Stack traces
 
 Errors logged contain a message with the function, source file and line number where the error occurred, optionally
-folowed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
+followed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
 and individual frames in the stack trace can be pruned with configuration option PRUNE_PATH.
 
 Errors are logged for each individual test, teardown functions, and the main script if in managed mode. This means
@@ -158,6 +160,61 @@ If you use `return` with a value other than 0 inside a function to trigger failu
 the return statement to the calling function instead of the function to which the return belongs.
 For this reason, using return to indicate failure is discouraged.
 
+Stack traces include frames in test.sh; they can be quite a large number if SUBSHELL is set to 'always'.
+For example, this test script:
+
+```bash
+#!/bin/bash
+
+test_01() {
+  assert_true false "this is a test killer"
+}
+
+SUBSHELL=${SUBSHELL:-always}
+STACK_TRACE=full
+PRUNE_PATH="*/"
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+
+run_tests
+```
+will log this output:
+
+<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in source(test.sh:343): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:310)
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:323)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
+<font color="#CC0000">[test.sh]</font>  at source(test.sh:343)
+<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:196)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font> test_01 FAILED
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:187): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+</pre>
+
+In contrast, if you run `SUBSHELL=never ./mytest.sh` the stack trace is more compact:
+
+<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:310): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:325)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:198)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+</pre>
+
+In either case, because the error was triggered from `assert_true` which is an internal test.sh function, the error
+message points to test.sh and not mytest.sh. This is a reason to activate stack traces. Note that there's a second error
+that is triggered when the script (not the test) fails. This second error also benefits from the stack trace.
+
+If the error logged is triggered from non-test.sh code, th
 ### Assertions
 
 Explicit assertions were originally conceived as an aid in locating the origin of failures. The error reporting
@@ -218,7 +275,7 @@ Available configuration variables:
 
 * INCLUDE_PATH
 
-  A colon separated list of include locations. Each location is a file glob.
+  A colon-separated list of include locations. Each location is a file glob.
 
   The default value is '$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'.
 
@@ -232,11 +289,22 @@ Available configuration variables:
   If true, failure of a test function will interrupt the script and the remaining test functions will
   be skipped.
 
-  If false, all test functions will be executed.
+  If false, all test functions will be executed. Requires SUBSHELL=always.
 
 * SUBSHELL
 
   Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
+
+  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
+    methods, will terminate the script. In this mode, `teardown_test_suite` will not get called when both a test and
+    `teardown_test` fail.
+  * teardown: only start subshells to execute teardown functions. Incompatible with FAIL_FAST false.
+    `teardown_test` and `teardown_test_suite` are always called in this mode and failures in these functions
+     don't fail the test nor interrupt the script.
+
+  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
+    FAIL_FAST is false. `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
+    these functions don't fail the test not interrupt the script
 
   test.sh can execute in a subshell code whose exit status must be monitored but not terminate the script on failure.
   This includes test functions, teardown functions and assert functions. Code executed in a
@@ -248,24 +316,13 @@ Available configuration variables:
   Another consequence is that bash looses track of the source files where functions are defined, affecting the
   quality of stack traces. The REENTER cnofiguration option overcomes this limitation.
 
-
-  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
-    methods, will terminate the script. In this mode, `teardown_test_suite` will not get called when both a test and
-    `teardown_test` fail.
-  * teardown: only start subshells to execute teardown functions. `teardown_test` and `teardown_test_suite` are
-    always called in this mode and failures in these functions don't fail the test not interrupt the script.
-    Incompatible with FAIL_FAST false.
-  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false. `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
-    these functions don't fail the test not interrupt the script
-
 * REENTER
 
   Boolean. Default true.
 
   If true, when test.sh starts a subshell it will source again all involved scripts: the test
   script, test.sh and included files. This redefines functions in the subshell's context and allows
-  stack traces to correctly refer source files and line numbers.
+  stack traces to correctly refer to source files and line numbers.
 
   If false, subshells will not source again involved scripts. Functions defined in the calling shell are
   available to the subshell because they are exported in the environment. The source file and line number of
@@ -283,12 +340,13 @@ Available configuration variables:
   * compact: include all frames except those in test.sh.
   * full: include all frames.
 
+
 * PRUNE_PATH
 
   Default: ${PWD}/
 
-  A pattern that is matched at the beginning of each source path when generating frames in stack traces. The longest
-  match is removed from the path; if there's no match the path not modified.
+  A pattern that is matched at the beginning of each source file path in error reports, i.e. the error message and
+  stack trace frames. The longest match is removed from the path. If there's no match the path not modified.
 
   For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
 
@@ -315,7 +373,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   ```bash
   test_xxx() {
-    start_test "The name of this test"
+    start_test "Short description of this test"
     # the test code goes here
   }
   ```
@@ -327,31 +385,32 @@ This is the list of functions defined by test.sh that you can use in a test scri
   Syntax:
 
   ```text
-  start_test <test name>
+  start_test <short test description>
   ```
 
   Defines the start of a test (and the end of the previous test) in inline mode. In managed mode,
-  sets the test name of the current test function.
+  sets the test description of the current test function. The test description is displayed in the
+  main output and should be single line of text.
 
 * setup_test_suite
 
-  If defined, this function will be called in managed mode only once before all tests.
+  If defined, this function will be called only once before any test.
   A failure in this function will cause failure of the script and no test will be executed.
 
 * teardown_test_suite
 
-  If defined, this function will be called in managed mode only once after all tests, even if there are failures.
+  If defined, this function will be called once after all tests even if there are failures.
   A failure in this function itself will not cause failure of the script, but will cause a warning
   message to be displayed on the main output.
 
 * setup_test
 
-  If defined, this function will be called in managed mode before each test.
+  If defined, this function will be called before each test.
   A failure in this function will cause failure of the test.
 
 * teardown_test
 
-  If defined, this function will be called in managed mode after each test, even if the test fails.
+  If defined, this function will be called after each test even if the test fails.
   A failure in this function itself will not cause failure of the test, but will cause a warning
   message to be displayed on the main output.
 
@@ -363,12 +422,59 @@ This is the list of functions defined by test.sh that you can use in a test scri
   assert_true <shell command> [message]
   ```
 
+  Executes \<shell command\>. If the result code is not success, an error message is logged and an error triggered.
+
+  For example, the following test script:
+
+  ```bash
+  #!/bin/bash
+
+  source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+
+  assert_true false "this is a test killer"
+  ```
+
+  will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+
+  ```text
+  [test.sh] Assertion failed: this is a test killer: expected success but got failure in: 'false'
+  [test.sh] Error in expect_true(test.sh:310): 'false' exited with status 1
+  [test.sh]  at call_assert(test.sh:325)
+  [test.sh]  at assert_true(test.sh:331)
+  [test.sh]  at main(mytest.sh:5)
+  ```
+
 * assert_false
 
   Syntax:
 
   ```text
   assert_false <shell command> [message]
+  ```
+
+  Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
+
+    **NOTE**: \<shell command\> is executed in _ignored errexit context_. You should not call shell functions designed to
+    run in errexit context (see [Implicit assertion](#implicit-assertion)).
+
+  For example, the following test script (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+
+  ```bash
+  #!/bin/bash
+
+  source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+
+  assert_false true "this is a test killer"
+  ```
+
+  will log the following output:
+
+  ```text
+  [test.sh] Assertion failed: this is a test killer: expected failure but got success in: 'true'
+  [test.sh] Error in expect_false(test.sh:315): 'false' exited with status 1
+  [test.sh]  at call_assert(test.sh:325)
+  [test.sh]  at assert_false(test.sh:335)
+  [test.sh]  at main(mytest.sh:5)
   ```
 
 ## Contributing
@@ -383,7 +489,9 @@ found in `runtest/test/testout`.
 Other Makefile targets:
 
 * all: build test.sh. Produces `build/test.sh`.
-* clean: remove the `build` and `runtest`directories.
+* clean: remove the `build` and `runtest` directories.
+* check|test: run the tests. Requires an already built test.sh; for this target to pick changes to test.sh, do
+  `make clean all check`. Test results are in `runtest/test/testout`.
 * coverage: run the tests and generate an HTML coverage report in `runtest/coverage`.
 Requires [Bashcov](https://github.com/infertux/bashcov), so you must install it first:
 

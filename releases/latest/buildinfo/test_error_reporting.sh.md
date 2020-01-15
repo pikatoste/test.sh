@@ -1,7 +1,8 @@
 ---
-layout: default
+layout: release
+version: 0.1.0-SNAPSHOT-8dfdff3
 ---
-# Output of test_error_reporting.sh:
+# Output of test_error_reporting.sh
 
 <html>
 <head>
@@ -315,14 +316,59 @@ span { display: inline-block; }
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
 <span class="f3">WARN: teardown_test failed</span>
 <span class="f1">* do_test_error_reporting inline</span>
-<span class="f3">WARN: teardown_test failed</span>
-<span class="f3">WARN: teardown_test failed</span>
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
 <span class="f3">WARN: teardown_test failed</span>
 <span class="f2">* do_test_error_reporting inline</span>
 <span class="f2">* do_test_error_reporting inline maybe not reached</span>
 <span class="f3">WARN: teardown_test failed</span>
-<span class="f1">[test.sh]</span> Error in main(runtest/test/test_error_reporting.sh:29): 'grep &quot;Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1&quot; &quot;$OUT&quot;' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f4">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in teardown_test_suite
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f2">* do_test_error_reporting inline</span>
+<span class="f2">* do_test_error_reporting inline maybe not reached</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): '[[ $FAIL_FUNC != *\[$FUNCNAME\]* ]]' exited with status 1
+<span class="f2">* do_test_error_reporting inline</span>
+<span class="f2">* do_test_error_reporting inline maybe not reached</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f4">[test.sh]</span> Start test: The error message should identify the source, line, command and exit code when triggered in assert
+<span class="f1">[test.sh]</span> Error in expect_true(test.sh:310): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in source(test.sh:343): 'false' exited with status 1
+<span class="f4">[test.sh]</span> Start test: Errors in test and teardown functions should be reported
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): '[[ $FAIL_FUNC != *\[$FUNCNAME\]* ]]' exited with status 1
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f1">* do_test_error_reporting inline</span>
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): '[[ $FAIL_FUNC != *\[$FUNCNAME\]* ]]' exited with status 1
+<span class="f1">* do_test_error_reporting inline</span>
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f1">* do_test_error_reporting inline</span>
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
 </pre>
 </body>
 </html>
