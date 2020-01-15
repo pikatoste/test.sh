@@ -67,9 +67,8 @@ run_tests
 
 Test output:
 
-```text
-* This is my first test
-```
+<pre><font color="#4E9A06">* This is my first test</font>
+</pre>
 
 The output of a test script is a colorized summary with the result of each test.
 The standard output and error are redirected to a log file named after the test script with the
@@ -153,12 +152,67 @@ Errors logged contain a message with the function, source file and line number w
 followed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
 and individual frames in the stack trace can be pruned with configuration option PRUNE_PATH.
 
-Errors are logged for each individual test, teardown functions, and the main script if in managed mode. This means
+Errors are logged for each individual test, setup and teardown functions, and the main script if in managed mode. This means
 that the same log file can contain more than one error.
 
 If you use `return` with a value other than 0 inside a function to trigger failure, the stack trace will attribute
 the return statement to the calling function instead of the function to which the return belongs.
 For this reason, using return to indicate failure is discouraged.
+
+Stack traces include frames in test.sh; they can be quite a large number if SUBSHELL is set to 'always'.
+For example, this test script:
+
+```shell script
+#!/bin/bash
+
+test_01() {
+  assert_true false "this is a test killer"
+}
+
+SUBSHELL=${SUBSHELL:-always}
+STACK_TRACE=full
+PRUNE_PATH="*/"
+source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+
+run_tests
+```
+will log this output:
+
+<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in source(test.sh:343): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:310)
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:323)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
+<font color="#CC0000">[test.sh]</font>  at source(test.sh:343)
+<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:196)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font> test_01 FAILED
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:187): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+</pre>
+
+If you Because the error was triggered from `assert_true` -- which is an internal test.sh function -- the error
+message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
+Note that there's a second error, this one is triggered in managed mode when the script (not the test) fails.
+This second error also benefits from the stack trace.
+
+In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
+
+<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:310): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:325)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:198)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+</pre>
 
 ### Assertions
 
@@ -399,8 +453,11 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
 
-    **NOTE**: \<shell command\> is executed in _ignored errexit context_. You should not call shell functions designed to
-    run in errexit context (see [Implicit assertion](#implicit-assertion)).
+    **NOTE**: \<shell command\> is executed in _ignored errexit context_
+    (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
+    run in errexit context, you should invoke <\shell command\> with the `subshell` function. For example,
+    the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
+    context, should be written as: `assert_false "subshell my_validation_function"`.
 
   For example, the following test script (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
 
@@ -421,6 +478,20 @@ This is the list of functions defined by test.sh that you can use in a test scri
   [test.sh]  at assert_false(test.sh:335)
   [test.sh]  at main(mytest.sh:5)
   ```
+
+* subshell
+
+  Syntax:
+
+  ```text
+  subshell <shell command>
+  ```
+
+  Executes \<shell command\> in a subshell with errexit context enabled. This is useful when you need to execute code
+  in errexit context but in a situation where bash is in ignored errexit context, such as when negating an expression
+  with `!`. It is also useful for capturing the result code of an expression that might fail.
+  Use this function instead of plain `bash -c`
+  invocations to preserve the error tracing capacity of test.sh.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
