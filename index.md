@@ -30,10 +30,10 @@ This is what a test looks like:
 #!/bin/bash
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
-set_test_name "This is my first test"
+start_test "This is a passing test"
 assert_true true
 
-set_test_name "This is my second test"
+start_test "This is a failing test"
 assert_true false
 ```
 
@@ -42,12 +42,12 @@ The previous test was written in *inline* mode. You can also choose *managed* mo
 ```bash
 #!/bin/bash
 test_01() {
-  test_name "This is my first test"
+  start_test "This is a passing test"
   assert_true true
 }
 
 test_02() {
-  test_name "This is my second test"
+  start_test "This is a failing test"
   assert_true false
 }
 
@@ -56,9 +56,11 @@ source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 run_tests
 ```
 
-In _managed_ mode you write each test in a separate function and then invoke `run_tests` to run your tests.
+In _managed_ mode you write each test in a separate function and then invoke `run_tests` to run your tests. This mode
+supports running all tests despite failures.
 
-In _inline_ mode you don't invoke `run_tests`; just remember to call `start_test` to provide context.
+In _inline_ mode you don't invoke `run_tests`; just remember to call `start_test` to provide context. In this mode,
+the first failed test terminates the script
 
 # What does **test.sh** provide?
 
@@ -66,13 +68,26 @@ With **test.sh** you get:
 
 * **Colorized summary output**.
 
-  ![](images/main-test-output.png)
+  <pre><font color="#4E9A06">* This is a passing test</font>
+  <font color="#CC0000">* This is a failing test</font>
+  </pre>
 
 * **Separate log output or displayed along the main output**. Each run is logged to a well-defined
 location.
+
 * **Detailed error reporting**. What failed and where, with a stack trace.
 
-  ![](images/error-stack-trace.png)
+  <pre><font color="#3465A4">[test.sh]</font> Start test: This is a passing test
+  <font color="#3465A4">[test.sh]</font> Start test: This is a failing test
+  <font color="#CC0000">[test.sh]</font> Assertion failed: expected success but got failure in: &apos;false&apos;
+  <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:310): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:325)
+  <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+  <font color="#CC0000">[test.sh]</font>  at test_02(mymanagedtest.sh:9)
+  <font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
+  <font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:198)
+  <font color="#CC0000">[test.sh]</font>  at main(mymanagedtest.sh:15)
+  </pre>
 
 * **Setup/Teardown functions**. `setup_test_suite` and `teardown_test_suite` will be called
 only once at the start and end of the script. `setup_test` and `teardown_test` will be called
@@ -81,11 +96,34 @@ but produce an error trace in the log file and a warning in the main output.
 
   Sample main output of a test with failing teardown functions:
 
-  ![](images/teardown-main.png)
+  <pre><font color="#4E9A06">* A passing test</font>
+  <font color="#C4A000">WARN: teardown_test failed</font>
+  <font color="#C4A000">WARN: teardown_test_suite failed</font>
+  </pre>
 
   Sample log output of the same test:
 
-  ![](images/teardown-log.png)
+  <pre><font color="#3465A4">[test.sh]</font> Start test: A passing test
+  <font color="#CC0000">[test.sh]</font> Error in teardown_test(myteardownfailtest.sh:8): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_if_exists(test.sh:138)
+  <font color="#CC0000">[test.sh]</font>  at call_teardown_subshell(test.sh:143)
+  <font color="#CC0000">[test.sh]</font>  at source(test.sh:343)
+  <font color="#CC0000">[test.sh]</font>  at source(myteardownfailtest.sh:16)
+  <font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+  <font color="#CC0000">[test.sh]</font>  at call_teardown(test.sh:149)
+  <font color="#CC0000">[test.sh]</font>  at run_test(test.sh:172)
+  <font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:198)
+  <font color="#CC0000">[test.sh]</font>  at main(myteardownfailtest.sh:18)
+  <font color="#CC0000">[test.sh]</font> Error in teardown_test_suite(myteardownfailtest.sh:12): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_if_exists(test.sh:138)
+  <font color="#CC0000">[test.sh]</font>  at call_teardown_subshell(test.sh:143)
+  <font color="#CC0000">[test.sh]</font>  at source(test.sh:343)
+  <font color="#CC0000">[test.sh]</font>  at source(myteardownfailtest.sh:16)
+  <font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
+  <font color="#CC0000">[test.sh]</font>  at call_teardown(test.sh:149)
+  <font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:213)
+  <font color="#CC0000">[test.sh]</font>  at main(myteardownfailtest.sh:18)
+  </pre>
 
 * **Include shared code among your tests**. Place shared code in a predefined location and it will be automatically
 sourced in your script.
@@ -100,5 +138,5 @@ of included code, if you want different settings than the default ones.
 that purpose. Or simply:
 
 ```bash
-find test -name test\*.sh | while read test; do ""$test""; done
+find test -name test\*.sh | while read test; do "$test"; done
 ```
