@@ -21,12 +21,16 @@ grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with statu
 start_test "The error message should identify the source, line, command and exit code when triggered in teardown_test"
 ! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH='*/' INLINE=     "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test] || false
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
   CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH='*/' INLINE=     "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test]
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH='*/' INLINE=true "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test] || false
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
   CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH='*/' INLINE=true "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test]
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 2 ]]
 
 start_test "The error message should identify the source, line, command and exit code when triggered in teardown_test_suite"
 ! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH='*/' INLINE=     "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test_suite] || false
@@ -50,23 +54,29 @@ start_test "Errors in test and teardown functions should be reported"
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 # TODO: investigar este caso raruno, el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH='*/' INLINE=     "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH='*/' INLINE=     "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=never    STACK_TRACE=no PRUNE_PATH='*/' INLINE=true "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 # TODO: investigar este caso raruno, el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=teardown STACK_TRACE=no PRUNE_PATH='*/' INLINE=true "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! CURRENT_TEST_NAME= SUBSHELL=always   STACK_TRACE=no PRUNE_PATH='*/' INLINE=true "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1" "$OUT"
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1" "$OUT"
+[[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
