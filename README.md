@@ -130,11 +130,11 @@ will fail also.
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
 
-These semantics break in corner cases when SUBSHELL is set 'never':
+These semantics break in corner cases when SUBSHELL is set to 'never':
 * A failure in `teardown_test` or `teardown_test_suite` will make the test script to fail.
 * In inline mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked for a failed test or
 the last test even if it succeeds.
-* In managed mode and FAIL_FAST false, `teardown_test_suite` will not be called if `teardown_test` fails when invoked
+* In managed mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked
 for a failed test.
 
 ### Subshells
@@ -454,14 +454,12 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
 
-  ```text
   <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
   <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:328): &apos;false&apos; exited with status 1
   <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
   <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:349)
   <font color="#CC0000">[test.sh]</font>  at main(mytestasserttrue.sh:8)
   </pre>
-  ```
 
 * assert_false
 
@@ -487,14 +485,12 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   will log the following output:
 
-  ```text
   <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected failure but got success in: &apos;true&apos;
   <font color="#CC0000">[test.sh]</font> Error in expect_false(test.sh:333): &apos;false&apos; exited with status 1
   <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
   <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:353)
   <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
   </pre>
-  ```
 
     **NOTE**: \<shell command\> is executed in _ignored errexit context_
     (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to

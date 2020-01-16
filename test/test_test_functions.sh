@@ -43,7 +43,7 @@ start_test "run_tests shoud invoke tests and setup methods when there are no fai
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
 define_funcs
-CURRENT_TEST_NAME= run_tests
+( CURRENT_TEST_NAME= run_tests )
 unset_funcs
 
 diff - "$OUTFILE" <<EOF
@@ -61,7 +61,7 @@ start_test "run_tests shoud invoke tests and setup methods when there are failur
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-! CURRENT_TEST_NAME= subshell run_tests || false
+( ! CURRENT_TEST_NAME= subshell run_tests || false )
 unset_funcs
 
 diff - "$OUTFILE" <<EOF

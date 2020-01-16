@@ -36,8 +36,9 @@ pop_exit_handler() {
 
 err_trap() {
   local err=$?
+  EXIT_CODE=$err
   for handler in "${ERR_HANDLERS[@]}"; do
-    EXIT_CODE=$err eval "$handler" || true
+    eval "$handler" || true
   done
 }
 
@@ -46,7 +47,7 @@ push_err_handler() {
 }
 
 pop_err_handler() {
-  unset ERR_HANDLERS[0]
+  ERR_HANDLERS=("${ERR_HANDLERS[@]:1}")
 }
 
 add_err_handler() {
@@ -90,8 +91,7 @@ display_test_skipped() {
 }
 
 warn_teardown_failed() {
-  pop_err_handler
-  echo -e "${ORANGE}WARN: teardown_test$1 failed${NC}" >&3
+  echo -e "${ORANGE}WARN: $1 failed${NC}" >&3
 }
 
 do_log() {
@@ -123,7 +123,7 @@ error_setup_test_suite() {
 }
 
 call_setup_test_suite() {
-  push_err_handler error_setup_test_suite
+  push_err_handler "pop_err_handler; error_setup_test_suite"
   call_if_exists setup_test_suite
   pop_err_handler
 }
@@ -136,24 +136,47 @@ call_teardown_subshell() {
 
 call_teardown() {
   if [[ $SUBSHELL != 'never' ]]; then
-    subshell "call_teardown_subshell $1" || warn_teardown_failed $2
+    subshell "call_teardown_subshell $1" || warn_teardown_failed $1
   else
-    push_err_handler "warn_teardown_failed $2"
+    push_err_handler "pop_err_handler; warn_teardown_failed $1"
     call_if_exists $1
     pop_err_handler
   fi
 }
 
+run_test_script() {
+  local test_script="$1"
+  shift
+  ( unset \
+      CURRENT_TEST_NAME \
+      SUBSHELL_CMD \
+      MANAGED \
+      FIRST_TEST \
+      teardown_test_called \
+      teardown_test_suite_called \
+      PIPE \
+      STACK_FILE \
+      FOREIGN_STACK ; \
+    "$test_script" "$@" )
+}
+
 run_test() {
+  local test_func=$1
+  catch_setup() {
+    pop_err_handler
+    ( CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func [setup_test]}; display_test_failed )
+  }
   teardown_test_called=
   local test_func=$1
   [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
-  push_err_handler "CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$1}; display_test_failed"
+  push_err_handler catch_setup
   call_if_exists setup_test
+  pop_err_handler
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || call_teardown teardown_test
   }
   push_exit_handler run_test_teardown_trap
+  push_err_handler "pop_err_handler; display_test_failed"
   $test_func
   display_test_passed
   pop_err_handler
@@ -166,16 +189,15 @@ run_test() {
 run_tests() {
   MANAGED=
   discover_tests() {
-    # TODO: use a configurable test matching pattern
     declare -F | cut -d \  -f 3 | grep "$TEST_MATCH" || true
   }
 
   teardown_test_suite_called=
   [ $# -gt 0 ] || { local discovered="$(discover_tests)"; [ -z "$discovered" ] || set $discovered; }
   local failures=0
-  call_if_exists setup_test_suite
+  call_setup_test_suite
   run_tests_exit_trap() {
-    [[ $teardown_test_suite_called ]] || call_teardown teardown_test_suite _suite
+    [[ $teardown_test_suite_called ]] || call_teardown teardown_test_suite
   }
   push_exit_handler run_tests_exit_trap
   while [ $# -gt 0 ]; do
@@ -200,7 +222,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  call_teardown teardown_test_suite _suite
+  call_teardown teardown_test_suite
   pop_exit_handler
   [[ $failures == 0 ]]
 }
@@ -308,7 +330,7 @@ expect_false() {
 call_assert() {
   local expect=$1
   shift
-  push_err_handler "assert_err_msg \"$1\" \"$2\" \"$3\""
+  push_err_handler "pop_err_handler; assert_err_msg \"$1\" \"$2\" \"$3\""
   if [[ $SUBSHELL == always ]]; then
     $expect "subshell \"$1\""
   else
@@ -325,7 +347,7 @@ assert_false() {
   call_assert expect_false "$1" "expected failure but got success" "$2"
 }
 
-if [[ -v SUBSHELL_CMD && $SUBSHELL_CMD != fork ]]; then
+if [[ -v SUBSHELL_CMD ]]; then
   load_includes
   trap "EXIT_CODE=\$?; exit_trap" EXIT
   trap err_trap ERR
@@ -352,7 +374,7 @@ else
   NC='\033[0m' # No Color'
 
   cleanup() {
-    exec 1>&- 2>&- || true
+    exec 1>&- 2>&-
     wait
     rm -f $STACK_FILE
   }
@@ -485,9 +507,9 @@ else
   push_exit_handler "cleanup"
   load_config
   load_includes
-  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite _suite"
+  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
   push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
-  push_exit_handler display_last_test_result
+  push_exit_handler "[[ -v MANAGED ]] || display_last_test_result"
 
   [[ ! $DEBUG ]] || set -x
 fi
