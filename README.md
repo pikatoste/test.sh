@@ -298,18 +298,22 @@ Available configuration variables:
 
   Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
 
-  * never: never start subshells. Incompatible with FAIL_FAST false. All failures, including those in teardown
-    methods, will terminate the script. In this mode, `teardown_test_suite` will not get called when both a test and
-    `teardown_test` fail.
+  * never: never start subshells. Incompatible with FAIL_FAST false. Breaks teardown semantics
+    (see [setup/teardown](#setupteardown)): any failure in a teardown function will terminate the script with
+    failure. In this mode, `teardown_test_suite` will not get called when both a test and `teardown_test` fail.
+
   * teardown: only start subshells to execute teardown functions. Incompatible with FAIL_FAST false.
-    `teardown_test` and `teardown_test_suite` are always called in this mode and failures in these functions
-     don't fail the test nor interrupt the script.
+     Enforces teardown semantics (see [setup/teardown](#setupteardown)):`teardown_test` and `teardown_test_suite`
+     are always called in this mode and failures in these functions don't fail the test nor interrupt the script.
 
   * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false. `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
-    these functions don't fail the test not interrupt the script
+    FAIL_FAST is false. Enforces teardown semantics (see [setup/teardown](#setupteardown)):
+    `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
+    these functions don't fail the test nor interrupt the script.
 
-  test.sh can execute in a subshell code whose exit status must be monitored but not terminate the script on failure.
+  See [Subshells](#subshells).
+  <!--
+  test.sh can execute in a subshell code whose exit status must be monitored, i.e. not terminate the script on failure.
   This includes test functions, teardown functions and assert functions. Code executed in a
   subshell cannot affect the environment of the caller.
 
@@ -317,7 +321,8 @@ Available configuration variables:
   This subshell inherits the environment, which includes both variables and functions, and the shell
   options. One implication of this is that you cannot affect the environment of the test script from a test function.
   Another consequence is that bash looses track of the source files where functions are defined, affecting the
-  quality of stack traces. The REENTER cnofiguration option overcomes this limitation.
+  quality of stack traces. The REENTER configuration option overcomes this limitation.
+  -->
 
 * REENTER
 
@@ -398,9 +403,9 @@ This is the list of functions defined by test.sh that you can use in a test scri
   start_test <short test description>
   ```
 
-  Defines the start of a test (and the end of the previous test) in inline mode. In managed mode,
-  sets the test description of the current test function. The test description is displayed in the
-  main output and should be single line of text.
+  Set the test description of the current test. The test description is displayed in the main output and should
+  be a single line of text. In inline mode, defines the start of a test (and the end of the previous test).
+  In managed mode, sets the test description of the current test function.
 
 * setup_test_suite
 
@@ -439,6 +444,9 @@ This is the list of functions defined by test.sh that you can use in a test scri
   ```shell script
   #!/bin/bash
 
+  SUBSHELL=never
+  STACK_TRACE=full
+  PRUNE_PATH="*/"
   source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
   assert_true false "this is a test killer"
@@ -447,11 +455,12 @@ This is the list of functions defined by test.sh that you can use in a test scri
   will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
 
   ```text
-  [test.sh] Assertion failed: this is a test killer: expected success but got failure in: 'false'
-  [test.sh] Error in expect_true(test.sh:310): 'false' exited with status 1
-  [test.sh]  at call_assert(test.sh:325)
-  [test.sh]  at assert_true(test.sh:331)
-  [test.sh]  at main(mytest.sh:5)
+  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+  <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:328): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
+  <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:349)
+  <font color="#CC0000">[test.sh]</font>  at main(mytestasserttrue.sh:8)
+  </pre>
   ```
 
 * assert_false
@@ -463,18 +472,14 @@ This is the list of functions defined by test.sh that you can use in a test scri
   ```
 
   Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
-
-    **NOTE**: \<shell command\> is executed in _ignored errexit context_
-    (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
-    run in errexit context, you should invoke <\shell command\> with the `subshell` function. For example,
-    the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
-    context, should be written as: `assert_false "subshell my_validation_function"`.
-
   For example, the following test script (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
 
   ```shell script
   #!/bin/bash
 
+  SUBSHELL=never
+  STACK_TRACE=full
+  PRUNE_PATH="*/"
   source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
 
   assert_false true "this is a test killer"
@@ -483,12 +488,19 @@ This is the list of functions defined by test.sh that you can use in a test scri
   will log the following output:
 
   ```text
-  [test.sh] Assertion failed: this is a test killer: expected failure but got success in: 'true'
-  [test.sh] Error in expect_false(test.sh:315): 'false' exited with status 1
-  [test.sh]  at call_assert(test.sh:325)
-  [test.sh]  at assert_false(test.sh:335)
-  [test.sh]  at main(mytest.sh:5)
+  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected failure but got success in: &apos;true&apos;
+  <font color="#CC0000">[test.sh]</font> Error in expect_false(test.sh:333): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
+  <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:353)
+  <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
+  </pre>
   ```
+
+    **NOTE**: \<shell command\> is executed in _ignored errexit context_
+    (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
+    run in errexit context, you should invoke <\shell command\> with the `subshell` function. For example,
+    the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
+    context, should be written as: `assert_false "subshell my_validation_function"`.
 
 * subshell
 
