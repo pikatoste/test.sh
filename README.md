@@ -130,8 +130,12 @@ will fail also.
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
 
-There is a corner case were `teardown_test_suite` will not be called: when SUBSHELL is set no 'never' and both a
-test and `teardown_test` fail.
+These semantics break in corner cases when SUBSHELL is set 'never':
+* A failure in `teardown_test` or `teardown_test_suite` will make the test script to fail.
+* In inline mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked for a failed test or
+the last test even if it succeeds.
+* In managed mode and FAIL_FAST false, `teardown_test_suite` will not be called if `teardown_test` fails when invoked
+for a failed test.
 
 ### Subshells
 
@@ -199,8 +203,8 @@ will log this output:
 
 If you Because the error was triggered from `assert_true` -- which is an internal test.sh function -- the error
 message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
-Note that there's a second error, this one is triggered in managed mode when the script (not the test) fails.
-This second error also benefits from the stack trace.
+Note that there's a second error, this one is triggered in managed mode and FAIL_FAST false when the script
+(not the test) fails. This second error also benefits from the stack trace.
 
 In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
 
