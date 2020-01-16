@@ -69,8 +69,8 @@ start_test() {
   [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown teardown_test; }
-  [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   CURRENT_TEST_NAME="$1"
+  [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
   unset FIRST_TEST
 }
@@ -148,12 +148,12 @@ run_test() {
   teardown_test_called=
   local test_func=$1
   [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
+  push_err_handler "CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$1}; display_test_failed"
   call_if_exists setup_test
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || call_teardown teardown_test
   }
   push_exit_handler run_test_teardown_trap
-  push_err_handler display_test_failed
   $test_func
   display_test_passed
   pop_err_handler
