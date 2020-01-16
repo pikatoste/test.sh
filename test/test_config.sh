@@ -1,4 +1,4 @@
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "The configuration file should be loaded from the default location"
 unset VERBOSE

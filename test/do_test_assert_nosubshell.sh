@@ -19,6 +19,6 @@ test_03_fail() {
   assert_false "false" "nok"
 }
 
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 run_tests

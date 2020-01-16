@@ -40,7 +40,7 @@ setup_test_suite() {
 
 STACK_TRACE=no
 PRUNE_PATH='*/'
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 FAIL_FUNC=$1
 

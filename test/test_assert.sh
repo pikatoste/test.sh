@@ -4,7 +4,7 @@ fail_validation() {
 }
 
 # TODO: check with different values of SUBSHELL
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Assertions should not fail when the assertion succeeds"
 assert_true "true" "ok"
