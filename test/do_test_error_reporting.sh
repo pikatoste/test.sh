@@ -15,16 +15,31 @@ test_01() {
 
 teardown_test() {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
+  true
 }
 
 teardown_test_suite() {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
+  true
 }
 
 func_assert() {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || assert_true false
+  true
 }
 
+setup_test() {
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
+  true
+}
+
+setup_test_suite() {
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
+  true
+}
+
+STACK_TRACE=no
+PRUNE_PATH='*/'
 source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 FAIL_FUNC=$1

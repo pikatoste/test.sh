@@ -14,6 +14,6 @@ source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
 
 start_test "Failing teardown functions should not break the test"
 # run in a different test script to avoid the race condition on the log output
-CURRENT_TEST_NAME= run_tests
+( CURRENT_TEST_NAME= run_tests )
 
 # TODO: check output
