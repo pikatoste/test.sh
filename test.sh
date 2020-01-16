@@ -253,7 +253,7 @@ subshell() {
   }
   rm -f $STACK_FILE
   if [[ $REENTER ]]; then
-    BASH_ENV=<(call_stack) /bin/bash --norc -c "SUBSHELL_CMD=\"$1\" source \"$TEST_SCRIPT\""
+    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=\"$1\") /bin/bash --norc -c "$TEST_SCRIPT"
   else
     BASH_ENV=<(call_stack) bash --norc -c "trap save_stack ERR ; $1"
   fi
@@ -386,8 +386,8 @@ else
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
-    [[   $VERBOSE ]] || grep -v ": pop_scope: " <"$PIPE" | cat >"$TESTOUT_FILE" &
-    [[ ! $VERBOSE ]] || grep -v ": pop_scope: " <"$PIPE" | tee  "$TESTOUT_FILE" &
+    [[   $VERBOSE ]] || cat >"$TESTOUT_FILE" <"$PIPE" &
+    [[ ! $VERBOSE ]] || tee  "$TESTOUT_FILE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
