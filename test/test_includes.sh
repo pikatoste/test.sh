@@ -1,4 +1,4 @@
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Files should be included from the default locations"
 cp "$TEST_SCRIPT_DIR"/_include_test1.sh "$TEST_SCRIPT_DIR"/../include_test.sh
