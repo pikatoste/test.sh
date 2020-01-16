@@ -201,9 +201,9 @@ will log this output:
 <font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
 </pre>
 
-If you Because the error was triggered from `assert_true` -- which is an internal test.sh function -- the error
+Because the error was triggered from `assert_true` --which is an internal test.sh function-- the error
 message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
-Note that there's a second error, this one is triggered in managed mode and FAIL_FAST false when the script
+Note that there's a second error, this one is triggered in managed mode, SUBSHELL=always and FAIL_FAST false when the script
 (not the test) fails. This second error also benefits from the stack trace.
 
 In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
