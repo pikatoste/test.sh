@@ -16,7 +16,6 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   set -o errtrace
   set -o pipefail
   export SHELLOPTS
-  #shopt -s checkjobs
 fi
 
 exit_trap() {
@@ -38,7 +37,7 @@ pop_exit_handler() {
 err_trap() {
   local err=$?
   for handler in "${ERR_HANDLERS[@]}"; do
-    ERRCODE=$err eval "$handler" || true
+    EXIT_CODE=$err eval "$handler" || true
   done
 }
 
@@ -59,7 +58,7 @@ remove_err_handler() {
 }
 
 display_last_test_result() {
-  if [[ $ERRCODE == 0 ]]; then
+  if [[ $EXIT_CODE == 0 ]]; then
     display_test_passed
   else
     display_test_failed
@@ -67,10 +66,10 @@ display_last_test_result() {
 }
 
 start_test() {
-  [[ -v MANAGED || ! -v FIRST_TEST ]] || call_if_exists setup_test_suite
+  [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
+  [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown teardown_test; }
   [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
-  [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   CURRENT_TEST_NAME="$1"
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
   unset FIRST_TEST
@@ -91,6 +90,7 @@ display_test_skipped() {
 }
 
 warn_teardown_failed() {
+  pop_err_handler
   echo -e "${ORANGE}WARN: teardown_test$1 failed${NC}" >&3
 }
 
@@ -116,6 +116,16 @@ log_err() {
 
 call_if_exists() {
   ! declare -f $1 >/dev/null || $1
+}
+
+error_setup_test_suite() {
+  echo -e "${RED}[ERROR] setup_test_suite failed, see $(prune_path "$TESTOUT_FILE") for more information${NC}" >&3
+}
+
+call_setup_test_suite() {
+  push_err_handler error_setup_test_suite
+  call_if_exists setup_test_suite
+  pop_err_handler
 }
 
 call_teardown_subshell() {
@@ -234,7 +244,7 @@ save_stack() {
 }
 
 current_stack() {
-  local err=$ERRCODE
+  local err=$EXIT_CODE
   local frame_idx=3
   ERRCMD=$BASH_COMMAND
   local err_string="Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
@@ -317,7 +327,7 @@ assert_false() {
 
 if [[ -v SUBSHELL_CMD && $SUBSHELL_CMD != fork ]]; then
   load_includes
-  trap "ERRCODE=\$?; exit_trap" EXIT
+  trap "EXIT_CODE=\$?; exit_trap" EXIT
   trap err_trap ERR
   push_err_handler save_stack
   eval "$SUBSHELL_CMD"
@@ -465,7 +475,7 @@ else
     validate_values STACK_TRACE no pruned compact full
   }
 
-  trap "ERRCODE=\$?; rm -f \$PIPE; exit_trap" EXIT
+  trap "EXIT_CODE=\$?; rm -f \$PIPE; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
   push_err_handler "print_stack_trace"
