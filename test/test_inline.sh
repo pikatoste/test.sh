@@ -1,4 +1,4 @@
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 OUTFILE="$TEST_SCRIPT_DIR"/.test_inline.out
 

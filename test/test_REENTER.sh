@@ -1,6 +1,6 @@
 FAIL_FAST=
 SUBSHELL=always
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/../test.sh
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 test_01() {
   true
