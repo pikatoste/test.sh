@@ -167,7 +167,7 @@ run_tests() {
   MANAGED=
   discover_tests() {
     # TODO: use a configurable test matching pattern
-    declare -F | cut -d \  -f 3 | grep ^test_ || true
+    declare -F | cut -d \  -f 3 | grep "$TEST_MATCH" || true
   }
 
   teardown_test_suite_called=
@@ -393,6 +393,7 @@ else
     default_PRUNE_PATH='$PWD/'
     default_SUBSHELL='$(set_default_SUBSHELL)'
     default_STACK_TRACE='$(set_default_STACK_TRACE)'
+    default_TEST_MATCH='^test_'
   }
 
   load_config() {
@@ -433,7 +434,7 @@ else
       IFS="$current_IFS"
     }
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH"
 
     # save environment config
     for var in $config_vars; do

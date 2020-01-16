@@ -353,6 +353,13 @@ Available configuration variables:
 
   For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
 
+* TEST_MATCH
+
+  Default: ^test_
+
+  A regular expression that is matched against function names to discover test functions in managed mode.
+  It is evaluated by grep.
+
 ### Function reference
 
 This is the list of functions defined by test.sh that you can use in a test script.
