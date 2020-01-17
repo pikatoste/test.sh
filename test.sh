@@ -19,6 +19,7 @@ if [[ ! -v SUBSHELL_CMD ]]; then
 fi
 
 exit_trap() {
+  EXIT_CODE=${EXIT_CODE:-$?}
   [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
     eval "$handler"
@@ -253,21 +254,21 @@ subshell() {
   }
   rm -f $STACK_FILE
   if [[ $REENTER ]]; then
-    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=\"$1\") /bin/bash --norc -c "$TEST_SCRIPT"
+    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=\"$1\") /bin/bash --norc "$TEST_SCRIPT"
   else
-    BASH_ENV=<(call_stack) bash --norc -c "trap save_stack ERR ; $1"
+    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=) /bin/bash --norc -c "trap exit_trap EXIT; trap err_trap ERR; push_err_handler save_stack; $1"
   fi
 }
 
 save_stack() {
   if [ ! -f $STACK_FILE ]; then
-    current_stack >$STACK_FILE
+    current_stack $1 >$STACK_FILE
   fi
 }
 
 current_stack() {
   local err=$EXIT_CODE
-  local frame_idx=3
+  local frame_idx=${1:-3}
   ERRCMD=$BASH_COMMAND
   local err_string="Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
@@ -283,8 +284,12 @@ current_stack() {
 
 prune_path() {
   [[ -v PRUNE_PATH ]] || eval "PRUNE_PATH=$default_PRUNE_PATH"
-  local path=$(realpath "$1")
-  echo ${path##$PRUNE_PATH}
+  if [[ $1 && $1 != environment ]]; then
+    local path=$(realpath "$1")
+    echo ${path##$PRUNE_PATH}
+  else
+    echo $1
+  fi
 }
 
 local_stack() {
@@ -387,7 +392,7 @@ else
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
     [[   $VERBOSE ]] || cat >"$TESTOUT_FILE" <"$PIPE" &
-    [[ ! $VERBOSE ]] || tee  "$TESTOUT_FILE" &
+    [[ ! $VERBOSE ]] || tee  "$TESTOUT_FILE" <"$PIPE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
