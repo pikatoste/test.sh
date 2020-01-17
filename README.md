@@ -13,10 +13,10 @@ Only GNU bash is supported. test.sh has been developed and tested with bash vers
 
 ## Installation
 
-Download test.sh from a [prebuilt release](https://pikatoste.github.io/test.sh/releases/) and copy it to your project
-or put it in a central location, such as /opt/test.sh/test.sh.
+From a [prebuilt release](https://pikatoste.github.io/test.sh/releases/): download and copy test.sh to your project
+or to a central location, such as /opt/test.sh/test.sh.
 
-Or you can install test.sh from sources:
+From sources:
 
 1. Build test.sh:
 
@@ -111,31 +111,46 @@ depending on the setting of configuration variables SUBSHELL and REENTER:
 * Otherwise, if REENTER is true, you should organize your script as follows: _function definitions_, _source test.sh_,
 _main code_.
 
+  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). Enabling the
+  REENTER feature means that you want correct frames in stack traces. This is only accomplished if the test script
+  defines its functions _before_ sourcing test.sh. The second time these functions are defined
+  they will be automatically exported because test.sh does `set -a`.
+  You probably don't want to reexecute the scripts' main code
+  when reentered from a subshell, that's why the main test script code is _after_ sourcing test.sh: when test.sh is
+  sourced as a result of a subshell invocation, the source command never returns.
+
 * Otherwise, the source command should be at the beginning of the test script, before function definitions and any code
 that affects these functions.
+
+  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). Disabling the
+  REENTER feature means that you don't require correct frames in stack traces and therefore frames of code executed in
+  a subshell will not correctly reference the source file and line number. Code execcuted in a subshell will only
+  see functions defined _after_ sourcing test.sh, and this is why you should source test.sh before function definitions:
+  as the script is not reexecuted, functions
+  defined _before_ sourcing test.sh will not be exported unless explicitly exported with, foe exapmke, `set -.a`.
 
 The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
 where test scripts can be run from.
 
-* If test.sh is installed at a central location, source it using the absolute path:
+* If test.sh is installed at a central location, source it using the absolute path. For example:
 
-```shell script
-source /opt/test.sh/test.sh
-```
+  ```shell script
+  source /opt/test.sh/test.sh
+  ```
 
 * If test.sh is installed relative to the test script and you want test scripts to support being launched from any
-directory, specify a path relative to the location of the test script. For example:
+directory, specify a path relative to the dynamically-obtained location of the test script. For example:
 
-```shell script
-source "$(dirname "$(readlink -f "$0")")"/test.sh
-```
+  ```shell script
+  source "$(dirname "$(readlink -f "$0")")"/test.sh
+  ```
 
 * If test.sh is installed relative to the test script and you want to restrict the directory from which test scripts
 can be launched, specify a path relative to the chosen directory. For example:
 
-```shell script
-source ./test.sh
-```
+  ```shell script
+  source ./test.sh
+  ```
 
 ### Implicit assertion
 
@@ -220,11 +235,11 @@ the return statement to the calling function instead of the function to which th
 For this reason, using return to indicate failure is discouraged.
 
 Stack traces include frames in test.sh; they can be quite a large number if SUBSHELL is set to 'always'.
-For example, this test script:
+For example, this test script (the line `set -o allexport` makes the script support REENTER false):
 
 ```shell script
 #!/bin/bash
-
+set -o allexport
 test_01() {
   assert_true false "this is a test killer"
 }
@@ -275,6 +290,34 @@ In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more 
 <font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
 </pre>
 
+When REENTER is false, stack traces involving subshells are different.
+For example, the log output of the previous script executed as `REENTER= ./mytest.sh` is:
+
+<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in (:0): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at subshell(environment:10)
+<font color="#CC0000">[test.sh]</font>  at expect_true(environment:0)
+<font color="#CC0000">[test.sh]</font>  at assert(environment:7)
+<font color="#CC0000">[test.sh]</font>  at assert_true(environment:0)
+<font color="#CC0000">[test.sh]</font>  at test_01(environment:0)
+<font color="#CC0000">[test.sh]</font>  at run_test(environment:19)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:279)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font> test_01 FAILED
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+</pre>
+
+The differences are:
+
+* The error message shows no source file and 0 as the line number; this happens when the subshell evaluates a
+simple expression.
+* The subshell invocation sequence is simpler.
+* All frames following the first subshell invocation show 'environment' as the source file and a line number
+relative to the definition of the function in the environment, wich might be different from the definition
+in the source file. For example, blank lines are removed from definitions of functions in the environment.
+
 ### Assertions
 
 Explicit assertions were originally conceived as an aid in locating the origin of failures. The error reporting
@@ -282,7 +325,7 @@ facilities currently implemented have alleviated this need and as a result asser
 attention.
 
 Currently there are only two assert
-functions, `assert_true` and `assert_false`. When SUBSHELL is not set to 'always', `assert_false` cannot be used
+functions, `assert_true` and `assert_false`. When S???BSHELL is not set to 'always', `assert_false` cannot be used
 to assert failure of a function as it makes use of the `!` operator (see [Implicit assertion](#implicit-assertion)).
 
 ### Predefined variables
