@@ -18,44 +18,42 @@ or put it in a central location, such as /opt/test.sh/test.sh.
 
 Or you can install test.sh from sources:
 
-* Build test.sh:
+1. Build test.sh:
 
     ```shell script
     make
     ```
 
-* Then copy `build/test.sh` to your project or put it in a central location, such as /opt/test.sh/test.sh.
+2. Copy `build/test.sh` to your project or put it in a central location, such as /opt/test.sh/test.sh.
 
 ## Usage
 
-Source test.sh in your test script **after function definitions and before any commands**.
-If test.sh is included in your project you may want to reference it relative to the script location:
-
-```shell script
-source "$(dirname "$(readlink -f "$0")")"/test.sh
-```
-
-A test script is a collection of tests. In inline mode, tests are delimited by calls to `start_test`.
-In managed mode, tests are defined by test functions. You should not mix inline and managed mode in the
-same test script.
-
-Inline mode:
+A test script looks like this:
 
 ```shell script
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 
-start_test "This is my first test"
+start_test "This is a passing test"
 assert_true true
+
+start_test "This is a failing test"
+assert_true false
 ```
 
-Managed mode:
+This test script contains two tests, one that passes and one that fails.
+It is written in *inline* mode; you can also choose *managed* mode, and the test becomes:
 
 ```shell script
 #!/bin/bash
 test_01() {
-  test_name "This is my first test"
+  start_test "This is a passing test"
   assert_true true
+}
+
+test_02() {
+  start_test "This is a failing test"
+  assert_true false
 }
 
 source "$(dirname "$(readlink -f "$0")")"/test.sh
@@ -63,21 +61,81 @@ source "$(dirname "$(readlink -f "$0")")"/test.sh
 run_tests
 ```
 
-Test output:
+In _managed_ mode you write each test in a separate function and then invoke `run_tests` to run your tests. This mode
+supports running all tests despite failures.
 
-<pre><font color="#4E9A06">* This is my first test</font>
+In _inline_ mode tests are delimited by calls to `start_test` and you don't invoke `run_tests`. In this mode,
+the first failed test terminates the script.
+
+You should not mix inline and managed mode in the same test script.
+
+The output of a test script is a colorized summary with the result of each test. Both tests above produce the
+same output:
+
+<pre><font color="#4E9A06">* This is a passing test</font>
+<font color="#CC0000">* This is a failing test</font>
 </pre>
 
-The output of a test script is a colorized summary with the result of each test.
-The standard output and error are redirected to a log file named after the test script with the
-suffix '.out' appended and located in directory 'testout' relative to the test script. For example, if your
+The standard output and error of the test script are redirected to a log file.
+This file is named after the test script with the
+suffix '.out' appended and is located in directory 'testout' relative to the test script. For example, if your
 test script is `test/test_something.sh`, the output will be logged to `test/testout/test_something.sh.out`.
-Test failures will cause a stack trace to be logged. Lines in the log file coming from test.sh (not from the test
-script or the commands it executes) are prefixed with the string '[testsh]', which is colorized to show the
+Lines in the log file coming from test.sh, i.e. not from the test script or the commands it executes,
+are prefixed with the string '[testsh]', which is colorized to show the
 category of the message: blue for info, orange for warnings and red for errors.
+
+Test failures will cause a stack trace to be logged. The log output of the managed sample test is:
+
+<pre><font color="#3465A4">[test.sh]</font> Start test: This is a passing test
+<font color="#3465A4">[test.sh]</font> Start test: This is a failing test
+<font color="#CC0000">[test.sh]</font> Assertion failed: expected success but got failure in: &apos;false&apos;
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:347): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at assert(test.sh:364)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:370)
+<font color="#CC0000">[test.sh]</font>  at test_02(mymanagedtest.sh:9)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:231)
+<font color="#CC0000">[test.sh]</font>  at main(mymanagedtest.sh:14)
+</pre>
 
 Currently test.sh does not deal with running test scripts; for this purpose you can use
 [Makefile.test](https://github.com/box/Makefile.test).
+
+### Sourcing test.sh
+
+There are specific requirements on the position in a test script of the source command that loads test.sh,
+depending on the setting of configuration variables SUBSHELL and REENTER:
+
+* If SUBSHELL is set to 'never', there are no specific requirements.
+
+* Otherwise, if REENTER is true, you should organize your script as follows: _function definitions_, _source test.sh_,
+_main code_.
+
+* Otherwise, the source command should be at the beginning of the test script, before function definitions and any code
+that affects these functions.
+
+The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
+where test scripts can be run from.
+
+* If test.sh is installed at a central location, source it using the absolute path:
+
+```shell script
+source /opt/test.sh/test.sh
+```
+
+* If test.sh is installed relative to the test script and you want test scripts to support being launched from any
+directory, specify a path relative to the location of the test script. For example:
+
+```shell script
+source "$(dirname "$(readlink -f "$0")")"/test.sh
+```
+
+* If test.sh is installed relative to the test script and you want to restrict the directory from which test scripts
+can be launched, specify a path relative to the chosen directory. For example:
+
+```shell script
+source ./test.sh
+```
 
 ### Implicit assertion
 
