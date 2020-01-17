@@ -32,10 +32,8 @@ Source test.sh in your test script **after function definitions and before any c
 If test.sh is included in your project you may want to reference it relative to the script location:
 
 ```shell script
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+source "$(dirname "$(readlink -f "$0")")"/test.sh
 ```
-
-  **NOTE:** use `$BASH_SOURCE` instead of `$0` to reference the main script.
 
 A test script is a collection of tests. In inline mode, tests are delimited by calls to `start_test`.
 In managed mode, tests are defined by test functions. You should not mix inline and managed mode in the
@@ -45,7 +43,7 @@ Inline mode:
 
 ```shell script
 #!/bin/bash
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+source "$(dirname "$(readlink -f "$0")")"/test.sh
 
 start_test "This is my first test"
 assert_true true
@@ -60,7 +58,7 @@ test_01() {
   assert_true true
 }
 
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+source "$(dirname "$(readlink -f "$0")")"/test.sh
 
 run_tests
 ```
@@ -176,28 +174,29 @@ test_01() {
 SUBSHELL=${SUBSHELL:-always}
 STACK_TRACE=full
 PRUNE_PATH="*/"
-source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+source "$(dirname "$(readlink -f "$0")")"/test.sh
 
 run_tests
 ```
+
 will log this output:
 
 <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in source(test.sh:343): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
-<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:310)
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:323)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font> Error in source(test.sh:381): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
+<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:348)
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:361)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
 <font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
-<font color="#CC0000">[test.sh]</font>  at source(test.sh:343)
-<font color="#CC0000">[test.sh]</font>  at source(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:244)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:196)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
+<font color="#CC0000">[test.sh]</font>  at source(test.sh:381)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
 <font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
 <font color="#CC0000">[test.sh]</font> test_01 FAILED
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:187): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
 <font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
 </pre>
 
@@ -209,12 +208,12 @@ Note that there's a second error, this one is triggered in managed mode, SUBSHEL
 In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
 
 <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:310): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:325)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:331)
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
 <font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:167)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:198)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:231)
 <font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
 </pre>
 
@@ -447,7 +446,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   SUBSHELL=never
   STACK_TRACE=full
   PRUNE_PATH="*/"
-  source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+  source "$(dirname "$(readlink -f "$0")")"/test.sh
 
   assert_true false "this is a test killer"
   ```
@@ -455,9 +454,9 @@ This is the list of functions defined by test.sh that you can use in a test scri
   will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
 
   <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-  <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:328): &apos;false&apos; exited with status 1
-  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
-  <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:349)
+  <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
+  <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
   <font color="#CC0000">[test.sh]</font>  at main(mytestasserttrue.sh:8)
   </pre>
 
@@ -478,7 +477,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   SUBSHELL=never
   STACK_TRACE=full
   PRUNE_PATH="*/"
-  source "$(dirname "$(readlink -f "$BASH_SOURCE")")"/test.sh
+  source "$(dirname "$(readlink -f "$0")")"/test.sh
 
   assert_false true "this is a test killer"
   ```
@@ -486,15 +485,15 @@ This is the list of functions defined by test.sh that you can use in a test scri
   will log the following output:
 
   <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected failure but got success in: &apos;true&apos;
-  <font color="#CC0000">[test.sh]</font> Error in expect_false(test.sh:333): &apos;false&apos; exited with status 1
-  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:343)
-  <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:353)
+  <font color="#CC0000">[test.sh]</font> Error in expect_false(test.sh:353): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
+  <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:373)
   <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
   </pre>
 
     **NOTE**: \<shell command\> is executed in _ignored errexit context_
     (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
-    run in errexit context, you should invoke <\shell command\> with the `subshell` function. For example,
+    run in errexit context, you should invoke \<shell command\> with the `subshell` function. For example,
     the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
     context, should be written as: `assert_false "subshell my_validation_function"`.
 
