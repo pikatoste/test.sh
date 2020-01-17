@@ -313,9 +313,9 @@ print_stack_trace() {
 }
 
 assert_msg() {
-  local what="$1"
-  local why="$2"
-  local msg="$3"
+  local what=$1
+  local why=$2
+  local msg=$3
   echo "Assertion failed: ${msg:+$msg: }$why in: '$what'"
 }
 
@@ -328,28 +328,30 @@ expect_true() {
 }
 
 expect_false() {
-  # TODO: broken when not in subshell, ignored errexit context
   ! eval "$1" || false
 }
 
-call_assert() {
-  local expect=$1
+assert() {
+  local what=$1
+  local expect=$2
+  local why=$3
+  local msg=$4
   shift
-  push_err_handler "pop_err_handler; assert_err_msg \"$1\" \"$2\" \"$3\""
+  push_err_handler "pop_err_handler; assert_err_msg \"$what\" \"$why\" \"$msg\""
   if [[ $SUBSHELL == always ]]; then
-    $expect "subshell \"$1\""
+    $expect "subshell \"$what\""
   else
-    $expect "eval \"$1\""
+    $expect "eval \"$what\""
   fi
   pop_err_handler
 }
 
 assert_true() {
-  call_assert expect_true "$1" "expected success but got failure" "$2"
+  assert "$1" expect_true "expected success but got failure" "$2"
 }
 
 assert_false() {
-  call_assert expect_false "$1" "expected failure but got success" "$2"
+  assert "$1" expect_false "expected failure but got success" "$2"
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
