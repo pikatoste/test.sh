@@ -157,7 +157,8 @@ run_test_script() {
       teardown_test_suite_called \
       PIPE \
       STACK_FILE \
-      FOREIGN_STACK
+      FOREIGN_STACK \
+      GREEN ORANGE RED BLUE NC
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
     "$test_script" "$@" )
 }
@@ -266,7 +267,7 @@ save_stack() {
 current_stack() {
   local err=$EXIT_CODE
   local frame_idx=${1:-3}
-  ERRCMD=$BASH_COMMAND
+  ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
   local err_string="Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
   local_stack $frame_idx
@@ -385,12 +386,15 @@ else
   FIRST_TEST=
   STACK_FILE=/tmp/stack-$$
 
-  # TODO: configure whether to colorize output
-  GREEN='\033[0;32m'
-  ORANGE='\033[0;33m'
-  RED='\033[0;31m'
-  BLUE='\033[0;34m'
-  NC='\033[0m' # No Color'
+  set_color() {
+    if [[ $COLOR = yes ]]; then
+      GREEN='\033[0;32m'
+      ORANGE='\033[0;33m'
+      RED='\033[0;31m'
+      BLUE='\033[0;34m'
+      NC='\033[0m' # No Color'
+    fi
+  }
 
   cleanup() {
     exec 1>&- 2>&-
@@ -429,6 +433,7 @@ else
     default_SUBSHELL='$(set_default_SUBSHELL)'
     default_STACK_TRACE='full'
     default_TEST_MATCH='^test_'
+    default_COLOR='yes'
   }
 
   load_config() {
@@ -469,7 +474,7 @@ else
       IFS="$current_IFS"
     }
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR"
 
     # save environment config
     for var in $config_vars; do
@@ -509,6 +514,9 @@ else
       SUBSHELL=always
     fi
     validate_values STACK_TRACE no full
+    validate_values COLOR no yes
+
+    set_color
   }
 
   trap "EXIT_CODE=\$?; rm -f \$PIPE; exit_trap" EXIT
