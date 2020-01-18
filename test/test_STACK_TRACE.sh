@@ -3,7 +3,7 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
 OUT="$TESTOUT_DIR"/do_$(basename "$TESTOUT_FILE")
 
 start_test "STACK_TRACE should accept only valid values"
-for i in no pruned compact full; do
+for i in no full; do
   STACK_TRACE=$i load_config
 done
 ! STACK_TRACE=pepe load_config || false

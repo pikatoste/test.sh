@@ -237,8 +237,8 @@ If you use `return` with a value other than 0 inside a function to trigger failu
 the return statement to the calling function instead of the function to which the return belongs.
 For this reason, using return to indicate failure is discouraged.
 
-Stack traces include frames in test.sh; they can be quite a large number if SUBSHELL is set to 'always'.
-For example, this test script (the line `set -o allexport` makes the script support REENTER false):
+Stack traces include frames in test.sh, and they can be quite a large number if SUBSHELL is set to 'always'.
+For example, this test script (the line `set -o allexport` makes the script support also REENTER false):
 
 ```shell script
 #!/bin/bash
@@ -328,7 +328,7 @@ facilities currently implemented have alleviated this need and as a result asser
 attention.
 
 Currently there are only two assert
-functions, `assert_true` and `assert_false`. See the description of these functions in
+functions, `assert_true` and `assert_false`. See the description of these functions in the
 [Function reference](#function-reference).
 
 ### Predefined variables
@@ -437,11 +437,9 @@ Available configuration variables:
 
 * STACK_TRACE
 
-  Values: no, pruned, compact or full. Default: pruned when SUBSHELL=always, compact otherwise.
+  Values: no or full. Default: full.
 
   * no: do not output stack traces.
-  * pruned: include frames up to the first frame in test.sh.
-  * compact: include all frames except those in test.sh.
   * full: include all frames.
 
 

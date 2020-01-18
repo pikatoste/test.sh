@@ -283,7 +283,6 @@ current_stack() {
 }
 
 prune_path() {
-  [[ -v PRUNE_PATH ]] || eval "PRUNE_PATH=$default_PRUNE_PATH"
   if [[ $1 && $1 != environment ]]; then
     local path=$(realpath "$1")
     echo ${path##$PRUNE_PATH}
@@ -406,13 +405,7 @@ else
         echo "always"
       fi
     }
-    set_default_STACK_TRACE() {
-      if [[ $SUBSHELL != always ]]; then
-        echo "compact"
-      else
-        echo "pruned"
-      fi
-    }
+
     default_VERBOSE=
     default_DEBUG=
     default_INCLUDE_GLOB='include*.sh'
@@ -421,7 +414,7 @@ else
     default_REENTER=1
     default_PRUNE_PATH='$PWD/'
     default_SUBSHELL='$(set_default_SUBSHELL)'
-    default_STACK_TRACE='$(set_default_STACK_TRACE)'
+    default_STACK_TRACE='full'
     default_TEST_MATCH='^test_'
   }
 
@@ -502,7 +495,7 @@ else
       log_warn "Configuration: SUBSHELL set to 'always' because FAIL_FAST is false (was: SUBSHELL=$SUBSHELL)"
       SUBSHELL=always
     fi
-    validate_values STACK_TRACE no pruned compact full
+    validate_values STACK_TRACE no full
   }
 
   trap "EXIT_CODE=\$?; rm -f \$PIPE; exit_trap" EXIT
