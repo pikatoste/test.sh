@@ -82,7 +82,13 @@ suffix '.out' appended and is located in directory 'testout' relative to the tes
 test script is `test/test_something.sh`, the output will be logged to `test/testout/test_something.sh.out`.
 Lines in the log file coming from test.sh, i.e. not from the test script or the commands it executes,
 are prefixed with the string '[testsh]', which is colorized to show the
-category of the message: blue for info, orange for warnings and red for errors.
+category of the message: blue for info, orange for warnings and red for errors. test.sh logs the following events:
+* The start of each test
+* The outcome of each test
+* Explicit assertion failures: an assertion-specific error message and a stack trace
+(see [Stack traces](#stack-traces)).
+* Implicit assertion failures (see [Implicit assertion](#implicit-assertion): a stack trace
+(see [Stack traces](#stack-traces)).
 
 Test failures will cause a stack trace to be logged. The log output of the managed sample test is:
 
