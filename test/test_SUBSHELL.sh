@@ -14,11 +14,14 @@ done
 start_test "When SUBSHELL=never teardown functions should be called"
 CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh
 OUTFILE="$TESTOUT_DIR"/do_test_SUBSHELL.sh.out
-diff - "$OUTFILE" <<EOF
+OUTFILE2="$TEST_SCRIPT_DIR"/.do_test_SUBSHELL.out
+grep -v '\[test\.sh\]' "$OUTFILE" >"$OUTFILE2"
+diff - "$OUTFILE2" <<EOF
 test_01
 teardown_test
 teardown_test_suite
 EOF
+rm "$OUTFILE2"
 
 start_test "When SUBSHELL=never a failure in teardown_test should terminate the test with failure"
 ! CURRENT_TEST_NAME= SUBSHELL=never "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test || false
@@ -47,11 +50,14 @@ rm "$OUTFILE2"
 start_test "When SUBSHELL=teardown teardown functions should be called"
 CURRENT_TEST_NAME= SUBSHELL=teardown "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh
 OUTFILE="$TESTOUT_DIR"/do_test_SUBSHELL.sh.out
-diff - "$OUTFILE" <<EOF
+OUTFILE2="$TEST_SCRIPT_DIR"/.do_test_SUBSHELL.out
+grep -v '\[test\.sh\]' "$OUTFILE" >"$OUTFILE2"
+diff - "$OUTFILE2" <<EOF
 test_01
 teardown_test
 teardown_test_suite
 EOF
+rm "$OUTFILE2"
 
 start_test "When SUBSHELL=teardown a failure in teardown_test should not terminate the test with failure"
 CURRENT_TEST_NAME= SUBSHELL=teardown "$TEST_SCRIPT_DIR"/do_test_SUBSHELL.sh teardown_test
