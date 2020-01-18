@@ -108,26 +108,27 @@ depending on the setting of configuration variables SUBSHELL and REENTER:
 
 * If SUBSHELL is set to 'never', there are no specific requirements.
 
-* Otherwise, if REENTER is true, you should organize your script as follows: _function definitions_, _source test.sh_,
+* Otherwise, if REENTER is true, the source command should be after function definitions and any code
+that affects these functions, such as variable assignments.
+You should organize your script as follows: _function definitions_, _source test.sh_,
 _main code_.
 
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). Enabling the
-  REENTER feature means that you want correct frames in stack traces. This is only accomplished if the test script
-  defines its functions _before_ sourcing test.sh. The second time these functions are defined
-  they will be automatically exported because test.sh does `set -a`.
-  You probably don't want to reexecute the scripts' main code
-  when reentered from a subshell, that's why the main test script code is _after_ sourcing test.sh: when test.sh is
-  sourced as a result of a subshell invocation, the source command never returns.
+  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
+  is true, subshells restart the test script to redefine functions in the current subshell.
+  This redefinition is only accomplished if these functions
+  are defined before sourcing test.sh. You probably don't want to reexecute the test script main code
+  when reentered from a subshell, and that's why the main test script code is _after_ sourcing test.sh (when test.sh is
+  sourced as a result of a subshell invocation, the source command never returns).
 
 * Otherwise, the source command should be at the beginning of the test script, before function definitions and any code
 that affects these functions.
 
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). Disabling the
-  REENTER feature means that you don't require correct frames in stack traces and therefore frames of code executed in
-  a subshell will not correctly reference the source file and line number. Code execcuted in a subshell will only
-  see functions defined _after_ sourcing test.sh, and this is why you should source test.sh before function definitions:
-  as the script is not reexecuted, functions
-  defined _before_ sourcing test.sh will not be exported unless explicitly exported with, foe exapmke, `set -.a`.
+  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
+  is false, subshells simply execute the requested code. All variables and functions are available in the subshell
+  because test.sh does `set -o allexport`, but this setting only affects code _after_ test.sh is sourced. Variables
+  and functions defined before test.sh is are not available in the subshell
+  unless explicitly exported, for example with `set -o allexport` at the beginning of the test
+  script.
 
 The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
 where test scripts can be run from.
@@ -515,7 +516,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 * teardown_test_suite
 
   If defined, this function will be called once after all tests even if there are failures.
-  A failure in this function itself will not cause failure of the script, but will cause a warning
+  A failure in this function will not cause failure of the script, but will cause a warning
   message to be displayed on the main output.
 
 * setup_test
@@ -526,7 +527,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
 * teardown_test
 
   If defined, this function will be called after each test even if the test fails.
-  A failure in this function itself will not cause failure of the test, but will cause a warning
+  A failure in this function will not cause failure of the test, but will cause a warning
   message to be displayed on the main output.
 
 * assert_true
