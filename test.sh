@@ -78,11 +78,13 @@ start_test() {
 }
 
 display_test_passed() {
+  log_ok "${test_func} PASSED"
   [ -z "$CURRENT_TEST_NAME" ] || echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
   unset CURRENT_TEST_NAME
 }
 
 display_test_failed() {
+  log_err "${test_func} FAILED"
   [ -z "$CURRENT_TEST_NAME" ] || echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
   unset CURRENT_TEST_NAME
 }
