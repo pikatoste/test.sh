@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Main test output
 
@@ -308,7 +308,7 @@ cp -a test runtest
 make -C runtest/test PRUNE_PATH=$PWD/
 make[1]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
 make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
-  [test_script.sh] This is test.sh version 0.1.0-SNAPSHOT-8dfdff3
+  [test_script.sh] This is test.sh version 0.1.0-SNAPSHOT-76f350a
   [test_script.sh] See https://github.com/pikatoste/test.sh
  PASSED: test_script.sh
   [test_config.sh] <span class="f2">* The configuration file should be loaded from the default location
@@ -341,11 +341,12 @@ make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
   [test_ignored.sh] <span class="f1">* test_01</span>
   [test_ignored.sh] <span class="f4">* [skipped] test_02</span>
  PASSED: test_ignored.sh
-  [test_REENTER.sh] <span class="f2">* Subshells should not resource files when REENTER is false</span>
  PASSED: test_REENTER.sh
   [test_teardown_fail.sh] <span class="f3">WARN: teardown_test failed</span>
   [test_teardown_fail.sh] <span class="f3">WARN: teardown_test_suite failed</span>
   [test_teardown_fail.sh] <span class="f2">* Failing teardown functions should not break the test</span>
+  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test failed</span>
+  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test_suite failed</span>
  PASSED: test_teardown_fail.sh
   [test_inline.sh] <span class="f2">* Inline test failures should display the failed test in the main output</span>
   [test_inline.sh] <span class="f2">* Inline tests should invoke setup and teardown functions</span>
@@ -370,6 +371,8 @@ make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
   [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test
 </span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test_suite
 </span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in assert</span>
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in setup_test_suite</span>
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in setup_test</span>
   [test_error_reporting.sh] <span class="f2">* Errors in test and teardown functions should be reported</span>
  PASSED: test_error_reporting.sh
 ---------------------------------

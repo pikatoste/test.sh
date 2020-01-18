@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of test_ignored.sh
 
@@ -303,8 +303,14 @@ span { display: inline-block; }
 <pre>
 <span class="f4">[test.sh]</span> Start test: test_01
 <span class="f1">[test.sh]</span> Error in test_01(runtest/test/test_ignored.sh:3): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_ignored.sh:11)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_ignored.sh:11)
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_ignored.sh:11)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_ignored.sh:11)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_ignored.sh:13)
 <span class="f1">[test.sh]</span> test_01 FAILED
 </pre>

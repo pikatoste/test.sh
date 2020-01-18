@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of do_test_STACK_TRACE.sh
 
@@ -304,14 +304,14 @@ span { display: inline-block; }
 <span class="f1">[test.sh]</span> Error in func2(runtest/test/do_test_STACK_TRACE.sh:6): 'false' exited with status 1
 <span class="f1">[test.sh]</span>  at func1(runtest/test/do_test_STACK_TRACE.sh:2)
 <span class="f1">[test.sh]</span>  at test_01(runtest/test/do_test_STACK_TRACE.sh:10)
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:167)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:343)
-<span class="f1">[test.sh]</span>  at source(runtest/test/do_test_STACK_TRACE.sh:15)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:244)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:196)
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_STACK_TRACE.sh:15)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
 <span class="f1">[test.sh]</span>  at main(runtest/test/do_test_STACK_TRACE.sh:17)
 <span class="f1">[test.sh]</span> test_01 FAILED
-<span class="f1">[test.sh]</span> Error in run_tests(runtest/test.sh:187): '[[ $failures == 0 ]]' exited with status 1
+<span class="f1">[test.sh]</span> Error in run_tests(runtest/test.sh:220): '[[ $failures == 0 ]]' exited with status 1
 <span class="f1">[test.sh]</span>  at main(runtest/test/do_test_STACK_TRACE.sh:17)
 </pre>
 </body>

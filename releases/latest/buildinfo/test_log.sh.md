@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of test_log.sh
 
@@ -302,8 +302,6 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: The log file should contain test stdout and stderr
-<span class="f3">WARN: teardown_test failed</span>
-<span class="f3">WARN: teardown_test_suite failed</span>
 output
 stderr
 </pre>

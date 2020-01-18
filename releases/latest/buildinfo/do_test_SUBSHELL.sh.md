@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of do_test_SUBSHELL.sh
 
@@ -304,7 +304,15 @@ span { display: inline-block; }
 test_01
 teardown_test
 teardown_test_suite
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(runtest/test/environment:1): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(environment:1): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
+<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:1)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:246)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:19)
 </pre>
 </body>
 </html>

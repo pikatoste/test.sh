@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of do_test_log.sh
 
@@ -303,8 +303,6 @@ span { display: inline-block; }
 <pre>
 output
 stderr
-/home/runner/work/test.sh/test.sh/runtest/test/do_test_log.sh: line 3: /bin/../test.sh: No such file or directory
-/home/runner/work/test.sh/test.sh/runtest/test/do_test_log.sh: line 3: /bin/../test.sh: No such file or directory
 </pre>
 </body>
 </html>

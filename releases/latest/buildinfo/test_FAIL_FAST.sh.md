@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of test_FAIL_FAST.sh
 
@@ -303,16 +303,30 @@ span { display: inline-block; }
 <pre>
 <span class="f4">[test.sh]</span> Start test: Any command that fails in the body of a test function should make the test to fail
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:18)
 <span class="f4">[test.sh]</span> Start test: When FAIL_FAST is true the first test failure should interrupt the script
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:23)
 <span class="f4">[test.sh]</span> Start test: When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
 <span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
-<span class="f1">[test.sh]</span>  at source(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
 <span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:29)
 <span class="f1">[test.sh]</span> test_fail FAILED
 </pre>

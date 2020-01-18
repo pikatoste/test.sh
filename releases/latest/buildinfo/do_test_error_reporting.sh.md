@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of do_test_error_reporting.sh
 
@@ -304,7 +304,7 @@ span { display: inline-block; }
 <span class="f4">[test.sh]</span> Start test: do_test_error_reporting inline
 <span class="f1">[test.sh]</span> Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1
 <span class="f1">[test.sh]</span> Error in teardown_test(do_test_error_reporting.sh:17): 'false' exited with status 1
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:21): 'false' exited with status 1
+<span class="f1">[test.sh]</span> Error in teardown_test_suite(do_test_error_reporting.sh:22): 'false' exited with status 1
 </pre>
 </body>
 </html>

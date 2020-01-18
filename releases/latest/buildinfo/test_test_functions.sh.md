@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-8dfdff3
+version: 0.1.0-SNAPSHOT-76f350a
 ---
 # Output of test_test_functions.sh
 
@@ -304,6 +304,15 @@ span { display: inline-block; }
 <span class="f4">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are no failures
 <span class="f4">[test.sh]</span> Start test: run_tests shoud invoke tests and setup methods when there are failures
 <span class="f1">[test.sh]</span> Error in test_02(runtest/test/test_test_functions.sh:36): '[ -z &quot;$test_02_fail&quot; ]' exited with status 1
+<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:40)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:40)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:64)
 <span class="f1">[test.sh]</span> test_02 FAILED
 </pre>
 </body>

@@ -6,6 +6,8 @@ Latest development version: [{{ site.unstable_version }}](releases/latest/)
 
 [All releases](releases/)
 
+> _"No es lo mismo dos **trazas de test** que dos **test-trazas**"_ (A.G.A)
+
 # What is **test.sh**?
 
 Consider this:
