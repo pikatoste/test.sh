@@ -3,7 +3,7 @@
 [![](https://raw.githubusercontent.com/pikatoste/test.sh/assets/coverage.svg?sanitize=true)](https://pikatoste.github.io/test.sh/releases/latest/buildinfo/coverage/)
 
 See https://pikatoste.github.io/test.sh/.
-<!-- BADGE-END-->
+<!-- BADGE-END -->
 
 # test.sh
 
@@ -24,7 +24,7 @@ From sources:
     make
     ```
 
-2. Copy `build/test.sh` to your project or put it in a central location, such as /opt/test.sh/test.sh.
+2. Copy `build/test.sh` to your project or put or to a central location, such as /opt/test.sh/test.sh.
 
 ## Usage
 
@@ -108,8 +108,8 @@ depending on the setting of configuration variables SUBSHELL and REENTER:
 
 * If SUBSHELL is set to 'never', there are no specific requirements.
 
-* Otherwise, if REENTER is true, the source command should be after function definitions and any code
-that affects these functions, such as variable assignments.
+* Otherwise, if REENTER is true, the source command should be after function definitions and before code at the
+main level. Any code before test.sh is sourced will be reexecuted in each subshell invocation.
 You should organize your script as follows: _function definitions_, _source test.sh_,
 _main code_.
 
@@ -133,20 +133,21 @@ that affects these functions.
 The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
 where test scripts can be run from.
 
-* If test.sh is installed at a central location, source it using the absolute path. For example:
+* If test.sh is installed at a central location, source it using an absolute path. For example:
 
   ```shell script
   source /opt/test.sh/test.sh
   ```
 
-* If test.sh is installed relative to the test script and you want test scripts to support being launched from any
-directory, specify a path relative to the dynamically-obtained location of the test script. For example:
+* If test.sh is installed relative to the test script and you want to support executing it from any
+directory, specify a path relative to the dynamically-obtained location of the test script. For example,
+if test.sh is in the same directory as the test script:
 
   ```shell script
   source "$(dirname "$(readlink -f "$0")")"/test.sh
   ```
 
-* If test.sh is installed relative to the test script and you want to restrict the directory from which test scripts
+* If test.sh is installed relative to the test script and you want to restrict the directory from which the test script
 can be launched, specify a path relative to the chosen directory. For example:
 
   ```shell script
@@ -213,13 +214,14 @@ for a failed test.
 
 If allowed by the SUBSHELL configuration option, test.sh will execute in a subshell (i.e. `bash -c`)
 code whose exit status must be monitored but not terminate the script on failure.
-This includes test functions, teardown functions and assert functions.
+This includes test functions in managed mode, teardown functions and assert functions.
 
 When code is executed in a subshell it cannot affect the environment of the caller. For example, variables set in
 a test function evaluated in a subshell will not be seen from other test functions or the main script.
 
 Subshells inherit the environment of the caller, which includes variables, functions and the shell
-options. Subshells loose track of source files and line numbers of functions inherited from the environment,
+options, but the source file and line numbers of functions inherited from the environment are lost
+in the subshell,
 affecting the quality of stack traces. The REENTER configuration option overcomes this limitation.
 
 ### Stack traces
@@ -326,8 +328,8 @@ facilities currently implemented have alleviated this need and as a result asser
 attention.
 
 Currently there are only two assert
-functions, `assert_true` and `assert_false`. When S???BSHELL is not set to 'always', `assert_false` cannot be used
-to assert failure of a function as it makes use of the `!` operator (see [Implicit assertion](#implicit-assertion)).
+functions, `assert_true` and `assert_false`. See the description of these functions in
+[Function reference](#function-reference).
 
 ### Predefined variables
 
@@ -403,9 +405,10 @@ Available configuration variables:
     (see [setup/teardown](#setupteardown)): any failure in a teardown function will terminate the script with
     failure. In this mode, `teardown_test_suite` will not get called when both a test and `teardown_test` fail.
 
-  * teardown: only start subshells to execute teardown functions. Incompatible with FAIL_FAST false.
-     Enforces teardown semantics (see [setup/teardown](#setupteardown)):`teardown_test` and `teardown_test_suite`
-     are always called in this mode and failures in these functions don't fail the test nor interrupt the script.
+  * teardown: only start subshells to execute `teardown_test` and `teardown_test_suite` functions.
+    Incompatible with FAIL_FAST false.
+    Enforces teardown semantics (see [setup/teardown](#setupteardown)):`teardown_test` and `teardown_test_suite`
+    are always called in this mode and failures in these functions don't fail the test nor interrupt the script.
 
   * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
     FAIL_FAST is false. Enforces teardown semantics (see [setup/teardown](#setupteardown)):
@@ -413,32 +416,24 @@ Available configuration variables:
     these functions don't fail the test nor interrupt the script.
 
   See [Subshells](#subshells).
-  <!--
-  test.sh can execute in a subshell code whose exit status must be monitored, i.e. not terminate the script on failure.
-  This includes test functions, teardown functions and assert functions. Code executed in a
-  subshell cannot affect the environment of the caller.
-
-  In managed mode, each test function is executed in its own subshell. Assertions are evaluated in a subshell also.
-  This subshell inherits the environment, which includes both variables and functions, and the shell
-  options. One implication of this is that you cannot affect the environment of the test script from a test function.
-  Another consequence is that bash looses track of the source files where functions are defined, affecting the
-  quality of stack traces. The REENTER configuration option overcomes this limitation.
-  -->
 
 * REENTER
 
   Boolean. Default true.
 
-  If true, when test.sh starts a subshell it will source again all involved scripts: the test
-  script, test.sh and included files. This redefines functions in the subshell's context and allows
+  If true, when test.sh starts a subshell it will reexecute he test script and source again other involved scripts:
+  test.sh and included files. This redefines functions in the subshell's context and allows
   stack traces to correctly refer to source files and line numbers.
 
-  If false, subshells will not source again involved scripts. Functions defined in the calling shell are
-  available to the subshell because they are exported in the environment. The source file and line number of
-  functions inherited from the environment is lost; stack traces with frames referencing these functions will
+  If false, subshells will reexecute the test script nor source again involved scripts. Functions defined in the calling shell are
+  available to the subshell because they are exported in the environment, but the source file and line number of
+  these functions is lost; stack traces with frames referencing these functions will
   show 'environment' as the source file and a line number relative to that function's definition
   _in the environment_, which might be different from the original function's definition in the source file.
   For example, blank lines are not present in the function definition in the environment.
+  See [Stack traces](#stack-traces).
+
+  The value of this variable affects the structure of test scripts (see [Sourcing test.sh](#sourcing-testsh)).
 
 * STACK_TRACE
 
@@ -478,8 +473,8 @@ This is the list of functions defined by test.sh that you can use in a test scri
   run_tests [test function]...
   ```
 
-  Runs the specified test functions in managed mode. With no arguments, runs discovered test
-  functions: functions whose name starts with 'test_'. Discovered test functions will be executed
+  Runs the specified test functions in managed mode. With no arguments, runs _discovered_ test
+  functions: functions whose name match the pattern configured in TEST_MATCH. Discovered test functions will be executed
   in function name order, not function definition order. Test functions specified as arguments
   will be executed in the order of the arguments.
 
@@ -513,22 +508,30 @@ This is the list of functions defined by test.sh that you can use in a test scri
   If defined, this function will be called only once before any test.
   A failure in this function will cause failure of the script and no test will be executed.
 
+  See [setup/teardown](#setupteardown).
+
 * teardown_test_suite
 
   If defined, this function will be called once after all tests even if there are failures.
   A failure in this function will not cause failure of the script, but will cause a warning
   message to be displayed on the main output.
 
+  See [setup/teardown](#setupteardown).
+
 * setup_test
 
   If defined, this function will be called before each test.
   A failure in this function will cause failure of the test.
+
+  See [setup/teardown](#setupteardown).
 
 * teardown_test
 
   If defined, this function will be called after each test even if the test fails.
   A failure in this function will not cause failure of the test, but will cause a warning
   message to be displayed on the main output.
+
+  See [setup/teardown](#setupteardown).
 
 * assert_true
 
@@ -612,6 +615,8 @@ This is the list of functions defined by test.sh that you can use in a test scri
   with `!`. It is also useful for capturing the result code of an expression that might fail.
   Use this function instead of plain `bash -c`
   invocations to preserve the error tracing capacity of test.sh.
+
+  See [Subshells](#subshells).
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
