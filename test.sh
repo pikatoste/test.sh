@@ -165,25 +165,22 @@ run_test_script() {
 
 run_test() {
   local test_func=$1
-  catch_setup() {
-    pop_err_handler
-    ( CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func [setup_test]}; display_test_failed )
-  }
   teardown_test_called=
   local test_func=$1
   [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
-  push_err_handler catch_setup
+  push_err_handler "pop_err_handler; display_test_failed"
+  push_err_handler "pop_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}"
   call_if_exists setup_test
-  pop_err_handler
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || call_teardown teardown_test
   }
   push_exit_handler run_test_teardown_trap
-  push_err_handler "pop_err_handler; display_test_failed"
   $test_func
+  CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
   display_test_passed
-  pop_err_handler
   pop_exit_handler
+  pop_err_handler
+  pop_err_handler
   teardown_test_called=1
   call_teardown teardown_test
   [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
