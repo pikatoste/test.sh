@@ -106,7 +106,7 @@ Currently test.sh does not deal with running test scripts; for this purpose you 
 There are specific requirements on the position in a test script of the source command that loads test.sh,
 depending on the setting of configuration variables SUBSHELL and REENTER:
 
-* If SUBSHELL is set to 'never', there are no specific requirements.
+* If SUBSHELL is set to 'never' and the `subshell` function is not called explicitly, there are no specific requirements.
 
 * Otherwise, if REENTER is true, the source command should be after function definitions and before code at the
 main level. Any code before test.sh is sourced will be reexecuted in each subshell invocation.
@@ -192,6 +192,8 @@ The following semantics apply to the setup & teardown functions:
 * `setup_test_suite`: if present, it will be called once before any test and `setup_test` functions. Failure in this
 function will fail the test immediatelly, i.e. no tests will be executed.
 
+  A failure in this function is reported in the main output and the error is logged in the log output.
+
 * `teardown_test_suite`: if present, it will be called once after all tests and `teardown_test` functions. A failure
 in this function will be reported as a warning in the main output and an error will be logged, but will not make
 the test script to fail.
@@ -199,6 +201,9 @@ the test script to fail.
 * `setup_test`: if present, it will be called before every test. A failure in this function will fail the
 test but will not prevent other tests from executing (if FAIL_FAST is false). Because the test fails, the script
 will fail also.
+
+  In managed mode, the test failure reported in the main output is the name of the test function instead of
+  the test description set with `start_test`.
 
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
@@ -347,7 +352,8 @@ test.sh defines these variables, which are available to the test script after te
 
 Configuration is expressed with environment variables. These variables can come from the environment
 or from a configuration file. Variables set in the environment take precedence over those defined
-in the configuration file.
+in the configuration file. Configuration variables can be set directly in the test script before
+sourcing test.sh.
 
 The configuration file is sourced, so it can contain any shell code. Normally you would
 put only variable assignments in the configuration file.
