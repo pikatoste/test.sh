@@ -12,7 +12,8 @@ TESTS ?= \
     test_inline.sh \
     test_SUBSHELL.sh \
     test_STACK_TRACE.sh \
-    test_error_reporting.sh
+    test_error_reporting.sh \
+    test_setup_error.sh
 
 include Makefile.test
 
