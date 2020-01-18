@@ -1,18 +1,14 @@
 #!/bin/bash
-func1() {
-  func2
-}
-
-func2() {
+test_01() {
+  start_test "test_01"
   false
 }
 
-test_01() {
-  func1
+test_02() {
+  start_test "test_02"
+  true
 }
 
-FAIL_FAST=
-SUBSHELL=always
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 run_tests

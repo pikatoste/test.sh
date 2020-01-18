@@ -1,3 +1,4 @@
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 OUT=$TEST_SCRIPT_DIR/.test_setup_error.sh.out

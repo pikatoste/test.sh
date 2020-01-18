@@ -1,3 +1,4 @@
+#!/bin/bash
 func1() {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func2

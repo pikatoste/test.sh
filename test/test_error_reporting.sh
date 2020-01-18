@@ -1,3 +1,4 @@
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 OUT="$TESTOUT_DIR"/do_$(basename "$TESTOUT_FILE")
@@ -38,7 +39,7 @@ grep "Error in teardown_test_suite(do_test_error_reporting.sh:22): 'false' exite
   SUBSHELL=teardown INLINE=     run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test_suite]
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:22): 'false' exited with status 1" "$OUT"
 ! SUBSHELL=never    INLINE=true run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test_suite] || false
-# TODO: investigar este caso raruno, el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
+# aparente error en bash: el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:22): '.*' exited with status 1" "$OUT"
   SUBSHELL=teardown INLINE=true run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [teardown_test_suite]
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:22): 'false' exited with status 1" "$OUT"
@@ -68,7 +69,7 @@ grep "Error in setup_test(do_test_error_reporting.sh:32): 'false' exited with st
 start_test "Errors in test and teardown functions should be reported"
 ! SUBSHELL=never    INLINE=     run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
-# TODO: investigar este caso raruno, el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
+# aparente error en bash: el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT"
 [[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! SUBSHELL=teardown INLINE=     run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
@@ -83,7 +84,7 @@ grep "Error in teardown_test_suite(do_test_error_reporting.sh:22): 'false' exite
 [[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! SUBSHELL=never    INLINE=true run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:12): 'false' exited with status 1" "$OUT"
-# TODO: investigar este caso raruno, el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
+# aparente error en bash: el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT"
 [[ $(grep "Error in teardown_test(do_test_error_reporting.sh:17): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 ! SUBSHELL=teardown INLINE=true run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false

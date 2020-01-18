@@ -1,3 +1,4 @@
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "The log file should contain test stdout and stderr"

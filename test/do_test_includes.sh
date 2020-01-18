@@ -1,18 +1,11 @@
 #!/bin/bash
-func1() {
-  func2
-}
-
-func2() {
-  false
-}
 
 test_01() {
-  func1
+  true
 }
 
-FAIL_FAST=
 SUBSHELL=always
+REENTER=1
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 run_tests
