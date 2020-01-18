@@ -41,7 +41,7 @@ start_test "This is a failing test"
 assert_true false
 ```
 
-This test script contains two tests, one that passes and one that fails.
+This test script contains two tests: one that passes and one that fails.
 It is written in *inline* mode; you can also choose *managed* mode, and the test becomes:
 
 ```shell script
@@ -69,7 +69,7 @@ the first failed test terminates the script.
 
 You should not mix inline and managed mode in the same test script.
 
-The output of a test script is a colorized summary with the result of each test. Both tests above produce the
+The output of a test script is a colorized summary with the result of each test. Both test scripts above produce the
 same output:
 
 <pre><font color="#4E9A06">* This is a passing test</font>
@@ -247,13 +247,14 @@ For example, this test script (the line `set -o allexport` makes the script supp
 
 ```shell script
 #!/bin/bash
+
 set -o allexport
+
 test_01() {
   assert_true false "this is a test killer"
 }
 
 SUBSHELL=${SUBSHELL:-always}
-STACK_TRACE=full
 PRUNE_PATH="*/"
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 
@@ -263,39 +264,40 @@ run_tests
 will log this output:
 
 <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in source(test.sh:381): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
-<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:348)
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:361)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
-<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
-<font color="#CC0000">[test.sh]</font>  at source(test.sh:381)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-<font color="#CC0000">[test.sh]</font> test_01 FAILED
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font> Error in source(test.sh:378): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:274)
+<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:343)
+<font color="#CC0000">[test.sh]</font>  at assert(test.sh:358)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:366)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:6)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:196)
+<font color="#CC0000">[test.sh]</font>  at source(test.sh:378)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:274)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:226)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
+<font color="#CC0000">[test.sh]</font> FAILED: test_01
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:217): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
 </pre>
 
 Because the error was triggered from `assert_true` --which is an internal test.sh function-- the error
 message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
-Note that there's a second error, this one is triggered in managed mode, SUBSHELL=always and FAIL_FAST false when the script
+Note that there's a second error: this one is triggered in managed mode and FAIL_FAST false when the script
 (not the test) fails. This second error also benefits from the stack trace.
 
 In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
 
 <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
-<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:231)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:343): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at assert(test.sh:360)
+<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:366)
+<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:6)
+<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:196)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:228)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
+<font color="#CC0000">[test.sh]</font> FAILED: test_01
 </pre>
 
 When REENTER is false, stack traces involving subshells are different.
@@ -308,18 +310,18 @@ For example, the log output of the previous script executed as `REENTER= ./mytes
 <font color="#CC0000">[test.sh]</font>  at assert(environment:7)
 <font color="#CC0000">[test.sh]</font>  at assert_true(environment:0)
 <font color="#CC0000">[test.sh]</font>  at test_01(environment:0)
-<font color="#CC0000">[test.sh]</font>  at run_test(environment:19)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:279)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-<font color="#CC0000">[test.sh]</font> test_01 FAILED
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
+<font color="#CC0000">[test.sh]</font>  at run_test(environment:12)
+<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:276)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:226)
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
+<font color="#CC0000">[test.sh]</font> FAILED: test_01
+<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:217): &apos;[[ $failures == 0 ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
 </pre>
 
 The differences are:
 
-* The error message shows no source file and 0 as the line number; this happens when the subshell evaluates a
+* The error message shows no source file and 0 as the line number. This happens when the subshell evaluates a
 simple expression.
 * The subshell invocation sequence is simpler.
 * All frames following the first subshell invocation show 'environment' as the source file and a line number
@@ -332,8 +334,8 @@ Explicit assertions were originally conceived as an aid in locating the origin o
 facilities currently implemented have alleviated this need and as a result assertions have not received much
 attention.
 
-Currently there are only two assert
-functions, `assert_true` and `assert_false`. See the description of these functions in the
+Currently there are three assert
+functions: `assert_true`, `assert_false` and `assert_equals`. See the description of these functions in the
 [Function reference](#function-reference).
 
 ### Predefined variables
@@ -427,11 +429,12 @@ Available configuration variables:
 
   Boolean. Default true.
 
-  If true, when test.sh starts a subshell it will reexecute he test script and source again other involved scripts:
+  If true, when test.sh starts a subshell it will reexecute the test script and source again other involved scripts:
   test.sh and included files. This redefines functions in the subshell's context and allows
   stack traces to correctly refer to source files and line numbers.
 
-  If false, subshells will reexecute the test script nor source again involved scripts. Functions defined in the calling shell are
+  If false, subshells will not reexecute the test script nor source again involved scripts.
+  Functions defined in the calling shell are
   available to the subshell because they are exported in the environment, but the source file and line number of
   these functions is lost; stack traces with frames referencing these functions will
   show 'environment' as the source file and a line number relative to that function's definition
@@ -445,8 +448,8 @@ Available configuration variables:
 
   Values: no or full. Default: full.
 
-  * no: do not output stack traces.
-  * full: include all frames.
+  * no: do not log stack traces.
+  * full: log stack traces.
 
 
 * PRUNE_PATH
@@ -454,9 +457,9 @@ Available configuration variables:
   Default: ${PWD}/
 
   A pattern that is matched at the beginning of each source file path in error reports, i.e. the error message and
-  stack trace frames. The longest match is removed from the path. If there's no match the path not modified.
+  stack trace frames. The longest match is removed from the path. If there's no match the path is not modified.
 
-  For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
+  For example, to strip all directories and leave only file names you would set: `PRUNE_PATH="*/"`.
 
 * TEST_MATCH
 
@@ -482,7 +485,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   in function name order, not function definition order. Test functions specified as arguments
   will be executed in the order of the arguments.
 
-  You should call run_tests only once.
+  You should call `run_tests` only once.
 
   A test function should look:
 
@@ -600,11 +603,24 @@ This is the list of functions defined by test.sh that you can use in a test scri
   <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
   </pre>
 
-    **NOTE**: \<shell command\> is executed in _ignored errexit context_
-    (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
+    **NOTE**: Because \<shell command\> is evaluated in a negated expression, it is executed in
+    _ignored errexit context_ (see [Implicit assertion](#implicit-assertion)); if \<shell command\>
+    calls a function designed to
     run in errexit context, you should invoke \<shell command\> with the `subshell` function. For example,
     the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
     context, should be written as: `assert_false "subshell my_validation_function"`.
+
+* assert_equals
+
+  Syntax:
+
+  ```text
+  assert_false <expected> <current> [message]
+  ```
+
+  Compares \<expeced\> and \<current\> with the bash expression: `[[ $expected = $current ]]`.
+  If the comparison fails, an error message is logged and an error triggered. The error message follows the pattern
+  `Assertion failed: [<message>, ]expected '<expected>' but got '<current>'`.
 
 * subshell
 

@@ -78,14 +78,12 @@ start_test() {
 }
 
 display_test_passed() {
-  log_ok "${test_func} PASSED"
-  [ -z "$CURRENT_TEST_NAME" ] || echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
+  [ -z "$CURRENT_TEST_NAME" ] || { log_ok "PASSED: ${CURRENT_TEST_NAME}"; echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3; }
   unset CURRENT_TEST_NAME
 }
 
 display_test_failed() {
-  log_err "${test_func} FAILED"
-  [ -z "$CURRENT_TEST_NAME" ] || echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
+  [ -z "$CURRENT_TEST_NAME" ] || { log_err "FAILED: ${CURRENT_TEST_NAME}"; echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3; }
   unset CURRENT_TEST_NAME
 }
 
@@ -159,7 +157,8 @@ run_test_script() {
       teardown_test_suite_called \
       PIPE \
       STACK_FILE \
-      FOREIGN_STACK ; \
+      FOREIGN_STACK
+    unset -f setup_test_suite teardown_test_suite setup_test teardown_test
     "$test_script" "$@" )
 }
 
@@ -210,7 +209,6 @@ run_tests() {
       run_test $test_func
     fi
     if [ $failed -ne 0 ]; then
-      log_err "${test_func} FAILED"
       failures=$(( $failures + 1 ))
       if [[ $FAIL_FAST ]]; then
         while [ $# -gt 0 ]; do
@@ -303,18 +301,19 @@ local_stack() {
 }
 
 print_stack_trace() {
+  local err_msg=$(tail -1 $STACK_FILE)
+  [[ $err_msg ]] || return 0
   log_err "$(tail -1 $STACK_FILE)"
   tac $STACK_FILE | tail -n +2 | while read frame; do
-  log_err " at $frame"
+    log_err " at $frame"
   done
   rm -f $STACK_FILE
 }
 
 assert_msg() {
-  local what=$1
+  local msg=$1
   local why=$2
-  local msg=$3
-  echo "Assertion failed: ${msg:+$msg: }$why in: '$what'"
+  echo "Assertion failed: ${msg:+$msg, }$why"
 }
 
 assert_err_msg() {
@@ -335,21 +334,36 @@ assert() {
   local why=$3
   local msg=$4
   shift
-  push_err_handler "pop_err_handler; assert_err_msg \"$what\" \"$why\" \"$msg\""
+  push_err_handler "pop_err_handler; print_stack_trace; touch $STACK_FILE"
+  push_err_handler "pop_err_handler; assert_err_msg \"$msg\" \"$why\""
   if [[ $SUBSHELL == always ]]; then
     $expect "subshell \"$what\""
   else
+    push_err_handler "pop_err_handler; save_stack"
     $expect "eval \"$what\""
+    pop_err_handler
   fi
+  pop_err_handler
   pop_err_handler
 }
 
 assert_true() {
-  assert "$1" expect_true "expected success but got failure" "$2"
+  local what=$1
+  local msg=$2
+  assert "$what" expect_true "expected success but got failure in: '$what'" "$msg"
 }
 
 assert_false() {
-  assert "$1" expect_false "expected failure but got success" "$2"
+  local what=$1
+  local msg=$2
+  assert "$what" expect_false "expected failure but got success in: '$what'" "$msg"
+}
+
+assert_equals() {
+  local expected=$1
+  local current=$2
+  local msg=$3
+  assert "[[ \"$current\" = \"$expected\" ]]" expect_true "expected '$expected' but got '$current'" "$msg"
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
