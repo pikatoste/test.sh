@@ -1,3 +1,4 @@
+#!/bin/bash
 test_ok() {
   touch "$TEST_SCRIPT_DIR"/.test_ok
   TEST_OK=1

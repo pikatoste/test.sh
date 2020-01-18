@@ -1,3 +1,4 @@
+#!/bin/bash
 FAIL_FAST=
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 

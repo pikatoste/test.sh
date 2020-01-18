@@ -1,4 +1,4 @@
-SUBSHELL=always
+#!/bin/bash
 
 define_funcs() {
   eval '
@@ -37,6 +37,7 @@ test_02() {
   echo test_02 >>"$OUTFILE"
 }
 
+SUBSHELL=always
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "run_tests shoud invoke tests and setup methods when there are no failures"

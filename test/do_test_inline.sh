@@ -1,3 +1,4 @@
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 setup_test_suite() {

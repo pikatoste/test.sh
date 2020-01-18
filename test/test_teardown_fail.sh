@@ -1,19 +1,5 @@
-teardown_test_suite() {
-  false
-}
-
-teardown_test() {
-  false
-}
-
-test_01() {
-  true
-}
-
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Failing teardown functions should not break the test"
-# run in a different test script to avoid the race condition on the log output
-( CURRENT_TEST_NAME= run_tests )
-
-# TODO: check output
+run_test_script "$TEST_SCRIPT_DIR"/do_test_teardown_fail.sh

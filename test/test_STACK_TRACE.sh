@@ -1,3 +1,4 @@
+#!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 OUT="$TESTOUT_DIR"/do_$(basename "$TESTOUT_FILE")
@@ -6,7 +7,7 @@ start_test "STACK_TRACE should accept only valid values"
 for i in no full; do
   STACK_TRACE=$i load_config
 done
-! STACK_TRACE=pepe load_config || false
+! STACK_TRACE=pepe subshell load_config || false
 
 start_test "When STACK_TRACE=no no stack traces should be produced"
 ! CURRENT_TEST_NAME= STACK_TRACE=no "$TEST_SCRIPT_DIR"/do_test_STACK_TRACE.sh || false
