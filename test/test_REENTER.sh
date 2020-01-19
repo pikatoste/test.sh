@@ -10,7 +10,7 @@ test_01() {
 }
 
 start_test "Subshells should not resource files when REENTER is false"
-( CURRENT_TEST_NAME= REENTER= run_tests )
+( CURRENT_TEST_NAME= REENTER= run_tests 3>&1 )
 assert_true '[[ $CHECK = pass ]]'
 
 start_test "Errors in subshells when REENTER is false should generate stack traces"
