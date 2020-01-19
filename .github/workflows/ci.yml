@@ -23,8 +23,7 @@ jobs:
         run: make
       - name: Run tests
         run: |
-          make check | tee /tmp/testmain.out
-          cp /tmp/testmain.out runtest/test/testout/.main
+          make check | tee /tmp/testmain.out && cp /tmp/testmain.out runtest/test/testout/.main
       - name: Upload test output artifact
         uses: actions/upload-artifact@v1
         with:
