@@ -16,6 +16,8 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   set -o errtrace
   set -o pipefail
   export SHELLOPTS
+  shopt -s inherit_errexit
+  export BASHOPTS
 fi
 
 ignore() {
