@@ -156,7 +156,6 @@ run_test_script() {
       teardown_test_called \
       teardown_test_suite_called \
       PIPE \
-      STACK_FILE \
       FOREIGN_STACK \
       GREEN ORANGE RED BLUE NC
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
