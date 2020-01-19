@@ -43,4 +43,4 @@ TEARDOWN_PREFIX=$SETUP_PREFIX
 start_test "Included files should not be reported when reincluded"
 INCLUDE_PATH="$TEST_SCRIPT_DIR"/files/_include*.sh run_test_script "$TEST_SCRIPT_DIR"/do_test_includes.sh
 OUT="$TEST_SCRIPT_DIR"/testout/do_test_includes.sh.out
-assert_equals 2 "$(grep "\[test.sh\].* Included:" "$OUT" | wc -l)"  "wrong count"
+assert_equals 2 "$(grep "\[test.sh\].* Included:" "$OUT" | wc -l)" "wrong count"
