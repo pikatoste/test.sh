@@ -644,6 +644,25 @@ This is the list of functions defined by test.sh that you can use in a test scri
 
   See [Subshells](#subshells).
 
+* run_test_script
+
+  Syntax:
+
+  ```text
+  run_test_script <test script>
+  ```
+
+  Executes \<test script\>, which is a standalone test.sh-enabled test script. Using this function is
+  preferred over plain execution of the test script because it resets internal variables that govern the
+  execution of test.sh and might affect the executed script. The current configuration of the calling script
+  is passed to the executed script. The main output of the executed script is directed to the log file of
+  the calling script unless redirected elsewhere. For example, to redirect the main output of the executed
+  script to the main output of the calling script, execute:
+
+  ```text
+  run_test_script <test script> >&3 2>&4
+  ```
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
