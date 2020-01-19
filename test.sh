@@ -18,11 +18,15 @@ if [[ ! -v SUBSHELL_CMD ]]; then
   export SHELLOPTS
 fi
 
+ignore() {
+  [[ -z $1 ]] || echo -e "$1"
+}
+
 exit_trap() {
   EXIT_CODE=${EXIT_CODE:-$?}
   [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
-    eval "$handler"
+    ignore "$(eval "$handler")"
   done
   [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || remove_err_handler
 }
@@ -70,7 +74,7 @@ display_last_test_result() {
 start_test() {
   [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
-  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown teardown_test; }
+  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; ignore "$(call_teardown teardown_test)"; }
   CURRENT_TEST_NAME="$1"
   [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
@@ -171,7 +175,7 @@ run_test() {
   push_err_handler "pop_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}"
   call_if_exists setup_test
   run_test_teardown_trap() {
-    [[ $teardown_test_called ]] || call_teardown teardown_test
+    [[ $teardown_test_called ]] || ignore "$(call_teardown teardown_test)"
   }
   push_exit_handler run_test_teardown_trap
   $test_func
@@ -181,7 +185,7 @@ run_test() {
   pop_err_handler
   pop_err_handler
   teardown_test_called=1
-  call_teardown teardown_test
+  ignore "$(call_teardown teardown_test)"
   [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
 }
 
@@ -196,7 +200,7 @@ run_tests() {
   local failures=0
   call_setup_test_suite
   run_tests_exit_trap() {
-    [[ $teardown_test_suite_called ]] || call_teardown teardown_test_suite
+    [[ $teardown_test_suite_called ]] || ignore "$(call_teardown teardown_test_suite)"
   }
   push_exit_handler run_tests_exit_trap
   while [ $# -gt 0 ]; do
@@ -220,7 +224,7 @@ run_tests() {
     fi
   done
   teardown_test_suite_called=1
-  call_teardown teardown_test_suite
+  ignore "$(call_teardown teardown_test_suite)"
   pop_exit_handler
   [[ $failures == 0 ]]
 }
