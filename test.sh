@@ -162,6 +162,8 @@ run_test_script() {
       PIPE \
       FOREIGN_STACK \
       GREEN ORANGE RED BLUE NC
+    EXIT_HANDLERS=()
+    ERR_HANDLERS=(save_stack)
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
     "$test_script" "$@" )
 }
@@ -412,7 +414,6 @@ else
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
-    #push_exit_handler "rm -f \"$PIPE\""
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
