@@ -233,15 +233,19 @@ load_includes() {
     [[ -v SUBSHELL_CMD ]] || log "Included: $include_file"
   }
 
+  local include_files=()
   local saved_IFS=$IFS
   IFS=":"
   for path in $INCLUDE_PATH; do
     # shellcheck disable=SC2066
-    for include in "$path"; do
-      [ ! -f "$include" ] || load_include_file "$include"
+    for file in "$path"; do
+      [[ -f $file ]] && include_files=("${include_files[@]/$file}" "$file")
     done
   done
   IFS=$saved_IFS
+  for file in "${include_files[@]}"; do
+    [[ $file ]] && load_include_file "$file"
+  done
 }
 
 subshell() {
@@ -341,7 +345,7 @@ assert() {
     $expect "subshell \"$what\""
   else
     push_err_handler "pop_err_handler; save_stack"
-    $expect "eval \"$what\""
+    $expect "$what"
     pop_err_handler
   fi
   pop_err_handler
@@ -372,7 +376,7 @@ if [[ -v SUBSHELL_CMD ]]; then
   trap "EXIT_CODE=\$?; exit_trap" EXIT
   trap err_trap ERR
   push_err_handler save_stack
-  eval "$SUBSHELL_CMD"
+  eval $SUBSHELL_CMD
   exit 0
 else
   # TODO: sort out global var names and control which are exported
