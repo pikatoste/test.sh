@@ -1,13 +1,15 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
+FILES_DIR="$TEST_SCRIPT_DIR"/files
+
 start_test "The configuration file should be loaded from the default location"
 unset VERBOSE
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
 unset CONFIG_FILE
 unset CONFIG_DIR
-cp "$TEST_SCRIPT_DIR"/test.sh.config.default "$TEST_SCRIPT_DIR"/../test.sh.config
+cp "$FILES_DIR"/test.sh.config.default "$TESTSH_DIR"/test.sh.config
 load_config
 rm "$TEST_SCRIPT_DIR"/../test.sh.config
 [ "$VERBOSE" = 0 ]
@@ -20,7 +22,7 @@ unset INCLUDE_GLOB
 unset INCLUDE_PATH
 unset CONFIG_FILE
 unset CONFIG_DIR
-CONFIG_FILE="$TEST_SCRIPT_DIR"/test.sh.config.FILE
+CONFIG_FILE="$FILES_DIR"/test.sh.config.FILE
 load_config
 [ "$VERBOSE" = 0 ]
 [ "$INCLUDE_GLOB" = "*" ]
@@ -32,7 +34,8 @@ unset INCLUDE_GLOB
 unset INCLUDE_PATH
 unset CONFIG_FILE
 unset CONFIG_DIR
-cp "$TEST_SCRIPT_DIR"/test.sh.config.DIR "$TEST_SCRIPT_DIR"/test.sh.config
+CONFIG_DIR="$TEST_SCRIPT_DIR"
+cp "$FILES_DIR"/test.sh.config.DIR "$TEST_SCRIPT_DIR"/test.sh.config
 load_config
 rm "$TEST_SCRIPT_DIR"/test.sh.config
 [ "$VERBOSE" = 0 ]
@@ -56,7 +59,7 @@ INCLUDE_GLOB=include_glob
 INCLUDE_PATH=include_path
 unset CONFIG_FILE
 unset CONFIG_DIR
-CONFIG_FILE="$TEST_SCRIPT_DIR"/test.sh.config.default
+CONFIG_FILE="$FILES_DIR"/test.sh.config.default
 load_config
 [ "$VERBOSE" = verbose ]
 [ "$INCLUDE_GLOB" = include_glob ]
@@ -73,6 +76,6 @@ start_test "Empty variables should be respected over configuration file"
 FAIL_FAST=
 unset CONFIG_FILE
 unset CONFIG_DIR
-CONFIG_FILE="$TEST_SCRIPT_DIR"/test.sh.config.default
+CONFIG_FILE="$FILES_DIR"/test.sh.config.default
 load_config
 [ "$FAIL_FAST" = "" ]
