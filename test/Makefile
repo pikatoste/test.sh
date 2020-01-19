@@ -14,7 +14,8 @@ TESTS ?= \
     test_STACK_TRACE.sh \
     test_error_reporting.sh \
     test_setup_error.sh \
-    test_regression_33.sh
+    test_regression_33.sh \
+    test_regression_30.sh
 
 include Makefile.test
 
