@@ -407,7 +407,7 @@ Available configuration variables:
   Boolean. Default true. Only used in managed mode.
 
   If true, failure of a test function will interrupt the script and the remaining test functions will
-  be skipped.
+  be skipped. Each skipped test is displayed in the main output as `[skipped] <test function>`.
 
   If false, all test functions will be executed. Requires SUBSHELL=always.
 
