@@ -28,6 +28,9 @@ From sources:
 
 ## Usage
 
+test.sh is a bash library designed to be sourced in test scripts. When executed, it prints a message with
+the version number and a link to this repository.
+
 A test script looks like this:
 
 ```shell script
