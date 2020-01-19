@@ -214,13 +214,6 @@ will fail also.
 * `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
 as a warning in the main output and an error will be logged, but will not make the test to fail.
 
-These semantics break in corner cases when SUBSHELL is set to 'never':
-* A failure in `teardown_test` or `teardown_test_suite` will make the test script to fail.
-* In inline mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked for a failed test or
-the last test even if it succeeds.
-* In managed mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked
-for a failed test.
-
 ### Subshells
 
 If allowed by the SUBSHELL configuration option, test.sh will execute in a subshell (i.e. `bash -c`)
@@ -415,19 +408,13 @@ Available configuration variables:
 
   Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
 
-  * never: never start subshells. Incompatible with FAIL_FAST false. Breaks teardown semantics
-    (see [setup/teardown](#setupteardown)): any failure in a teardown function will terminate the script with
-    failure. In this mode, `teardown_test_suite` will not get called when both a test and `teardown_test` fail.
+  * never: never start subshells. Incompatible with FAIL_FAST false.
 
   * teardown: only start subshells to execute `teardown_test` and `teardown_test_suite` functions.
     Incompatible with FAIL_FAST false.
-    Enforces teardown semantics (see [setup/teardown](#setupteardown)):`teardown_test` and `teardown_test_suite`
-    are always called in this mode and failures in these functions don't fail the test nor interrupt the script.
 
   * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false. Enforces teardown semantics (see [setup/teardown](#setupteardown)):
-    `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
-    these functions don't fail the test nor interrupt the script.
+    FAIL_FAST is false.
 
   See [Subshells](#subshells).
 
