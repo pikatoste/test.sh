@@ -15,7 +15,8 @@ TESTS ?= \
     test_error_reporting.sh \
     test_setup_error.sh \
     test_regression_33.sh \
-    test_regression_30.sh
+    test_regression_30.sh \
+    test_regression_31.sh
 
 include Makefile.test
 
