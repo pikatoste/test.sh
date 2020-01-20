@@ -18,26 +18,32 @@ teardown_test() {
 }
 
 start_test "Files should be included from the default locations"
-load_includes
-include_test1
-include_test2
+(
+  load_includes
+  include_test1
+  include_test2
+)
 
 SETUP_PREFIX=__
 start_test "Files should be included from the default directories with the configured INCLUDE_GLOB"
 INCLUDE_GLOB="__include*.sh"
 unset INCLUDE_PATH
-load_config
-load_includes
-include_test1
-include_test2
+(
+  load_config
+  load_includes
+  include_test1
+  include_test2
+)
 
 TEARDOWN_PREFIX=$SETUP_PREFIX
 SETUP_PREFIX=xx_
 start_test "Files should be included from the configured INCLUDE_PATH"
 INCLUDE_PATH="$TEST_SCRIPT_DIR"/files/_include*.sh
-load_includes
-include_test1
-include_test2
+(
+  load_includes
+  include_test1
+  include_test2
+)
 
 TEARDOWN_PREFIX=$SETUP_PREFIX
 start_test "Included files should not be reported when reincluded"
