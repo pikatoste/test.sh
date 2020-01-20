@@ -348,10 +348,11 @@ test.sh defines these variables, which are available to the test script after te
 * VERSION: the version of test.sh.
 * TESTSH: full path of the sourced test.sh.
 * TESTSH_DIR: the directory of test.sh.
+* TEST_SCRIPT: full path of the test script.
 * TEST_SCRIPT_DIR: the directory of the test script.
 * CONFIG_FILE: the location of the effective configuration file.
-* TESTOUT_FILE: the log file.
-* TESTOUT_DIR: the directory of the log file.
+
+Configuration variables are set to the effective value.
 
 ### Configuration
 
@@ -464,6 +465,26 @@ Available configuration variables:
 
   A regular expression that is matched against function names to discover test functions in managed mode.
   It is evaluated by grep.
+
+* LOG_DIR_NAME
+
+  The name of the log directory. Default: testout
+
+* LOG_DIR
+
+  Full path of the log directory. Default: `$TEST_SCRIPT_DIR/$LOG_DIR_NAME`
+
+* LOG_NAME
+
+  Name of the log file. Default: `$(basename "$TEST_SCRIPT").out`
+
+* LOG_FILE
+
+  Full path of the log file. Default: `$LOG_DIR/$LOG_NAME`
+
+* LOG_MODE
+
+  Values: overwrite, append. Default: overwrite
 
 ### Function reference
 

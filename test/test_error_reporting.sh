@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-OUT="$TESTOUT_DIR"/do_$(basename "$TESTOUT_FILE")
+OUT="$LOG_DIR"/do_$(basename "$LOG_FILE")
 
 start_test "The error message should identify the source, line, command and exit code when there are no subshells"
 ! SUBSHELL=never run_test_script "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh [func2] || false

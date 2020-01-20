@@ -125,7 +125,7 @@ call_if_exists() {
 }
 
 error_setup_test_suite() {
-  echo -e "${RED}[ERROR] setup_test_suite failed, see $(prune_path "$TESTOUT_FILE") for more information${NC}" >&3
+  echo -e "${RED}[ERROR] setup_test_suite failed, see $(prune_path "$LOG_FILE") for more information${NC}" >&3
 }
 
 call_setup_test_suite() {
@@ -151,7 +151,7 @@ call_teardown() {
 }
 
 run_test_script() {
-  local test_script="$1"
+  local test_script=$1
   shift
   ( unset \
       CURRENT_TEST_NAME \
@@ -163,9 +163,16 @@ run_test_script() {
       PIPE \
       FOREIGN_STACK \
       GREEN ORANGE RED BLUE NC
+    unset -f setup_test_suite teardown_test_suite setup_test teardown_test
+
+    # restore log-related config vars ti initial values
+    for var in LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE; do
+      unset $var
+      restore_variable $var
+    done
+
     EXIT_HANDLERS=()
     ERR_HANDLERS=(save_stack)
-    unset -f setup_test_suite teardown_test_suite setup_test teardown_test
     "$test_script" "$@" )
 }
 
@@ -403,6 +410,8 @@ else
       RED='\033[0;31m'
       BLUE='\033[0;34m'
       NC='\033[0m' # No Color'
+    else
+      unset GREEN ORANGE RED BLUE NC
     fi
   }
 
@@ -415,13 +424,13 @@ else
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
-#    TESTOUT_DIR=${LOG_DIR:-$TEST_SCRIPT_DIR/testout}
-#    TESTOUT_FILE=${LOG_FILE:-$TESTOUT_DIR/$(basename "$TEST_SCRIPT").out}
-    TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
-    TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
-    mkdir -p "$TESTOUT_DIR"
-    [[   $VERBOSE ]] || cat >"$TESTOUT_FILE" <"$PIPE" &
-    [[ ! $VERBOSE ]] || tee  "$TESTOUT_FILE" <"$PIPE" &
+    mkdir -p "$LOG_DIR"
+    local redir=\>
+    [[ $LOG_MODE = overwrite ]] || redir=\>$redir
+    [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
+    redir=
+    [[ $LOG_MODE = overwrite ]] || redir=-a
+    [[ ! $VERBOSE ]] || tee $redir "$LOG_FILE" <"$PIPE" &
     exec 3>&1 4>&2 >"$PIPE" 2>&1
   }
 
@@ -445,9 +454,11 @@ else
     default_STACK_TRACE='full'
     default_TEST_MATCH='^test_'
     default_COLOR='yes'
-    default_LOG_DIR='$TEST_SCRIPT_DIR/testout'
+    default_LOG_DIR_NAME='testout'
+    default_LOG_DIR='$TEST_SCRIPT_DIR/$LOG_DIR_NAME'
     default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
     default_LOG_FILE='$LOG_DIR/$LOG_NAME'
+    default_LOG_MODE='overwrite'
   }
 
   load_config() {
@@ -488,7 +499,7 @@ else
       IFS="$current_IFS"
     }
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR LOG_NAME LOG_FILE"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE"
 
     # save environment config
     for var in $config_vars; do
@@ -529,6 +540,7 @@ else
     fi
     validate_values STACK_TRACE no full
     validate_values COLOR no yes
+    validate_values LOG_MODE overwrite append
 
     set_color
   }
@@ -536,11 +548,11 @@ else
   trap "EXIT_CODE=\$?; rm -f \$PIPE; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
+  load_config
   push_err_handler "print_stack_trace"
   push_err_handler "save_stack"
   setup_io
   push_exit_handler "cleanup"
-  load_config
   load_includes
   push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
   push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
