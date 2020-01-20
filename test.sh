@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 @LICENSE@
 #
@@ -349,7 +348,7 @@ assert() {
   push_err_handler "pop_err_handler; print_stack_trace; touch $STACK_FILE"
   push_err_handler "pop_err_handler; assert_err_msg \"$msg\" \"$why\""
   if [[ $SUBSHELL == always ]]; then
-    $expect "subshell \"$what\""
+    $expect "subshell '$what'"
   else
     push_err_handler "pop_err_handler; save_stack"
     $expect "$what"
@@ -383,7 +382,7 @@ if [[ -v SUBSHELL_CMD ]]; then
   trap "EXIT_CODE=\$?; exit_trap" EXIT
   trap err_trap ERR
   push_err_handler save_stack
-  eval $SUBSHELL_CMD
+  eval "$SUBSHELL_CMD"
   exit 0
 else
   # TODO: sort out global var names and control which are exported
@@ -416,6 +415,8 @@ else
   setup_io() {
     PIPE=$(mktemp -u)
     mkfifo "$PIPE"
+#    TESTOUT_DIR=${LOG_DIR:-$TEST_SCRIPT_DIR/testout}
+#    TESTOUT_FILE=${LOG_FILE:-$TESTOUT_DIR/$(basename "$TEST_SCRIPT").out}
     TESTOUT_DIR="$TEST_SCRIPT_DIR"/testout
     TESTOUT_FILE="$TESTOUT_DIR"/"$(basename "$TEST_SCRIPT")".out
     mkdir -p "$TESTOUT_DIR"
@@ -444,6 +445,9 @@ else
     default_STACK_TRACE='full'
     default_TEST_MATCH='^test_'
     default_COLOR='yes'
+    default_LOG_DIR='$TEST_SCRIPT_DIR/testout'
+    default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
+    default_LOG_FILE='$LOG_DIR/$LOG_NAME'
   }
 
   load_config() {
@@ -484,7 +488,7 @@ else
       IFS="$current_IFS"
     }
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR LOG_NAME LOG_FILE"
 
     # save environment config
     for var in $config_vars; do
@@ -515,7 +519,7 @@ else
       for i in "$@"; do
         [[ $i != $val ]] || return 0
       done
-      log_err "Configuration: invalid value in variable $var: '$val', should be one of: $*" && false
+      log_err "Configuration: invalid value of variable $var: '$val', allowed values: $(echo "$*" | sed -e 's/ /, /g')" && false
     }
 
     validate_values SUBSHELL never teardown always
