@@ -152,7 +152,8 @@ call_teardown() {
 }
 
 run_test_script() {
-  local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath --relative-to "$pwd" "$1")
+#  local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath --relative-to "$pwd" "$1")
+  local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
   ( unset \
       CURRENT_TEST_NAME \
