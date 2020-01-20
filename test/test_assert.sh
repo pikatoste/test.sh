@@ -29,4 +29,4 @@ start_test "assert_equals shoud fail when the arguments are not equal"
 ( ! REENTER=  subshell "assert_equals expected current wrong" || false )
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-( ! REENTER=1 run_test_script "$TEST_SCRIPT_DIR"/do_test_assert_nosubshell.sh || false )
+( ! REENTER=1 run_test_script do_test_assert_nosubshell.sh || false )

@@ -372,7 +372,9 @@ Otherwise a file named 'test.sh.config' will be searched in these locations (see
 
 Boolean variables are considered true when not empty and false otherwise (undefined or empty).
 
-Available configuration variables:
+The configuration is read before any configuration variable takes effect. The means that
+errors are displayed in the main output because the redirection to LOG_FILE has not been done yet.
+For the same reason, no color is applied: the COLOR configuration has not been yet processed.
 
 * VERBOSE
 
@@ -465,6 +467,13 @@ Available configuration variables:
 
   A regular expression that is matched against function names to discover test functions in managed mode.
   It is evaluated by grep.
+
+* COLOR
+
+  Values: yes, no. Default: yes.
+
+  * yes: output ANSI color escape sequences in both main and log output.
+  * no: do not output ANSI color escape sequences in neither main or log output.
 
 * LOG_DIR_NAME
 
@@ -664,10 +673,19 @@ This is the list of functions defined by test.sh that you can use in a test scri
   run_test_script <test script>
   ```
 
-  Executes \<test script\>, which is a standalone test.sh-enabled test script. Using this function is
-  preferred over plain execution of the test script because it resets internal variables that govern the
-  execution of test.sh and might affect the executed script. The current configuration of the calling script
-  is passed to the executed script. The main output of the executed script is directed to the log file of
+  Executes \<test script\>, which is a relative or absolute path to a standalone test.sh-enabled test script.
+  Relative paths are interpreted from `$TEST_SCRIPT_DIR`.
+
+  Using this function is preferred over plain execution of the test script because it resets internal
+  variables that govern the execution of test.sh and might affect the executed script. The current
+  configuration of the calling script is passed to the executed script, with the following exceptions:
+
+  * The current color settings (not the COLOR configuration variable) are reset.
+  * LOG_DIR_NAME, LOG_DIR, LOG_NAME and LOG_FILE: these variables are reset to the value they had at the start
+  of the calling script. Directing the called script log output to the calling script log file is not supported.
+  These variables can only be set in the called script or in its configuration file.
+
+  The main output of the executed script is directed to the log file of
   the calling script unless redirected elsewhere. For example, to redirect the main output of the executed
   script to the main output of the calling script, execute:
 

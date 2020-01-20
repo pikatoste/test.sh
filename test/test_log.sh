@@ -3,8 +3,8 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "The log file should contain test stdout and stderr"
 # run in a different test script to avoid the race condition on the log output
-! run_test_script "$TEST_SCRIPT_DIR"/do_test_log.sh || false
-OUT="$TEST_SCRIPT_DIR"/testout/do_test_log.sh.out
+! run_test_script do_test_log.sh || false
+OUT=$LOG_DIR/do_test_log.sh.out
 grep ^output$ "$OUT"
 grep ^stderr$ "$OUT"
 

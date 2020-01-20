@@ -16,9 +16,9 @@ start_test "Subshells should not resource files when REENTER is false"
 assert_true '[[ $CHECK = pass ]]'
 
 start_test "Errors in subshells when REENTER is false should generate stack traces"
-! COLOR=no run_test_script "$TEST_SCRIPT_DIR"/do_test_REENTER.sh || { COLOR=yes; false; }
+! COLOR=no run_test_script do_test_REENTER.sh || { COLOR=yes; false; }
 COLOR=yes
-OUT="$TEST_SCRIPT_DIR"/testout/do_test_REENTER.sh.out
+OUT=$LOG_DIR/do_test_REENTER.sh.out
 grep "(environment:0)" "$OUT"
 OUT2="$TEST_SCRIPT_DIR"/.do_test_REENTER.out
 sed -e 's/^\(.*\)(.*)\(.*\)$/\1()\2/' "$OUT" >"$OUT2"
