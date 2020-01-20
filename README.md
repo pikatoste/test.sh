@@ -9,7 +9,8 @@ See https://pikatoste.github.io/test.sh/.
 
 test.sh is a bash library for writing tests as shell scripts.
 
-Only GNU bash is supported. test.sh has been developed and tested with bash version 4.4.20.
+Only GNU bash is supported. Requires bash \>=4.4.20. test.sh has been developed with bash version 4.4.20.
+It has been tested succesfully with versions up to 5.0.11.
 
 ## Installation
 
