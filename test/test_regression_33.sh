@@ -15,6 +15,6 @@ chmod a+x "$TEST_SCRIPT_DIR"/test-regression-33.sh
 cp "$TESTSH" "$TEST_SCRIPT_DIR"
 unset INCLUDE_GLOB
 unset INCLUDE_PATH
-( run_test_script ./test-regression-33.sh )
+( cd "$TEST_SCRIPT_DIR"; run_test_script ./test-regression-33.sh )
 assert_equals 1 "$(grep "regression #33" "$TEST_SCRIPT_DIR"/testout/test-regression-33.sh.out | wc -l)"
 rm "$TEST_SCRIPT_DIR"/include-regression-33.sh "$TEST_SCRIPT_DIR"/test-regression-33.sh "$TEST_SCRIPT_DIR"/test.sh
