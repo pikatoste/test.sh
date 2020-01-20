@@ -18,7 +18,8 @@ TESTS ?= \
     test_regression_30.sh \
     test_regression_31.sh \
     test_validate_values_56.sh \
-    test_config_LOG_vars_50.sh
+    test_config_LOG_vars_50.sh \
+    test_run_test_script.sh
 
 include Makefile.test
 
