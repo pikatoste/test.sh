@@ -383,7 +383,7 @@ assert_equals() {
   local expected=$1
   local current=$2
   local msg=$3
-  assert "[[ \"$current\" = \"$expected\" ]]" expect_true "expected '$expected' but got '$current'" "$msg"
+  assert "[[ \"$expected\" = \"$current\" ]]" expect_true "expected '$expected' but got '$current'" "$msg"
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
