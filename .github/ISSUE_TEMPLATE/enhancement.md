@@ -7,6 +7,11 @@ assignees: ''
 
 ---
 
+# Description
+A description of the enhancement.
+
+Why is it desirable, what is improved.
+
 # Tasks
 - [ ] implementation
 - [ ] documentation
