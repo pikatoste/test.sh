@@ -183,8 +183,8 @@ run_test() {
   teardown_test_called=
   local test_func=$1
   [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
-  push_err_handler "pop_err_handler; display_test_failed"
-  push_err_handler "pop_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}"
+  add_err_handler "remove_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}"
+  add_err_handler "remove_err_handler; display_test_failed"
   call_if_exists setup_test
   run_test_teardown_trap() {
     [[ $teardown_test_called ]] || ignore "$(call_teardown teardown_test)"
@@ -194,8 +194,8 @@ run_test() {
   CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
   display_test_passed
   pop_exit_handler
-  pop_err_handler
-  pop_err_handler
+  remove_err_handler
+  remove_err_handler
   teardown_test_called=1
   ignore "$(call_teardown teardown_test)"
   [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
@@ -354,17 +354,12 @@ assert() {
   local why=$3
   local msg=$4
   shift
-  push_err_handler "pop_err_handler; print_stack_trace; touch $STACK_FILE"
-  push_err_handler "save_stack"
   push_err_handler "pop_err_handler; assert_err_msg \"$msg\" \"$why\""
   if [[ $SUBSHELL == always ]]; then
     $expect "subshell $(printf "%q" "$what")"
   else
-    push_err_handler "pop_err_handler; save_stack"
     $expect "$what"
-    pop_err_handler
   fi
-  pop_err_handler
   pop_err_handler
 }
 

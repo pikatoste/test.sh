@@ -20,7 +20,8 @@ TESTS ?= \
     test_validate_values_56.sh \
     test_config_LOG_vars_50.sh \
     test_run_test_script_63.sh \
-    test_assert_escaping_62.sh
+    test_assert_escaping_62.sh \
+    test_assert_71.sh
 
 include Makefile.test
 

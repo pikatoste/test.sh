@@ -23,7 +23,6 @@ grep "(environment:0)" "$OUT"
 OUT2="$TEST_SCRIPT_DIR"/.do_test_REENTER.out
 sed -e 's/^\(.*\)(.*)\(.*\)$/\1()\2/' "$OUT" >"$OUT2"
 diff - "$OUT2" <<OUT
-[test.sh] FAILED: test_01
 [test.sh] Error in test_01(): 'false' exited with status 1
 [test.sh]  at run_test()
 [test.sh]  at source()
@@ -31,6 +30,7 @@ diff - "$OUT2" <<OUT
 [test.sh]  at subshell()
 [test.sh]  at run_tests()
 [test.sh]  at main()
+[test.sh] FAILED: test_01
 [test.sh] Error in run_tests(): '[[ \$failures == 0 ]]' exited with status 1
 [test.sh]  at main()
 OUT
