@@ -195,6 +195,101 @@ then, expressions of the form `if validate; then ... fi`, `while validate; do ..
 `! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
 of the negated expression will not trigger exit even if it evaluates to false.
 
+The errexit option and the ERR trap are related but they are not the same. The ERR trap is raised when a command
+returns non-zero, but does not imply exiting. It shares with errexi the conditions under which it is ignored, i.e.
+ignored errexit context is also ignored ERR trap context.
+Because both the ERR trap and errexit are active at the
+same time, test.sh assumes that after an ERR trap the shell will exit, but this is not always true; this feature is
+leveraged to enforce teardown semantics even when SUBSHELL is set to 'never', but can have unexpected effects also.
+The exact situation when this happens is in command substitutions (`$(...)` or `` `...` `` expressions) evaluated in
+the argument list of a command. For example, consider the expression `my_function $(false; true)`. The `false`
+command will trigger the ERR trap and, because of errexit, `true` will not execute, but the call to `my_function` will
+proceed.
+
+The ERR trap is used by tests.sh to generate error reports. When in ignored ERR trap context, such as in
+`! my_function $(false; true)`, no ERR signal nor exit will get triggered; this is coherent. But when
+not in ignored ERR trap context, if `my_function` does fail in turn, two traps fill be raised: one for the command
+substitution and another one for `my_function`. This means two error reports in test.sh. It is common to see this
+in assertions. For example:
+
+```shell script
+assert_equals "marker: expected content" "$(grep marker "$FILE")"
+```
+
+If the grep command returns non-zero, an ERR signal is raised and an error report printed. As a consequence of this
+error, the assertion will probably fail also and a second ERR signal will be raised, printing another error. The
+first error occurs in the command substitution while the second one does in `assert_true`. See this in action:
+
+```shell script
+source ./test.sh
+assert_equals "marker: expected content" "$(grep marker missing_file)"
+```
+
+<pre>$ VERBOSE=1 ./doubleerror.sh
+grep: missing_file: No such file or directory
+<font color="#CC0000">[test.sh]</font> Error in main(doubleerror.sh:2): &apos;grep marker missing_file&apos; exited with status 2
+<font color="#CC0000">[test.sh]</font> Assertion failed: expected &apos;marker: expected content&apos; but got &apos;&apos;
+<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:364): &apos;[[ &quot;marker: expected content&quot; = &quot;&quot; ]]&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at assert(test.sh:383)
+<font color="#CC0000">[test.sh]</font>  at assert_equals(test.sh:406)
+<font color="#CC0000">[test.sh]</font>  at main(doubleerror.sh:2)
+</pre>
+
+An alternative way to write the above assertion in an effort to get rid of the double error is:
+
+```shell script
+source ./test.sh
+FOUND=$(grep marker missing_file)
+assert_equals "marker: expected content" "$FOUND"
+```
+
+now the command substitution is not errexit-protected because it is not part of an argument list: if grep fails the
+assertion will not execute. However, you still get a double error though this time both errors refer to the same
+failure:
+
+<pre>$ VERBOSE=1 ./singleerror.sh
+grep: missing_file: No such file or directory
+<font color="#CC0000">[test.sh]</font> Error in main(singleerror.sh:2): &apos;grep marker missing_file&apos; exited with status 2
+<font color="#CC0000">[test.sh]</font> Error in main(singleerror.sh:2): &apos;FOUND=$(grep marker missing_file)&apos; exited with status 2
+</pre>
+
+How come? we are seeing a tricky part of ERR signals: it is raised (and trapped) in each nested subshell environment.
+Deeper subshell nesting will produce more repetitions; for example, the following snippet prints three errors, each one
+at a different nesting level:
+
+```shell script
+source ./test.sh
+( FOUND=$(grep marker missing_file) )
+assert_equals "marker: expected content" "$FOUND"
+```
+
+<pre>$ VERBOSE=1 ./tripleerror.sh
+grep: missing_file: No such file or directory
+<font color="#CC0000">[test.sh]</font> Error in main(tripleerror.sh:2): &apos;grep marker missing_file&apos; exited with status 2
+<font color="#CC0000">[test.sh]</font> Error in main(tripleerror.sh:2): &apos;FOUND=$(grep marker missing_file)&apos; exited with status 2
+<font color="#CC0000">[test.sh]</font> Error in main(tripleerror.sh:2): &apos;( FOUND=$(grep marker missing_file) )&apos; exited with status 2
+</pre>
+
+However, there's something you can do. Resorting to the internals of error handling in test.sh, this script finally
+achieves the desired effect:
+
+```shell script
+source ./test.sh
+FOUND=$(ERR_HANDLERS=(save_stack); grep marker missing_file)
+assert_equals "marker: expected content" "$FOUND"
+```
+gets:
+
+<pre>$ VERBOSE=1 ./singleerror.sh
+grep: missing_file: No such file or directory
+<font color="#CC0000">[test.sh]</font> Error in main(singleerror.sh:2): &apos;grep marker missing_file&apos; exited with status 2
+</pre>
+
+The explanation is: the `ERR_HANDLERS=(save_stack)` resets the reaction to ERR traps in the subshell environment
+introduced by the command substitution. The error is captured but not printed.
+
+After all, maybe the first form of double error wasn't that bad.
+
 ### setup/teardown
 
 The following semantics apply to the setup & teardown functions:
