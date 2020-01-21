@@ -271,7 +271,7 @@ subshell() {
   }
   rm -f $STACK_FILE
   if [[ $REENTER ]]; then
-    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=\"$1\") /bin/bash --norc "$TEST_SCRIPT"
+    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=$(printf "%q" "$1")) /bin/bash --norc "$TEST_SCRIPT"
   else
     BASH_ENV=<(call_stack; echo SUBSHELL_CMD=) /bin/bash --norc -c "trap exit_trap EXIT; trap err_trap ERR; push_err_handler save_stack; $1"
   fi
@@ -355,9 +355,10 @@ assert() {
   local msg=$4
   shift
   push_err_handler "pop_err_handler; print_stack_trace; touch $STACK_FILE"
+  push_err_handler "save_stack"
   push_err_handler "pop_err_handler; assert_err_msg \"$msg\" \"$why\""
   if [[ $SUBSHELL == always ]]; then
-    $expect "subshell '$what'"
+    $expect "subshell $(printf "%q" "$what")"
   else
     push_err_handler "pop_err_handler; save_stack"
     $expect "$what"
@@ -508,7 +509,7 @@ else
       save_variable $var
     done
 
-    # load config if present
+    # load config file if present
     [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
     [ -n "$CONFIG_FILE" ] || try_config_path
 

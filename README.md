@@ -195,9 +195,9 @@ then, expressions of the form `if validate; then ... fi`, `while validate; do ..
 `! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
 of the negated expression will not trigger exit even if it evaluates to false.
 
-The errexit option and the ERR trap are related but they are not the same. The ERR trap is raised when a command
-returns non-zero, but does not imply exiting. It shares with errexi the conditions under which it is ignored, i.e.
-ignored errexit context is also ignored ERR trap context.
+The errexit option is closely related to the ERR trap, but they are not the same. The ERR signal is raised when
+a command returns non-zero, but does not imply exiting. It shares with errexit the conditions under which it is
+ignored, i.e. ignored errexit context is also ignored ERR trap context.
 Because both the ERR trap and errexit are active at the
 same time, test.sh assumes that after an ERR trap the shell will exit, but this is not always true; this feature is
 leveraged to enforce teardown semantics even when SUBSHELL is set to 'never', but can have unexpected effects also.
@@ -436,6 +436,15 @@ Currently there are three assert
 functions: `assert_true`, `assert_false` and `assert_equals`. See the description of these functions in the
 [Function reference](#function-reference).
 
+`assert_true` and `assert_false` accept an expression which is evaluated with `eval`. There are quoting issues to
+be aware of:
+
+* If the expression is surrounded by double quotes, parameter expansion will occur at call point. If single quotes
+are used, then parameter expansion will occur at the evaluation point.
+* Double quotes inside the expression have to be escaped if the expression is surrounded by double quotes.
+
+The quoting issues also apply to the `subshell` function.
+
 ### Predefined variables
 
 test.sh defines these variables, which are available to the test script after test.sh is sourced:
@@ -464,6 +473,7 @@ Otherwise a file named 'test.sh.config' will be searched in these locations (see
 
 * $TEST_SCRIPT_DIR
 * $TESTSH_DIR
+* Working directory
 
 Boolean variables are considered true when not empty and false otherwise (undefined or empty).
 
@@ -756,7 +766,8 @@ This is the list of functions defined by test.sh that you can use in a test scri
   in errexit context but in a situation where bash is in ignored errexit context, such as when negating an expression
   with `!`. It is also useful for capturing the result code of an expression that might fail.
   Use this function instead of plain `bash -c`
-  invocations to preserve the error tracing capacity of test.sh.
+  invocations to preserve the error tracing capacity of test.sh. The \<shell command\> is subject to quoting issues
+  that are discussed in section [Assertions](#assertions).
 
   See [Subshells](#subshells).
 
