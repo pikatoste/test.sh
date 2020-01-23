@@ -481,6 +481,8 @@ The configuration is read before any configuration variable takes effect. The me
 errors are displayed in the main output because the redirection to LOG_FILE has not been done yet.
 For the same reason, no color is applied: the COLOR configuration has not been yet processed.
 
+Temporary files are created in TMPDIR if set, otherwise in `/tmp`.
+
 * VERBOSE
 
   Boolean. Default false.
