@@ -162,7 +162,7 @@ run_test_script() {
       FIRST_TEST \
       teardown_test_called \
       teardown_test_suite_called \
-      PIPE \
+      TSH_TMPDIR PIPE \
       FOREIGN_STACK \
       GREEN ORANGE RED BLUE NC
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
@@ -269,7 +269,7 @@ subshell() {
     FOREIGN_STACK=("${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}")
     declare -p FOREIGN_STACK
   }
-  rm -f $STACK_FILE
+  rm -f "$STACK_FILE"
   if [[ $REENTER ]]; then
     BASH_ENV=<(call_stack; echo SUBSHELL_CMD=$(printf "%q" "$1")) /bin/bash --norc "$TEST_SCRIPT"
   else
@@ -327,7 +327,7 @@ print_stack_trace() {
   tac $STACK_FILE | tail -n +2 | while read frame; do
     log_err " at $frame"
   done
-  rm -f $STACK_FILE
+  rm -f "$STACK_FILE"
 }
 
 assert_msg() {
@@ -399,7 +399,8 @@ else
 
   FOREIGN_STACK=()
   FIRST_TEST=
-  STACK_FILE=/tmp/stack-$$
+  TSH_TMPDIR=$(mktemp -d -p ${TMPDIR:-/tmp} tsh-XXXXXXXXX)
+  STACK_FILE=$TSH_TMPDIR-stack
 
   set_color() {
     if [[ $COLOR = yes ]]; then
@@ -416,13 +417,13 @@ else
   cleanup() {
     exec 1>&- 2>&-
     wait
-    rm -f $STACK_FILE
+    rm -f "$STACK_FILE"
   }
 
   setup_io() {
-    PIPE=$(mktemp -u)
+    PIPE=$TSH_TMPDIR/pipe
     mkfifo "$PIPE"
-    mkdir -p "$LOG_DIR"
+    mkdir -p "$(dirname "$LOG_FILE")"
     local redir=\>
     [[ $LOG_MODE = overwrite ]] || redir=\>$redir
     [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
@@ -543,7 +544,7 @@ else
     set_color
   }
 
-  trap "EXIT_CODE=\$?; rm -f \$PIPE; exit_trap" EXIT
+  trap "EXIT_CODE=\$?; rm -rf \$TSH_TMPDIR; exit_trap" EXIT
   trap err_trap ERR
   config_defaults
   load_config

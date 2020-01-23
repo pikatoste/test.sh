@@ -21,7 +21,10 @@ TESTS ?= \
     test_config_LOG_vars_50.sh \
     test_run_test_script_63.sh \
     test_assert_escaping_62.sh \
-    test_assert_71.sh
+    test_assert_71.sh \
+    test_tmpdir_74.sh \
+    \
+    test_xxx_tmpfiles_74.sh
 
 include Makefile.test
 
