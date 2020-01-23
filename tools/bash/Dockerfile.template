@@ -121,7 +121,8 @@ RUN set -eux; \
 	[ "$(which bash)" = '/usr/local/bin/bash' ]; \
 	bash --version; \
 	[ "$(bash -c 'echo "${BASH_VERSION%%[^0-9.]*}"')" = "${_BASH_VERSION%%-*}.$_BASH_LATEST_PATCH" ]; \
-	ln -s /usr/local/bin/bash /bin/bash
+	ln -s /usr/local/bin/bash /bin/bash; \
+	adduser -D test
 
 COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
