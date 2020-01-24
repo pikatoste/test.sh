@@ -23,6 +23,7 @@ TESTS ?= \
     test_assert_escaping_62.sh \
     test_assert_71.sh \
     test_tmpdir_74.sh \
+    test_assert_76.sh \
     \
     test_xxx_tmpfiles_74.sh
 

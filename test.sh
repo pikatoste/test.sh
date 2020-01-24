@@ -337,10 +337,11 @@ assert_msg() {
 }
 
 assert_err_msg() {
-  log_err "$(assert_msg "$@")"
+  log_err "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
-expect_true() {
+expect_true()
+{
   eval "$1"
 }
 
@@ -354,7 +355,9 @@ assert() {
   local why=$3
   local msg=$4
   shift
-  push_err_handler "pop_err_handler; assert_err_msg \"$msg\" \"$why\""
+  tsh_assert_msg=$msg
+  tsh_assert_why=$why
+  push_err_handler "pop_err_handler; assert_err_msg"
   if [[ $SUBSHELL == always ]]; then
     $expect "subshell $(printf "%q" "$what")"
   else
@@ -379,7 +382,12 @@ assert_equals() {
   local expected=$1
   local current=$2
   local msg=$3
-  assert "[[ \"$expected\" = \"$current\" ]]" expect_true "expected '$expected' but got '$current'" "$msg"
+  tsh_assert_msg=$msg
+  # TODO: dump exact value, avoid any bash processing
+  tsh_assert_why="[[ \"$expected\" = \"$current\" ]]"
+  push_err_handler "pop_err_handler; assert_err_msg"
+  [[ "$expected" = "$current" ]]
+  pop_err_handler
 }
 
 if [[ -v SUBSHELL_CMD ]]; then
