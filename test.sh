@@ -135,23 +135,18 @@ call_setup_test_suite() {
   pop_err_handler
 }
 
-call_teardown_subshell() {
-  add_err_handler "print_stack_trace"
-  call_if_exists $1
+call_teardown() {
+  add_err_handler "remove_err_handler; warn_teardown_failed $1"
+  if [[ $SUBSHELL != 'never' ]]; then
+    subshell "call_if_exists $1"
+  else
+    call_if_exists $1
+  fi
   remove_err_handler
 }
 
-call_teardown() {
-  if [[ $SUBSHELL != 'never' ]]; then
-    subshell "call_teardown_subshell $1" || warn_teardown_failed $1
-  else
-    push_err_handler "pop_err_handler; warn_teardown_failed $1"
-    call_if_exists $1
-    pop_err_handler
-  fi
-}
-
 run_test_script() {
+  # commented out to supprt realpath in busybox (for bash compat test in containers)
 #  local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath --relative-to "$pwd" "$1")
   local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
@@ -167,11 +162,14 @@ run_test_script() {
       GREEN ORANGE RED BLUE NC
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
 
-    # restore log-related config vars ti initial values
-    for var in LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE; do
-      unset $var
-      restore_variable $var
-    done
+    # restore log-related config vars to initial values
+    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
+      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
+        while [[ -v $var ]]; do unset $var; done
+        restore_variable $var
+      done
+      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
+    fi
 
     EXIT_HANDLERS=()
     ERR_HANDLERS=(save_stack)
@@ -340,8 +338,7 @@ assert_err_msg() {
   log_err "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
-expect_true()
-{
+expect_true() {
   eval "$1"
 }
 
@@ -354,7 +351,6 @@ assert() {
   local expect=$2
   local why=$3
   local msg=$4
-  shift
   tsh_assert_msg=$msg
   tsh_assert_why=$why
   push_err_handler "pop_err_handler; assert_err_msg"
@@ -432,6 +428,7 @@ else
     PIPE=$TSH_TMPDIR/pipe
     mkfifo "$PIPE"
     mkdir -p "$(dirname "$LOG_FILE")"
+    [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
     local redir=\>
     [[ $LOG_MODE = overwrite ]] || redir=\>$redir
     [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
@@ -466,6 +463,7 @@ else
     default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
     default_LOG_FILE='$LOG_DIR/$LOG_NAME'
     default_LOG_MODE='overwrite'
+    default_SUBTEST_LOG_CONFIG='reset'
   }
 
   load_config() {
@@ -506,7 +504,7 @@ else
       IFS="$current_IFS"
     }
 
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE"
+    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG"
 
     # save environment config
     for var in $config_vars; do
@@ -548,7 +546,7 @@ else
     validate_values STACK_TRACE no full
     validate_values COLOR no yes
     validate_values LOG_MODE overwrite append
-
+    validate_values SUBTEST_LOG_CONFIG reset noreset noredir
     set_color
   }
 
