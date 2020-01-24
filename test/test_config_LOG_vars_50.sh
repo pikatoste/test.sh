@@ -27,8 +27,8 @@ EOF
 rm "$LOG"
 
 start_test "LOG_FILE"
-run_test_script do_test_config_LOG_vars.sh 'LOG_FILE=/tmp/config_LOG_vars.log'
-LOG=/tmp/config_LOG_vars.log
+run_test_script do_test_config_LOG_vars.sh "LOG_FILE=${TMPDIR:-/tmp}/config_LOG_vars.log"
+LOG=${TMPDIR:-/tmp}/config_LOG_vars.log
 diff - "$LOG" <<EOF
 lorem ipsum
 EOF
