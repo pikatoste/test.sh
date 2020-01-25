@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-- Verson orginated: 
+- Verson originated:
 - Version done:
 ----
 
