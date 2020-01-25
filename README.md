@@ -749,7 +749,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   Syntax:
 
   ```text
-  assert_false <expected> <current> [message]
+  assert_equals <expected> <current> [message]
   ```
 
   Compares \<expeced\> and \<current\> with the bash expression: `[[ $expected = $current ]]`.
