@@ -13,7 +13,7 @@ teardown_test_suite() {
 
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-ignore $(assert_true false "first")
-ignore $(assert_true false "second")
+result_of 'assert_true false "first"'
+result_of 'assert_true false "second"'
 
 run_tests

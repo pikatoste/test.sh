@@ -12,8 +12,11 @@ start_test "#74: assert_equals never evaluates its arguments"
 rm -f "$OUT"
 assert_equals my_func my_func
 [[ ! -f "$OUT" ]]
-echo -n $(assert_equals 2 "\""'$(ls|wc -l)')
-# TODO: check that there's no eval parsing error
+echo -n $(assert_equals zzz my_func)
+[[ ! -f "$OUT" ]]
+echo -n $(assert_equals my_func zzz)
+[[ ! -f "$OUT" ]]
+assert_equals "\""'$(ls|wc -l)' "\""'$(ls|wc -l)'
 
 start_test "#74: failures in assertion functions don't reevaluate the expression"
 rm -f "$OUT"

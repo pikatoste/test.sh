@@ -1,10 +1,5 @@
 #!/bin/bash
-FAIL_FAST=
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
-
-start_test "SUBSHELL should default to 'always' when FAIL_FAST is false"
-[[ $SUBSHELL = always ]]
-FAIL_FAST=1
 
 start_test "SUBSHELL should accept only valid values"
 (
