@@ -11,8 +11,8 @@ test_01() {
 }
 
 start_test "Subshells should not resource files when REENTER is false"
-# TODO: wrong check: runs in subshell
-( CURRENT_TEST_NAME= REENTER= run_tests 3>&1 )
+CURRENT_TEST_NAME= REENTER= run_tests 3>&1
+CURRENT_TEST_NAME="Subshells should not resource files when REENTER is false"
 SUBSHELL=never assert_true '[[ $CHECK = pass ]]'
 
 start_test "Errors in subshells when REENTER is false should generate stack traces"
@@ -24,6 +24,7 @@ OUT2="$TEST_SCRIPT_DIR"/.do_test_REENTER.out
 sed -e 's/^\(.*\)(.*)\(.*\)$/\1()\2/' "$OUT" >"$OUT2"
 diff - "$OUT2" <<OUT
 [test.sh] Error in test_01(): 'false' exited with status 1
+[test.sh]  at with_exit_handler()
 [test.sh]  at run_test()
 [test.sh]  at source()
 [test.sh]  at main()

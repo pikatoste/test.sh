@@ -5,6 +5,7 @@
 [test.sh]  at expect_true(test.sh:)
 [test.sh]  at assert(test.sh:)
 [test.sh]  at assert_true(test.sh:)
+[test.sh]  at result_of(test.sh:)
 [test.sh]  at main(do_test_assert_71.sh:)
 [test.sh] Assertion failed: second, expected success but got failure in: 'false'
 [test.sh] Error in source(test.sh:): 'false' exited with status 1
@@ -13,6 +14,7 @@
 [test.sh]  at expect_true(test.sh:)
 [test.sh]  at assert(test.sh:)
 [test.sh]  at assert_true(test.sh:)
+[test.sh]  at result_of(test.sh:)
 [test.sh]  at main(do_test_assert_71.sh:)
 [test.sh] Assertion failed: test_01, expected success but got failure in: 'false'
 [test.sh] Error in source(test.sh:): 'false' exited with status 1
@@ -22,6 +24,7 @@
 [test.sh]  at assert(test.sh:)
 [test.sh]  at assert_true(test.sh:)
 [test.sh]  at test_01(do_test_assert_71.sh:)
+[test.sh]  at with_exit_handler(test.sh:)
 [test.sh]  at run_test(test.sh:)
 [test.sh]  at source(test.sh:)
 [test.sh]  at main(do_test_assert_71.sh:)
@@ -42,7 +45,7 @@
 [test.sh]  at main(do_test_assert_71.sh:)
 [test.sh]  at subshell(test.sh:)
 [test.sh]  at call_teardown(test.sh:)
-[test.sh]  at run_test_teardown_trap(test.sh:)
+[test.sh]  at result_of(test.sh:)
 [test.sh]  at exit_trap(test.sh:)
 [test.sh]  at run_test(test.sh:)
 [test.sh]  at source(test.sh:)
@@ -63,6 +66,7 @@
 [test.sh]  at main(do_test_assert_71.sh:)
 [test.sh]  at subshell(test.sh:)
 [test.sh]  at call_teardown(test.sh:)
+[test.sh]  at result_of(test.sh:)
 [test.sh]  at run_tests(test.sh:)
 [test.sh]  at main(do_test_assert_71.sh:)
 [test.sh] Error in run_tests(test.sh:): '[[ $failures == 0 ]]' exited with status 1
