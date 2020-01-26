@@ -11,6 +11,7 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
+# TODO: function skip() before start_test() to skip a test
 set -o allexport
 set -o errexit
 set -o errtrace
@@ -34,6 +35,8 @@ result_of() {
   DISABLE_STACK_TRACE=
   get_result "$(eval "$1" | { tee "$pipe" >/dev/null || true; })" "$2"
   unset DISABLE_STACK_TRACE
+  LOCAL_STACK=()
+  # TODO: think of some alternative to STACK_FILE
   rm -f "$STACK_FILE"
   wait "$catpid"
   rm -f "$pipe"
@@ -162,13 +165,13 @@ run_test_script() {
   local test_script
   test_script=$(cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
+  # TODO: unset deeply
   ( unset \
       CURRENT_TEST_NAME \
       MANAGED \
       FIRST_TEST \
       teardown_test_called \
       TSH_TMPDIR PIPE \
-      FOREIGN_STACK \
       GREEN ORANGE RED BLUE NC
     unset -f setup_test_suite teardown_test_suite setup_test teardown_test
 
@@ -272,17 +275,9 @@ current_stack() {
   local err=$ERR_CODE
   local frame_idx=${1:-3}
   ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
-  # shellcheck disable=SC2155
-  local err_string="Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
+  LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
   ((frame_idx++))
   local_stack $frame_idx
-  for ((i=${#FOREIGN_STACK[@]}-1; i>=0; i--)); do
-    echo "${FOREIGN_STACK[i]}"
-  done
-  for ((i=${#LOCAL_STACK[@]}-1; i>=0; i--)); do
-    echo "${LOCAL_STACK[i]}"
-  done
-  echo "$err_string"
 }
 
 prune_path() {
@@ -296,13 +291,12 @@ prune_path() {
 }
 
 local_stack() {
-  LOCAL_STACK=()
   [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
     # shellcheck disable=SC2155
-    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
-    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
-    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
+#    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
+#    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
+#    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
     # shellcheck disable=SC2155
     local line="${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
     LOCAL_STACK+=("$line")
@@ -310,15 +304,14 @@ local_stack() {
 }
 
 print_stack_trace() {
-  local err_msg
-  err_msg=$(tail -1 "$STACK_FILE")
-  [[ $err_msg ]] || return 0
-  log_err "$(tail -1 "$STACK_FILE")"
-  tac "$STACK_FILE" | tail -n +2 | while read -r frame; do
-    log_err " at $frame"
+  [[ ${#LOCAL_STACK[@]} != 0 ]] || return 0
+  log_err "${LOCAL_STACK[0]}"
+  for ((i=1; i<${#LOCAL_STACK[@]}; i++)); do
+    log_err " at ${LOCAL_STACK[i]}"
   done
   rm -f "$STACK_FILE"
   [[ ! -v DISABLE_STACK_TRACE ]] || touch -f "$STACK_FILE"
+  LOCAL_STACK=()
 }
 
 assert_msg() {
@@ -383,9 +376,9 @@ TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 TESTSH=$(readlink -f "$BASH_SOURCE")
 TESTSH_DIR=$(dirname "$TESTSH")
 
-FOREIGN_STACK=()
 FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
+LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
 
 set_color() {
