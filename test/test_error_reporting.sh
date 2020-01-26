@@ -2,6 +2,7 @@
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 OUT="$LOG_DIR"/do_$(basename "$LOG_FILE")
+prune_path "$TEST_SCRIPT_DIR"/do_test_error_reporting.sh
 
 start_test "The error message should identify the source, line, command and exit code"
 ! run_test_script do_test_error_reporting.sh [func2] || false

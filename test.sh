@@ -134,7 +134,7 @@ call_if_exists() {
 }
 
 error_setup_test_suite() {
-  echo -e "${RED}[ERROR] setup_test_suite failed, see $(prune_path "$LOG_FILE") for more information${NC}" >&3
+  echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
 }
 
 call_setup_test_suite() {
@@ -169,7 +169,7 @@ run_test_script() {
 
     EXIT_HANDLERS=()
     ERR_HANDLERS=(save_stack)
-    "$test_script" "$@" )
+    BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@" )
 }
 
 run_test() {
@@ -223,6 +223,7 @@ load_includes() {
     # shellcheck disable=SC1090
     source "$include_file"
     log "Included: $include_file"
+    prune_path "$include_file"
   }
 
   local include_files=()
@@ -246,24 +247,29 @@ save_stack() {
   fi
 }
 
+prune_path() {
+  if [[ $1 && $1 != environment ]]; then
+    if [[ ${PRUNE_PATH_CACHE[$1]} ]]; then
+      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
+    else
+      # shellcheck disable=SC2155
+      local path=$(realpath "$1")
+      PRUNE_PATH_CACHE[$1]=${path##$PRUNE_PATH}
+      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
+    fi
+  else
+    PRUNED_PATH="$1"
+  fi
+}
+
 current_stack() {
   local err=$ERR_CODE
   local frame_idx=${1:-3}
   ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
-  LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($(prune_path "${BASH_SOURCE[$frame_idx]}"):${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
+  prune_path "${BASH_SOURCE[$frame_idx]}"
+  LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
   ((frame_idx++))
   local_stack $frame_idx
-}
-
-# TODO: cache paths and pruned path in an associative array
-prune_path() {
-  if [[ $1 && $1 != environment ]]; then
-    # shellcheck disable=SC2155
-    local path=$(realpath "$1")
-    echo "${path##$PRUNE_PATH}"
-  else
-    echo "$1"
-  fi
 }
 
 local_stack() {
@@ -274,7 +280,8 @@ local_stack() {
 #    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
 #    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
     # shellcheck disable=SC2155
-    local line="${FUNCNAME[$i+1]}($(prune_path "${BASH_SOURCE[$i+1]}"):${BASH_LINENO[$i]})"
+    prune_path "${BASH_SOURCE[$i+1]}"
+    local line="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
     LOCAL_STACK+=("$line")
   done
 }
@@ -355,6 +362,7 @@ FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
 LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
+declare -A PRUNE_PATH_CACHE
 
 set_color() {
   if [[ $COLOR = yes ]]; then
@@ -414,6 +422,7 @@ config_defaults() {
   default_LOG_FILE='$LOG_DIR/$LOG_NAME'
   default_LOG_MODE='overwrite'
   default_SUBTEST_LOG_CONFIG='reset'
+  default_INITIALIZE_SOURCE_CACHE=
 }
 
 load_config() {
@@ -455,7 +464,7 @@ load_config() {
     IFS="$current_IFS"
   }
 
-  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG"
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE"
 
   # save environment config
   for var in $config_vars; do
@@ -497,6 +506,16 @@ load_config() {
   set_color
 }
 
+init_prune_path_cache() {
+  local path
+  [[ ! -v SUBTEST ]] || for path in "${!PRUNE_PATH_CACHE[@]}"; do
+    PRUNE_PATH_CACHE[$path]=${path##$PRUNE_PATH}
+  done
+  [[ $INITIALIZE_SOURCE_CACHE ]] || return 0
+  prune_path "$TEST_SCRIPT"
+  prune_path "$BASH_SOURCE"
+}
+
 trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
 trap err_trap ERR
 config_defaults
@@ -504,6 +523,7 @@ load_config
 push_err_handler "print_stack_trace"
 push_err_handler "save_stack"
 setup_io
+init_prune_path_cache
 push_exit_handler "cleanup"
 load_includes
 push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
