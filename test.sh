@@ -12,7 +12,6 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
 fi
 
 # TODO: function skip() before start_test() to skip a test
-set -o allexport
 set -o errexit
 set -o errtrace
 set -o pipefail
@@ -165,25 +164,17 @@ run_test_script() {
   local test_script
   test_script=$(cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
-  # TODO: unset deeply
-  ( unset \
-      CURRENT_TEST_NAME \
-      MANAGED \
-      FIRST_TEST \
-      teardown_test_called \
-      TSH_TMPDIR PIPE \
-      GREEN ORANGE RED BLUE NC
-    unset -f setup_test_suite teardown_test_suite setup_test teardown_test
-
-    # restore log-related config vars to initial values
-    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
-      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
-        while [[ -v $var ]]; do unset $var; done
-        restore_variable $var
-      done
-      # shellcheck disable=SC2030
-      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
-    fi
+  (
+    # TODO: give meaning to SUBSHELL_LOG_CONFIG and implement it
+#    # restore log-related config vars to initial values
+#    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
+#      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
+#        while [[ -v $var ]]; do unset $var; done
+#        restore_variable $var
+#      done
+#      # shellcheck disable=SC2030
+#      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
+#    fi
 
     EXIT_HANDLERS=()
     ERR_HANDLERS=(save_stack)

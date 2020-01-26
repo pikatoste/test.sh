@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-OUTFILE="$TEST_SCRIPT_DIR"/.test_inline.out
+export OUTFILE="$TEST_SCRIPT_DIR"/.test_inline.out
 
 start_test "Inline test failures should display the failed test in the main output"
 OUT="$TEST_SCRIPT_DIR"/.do_test_inline.sh.main.out
