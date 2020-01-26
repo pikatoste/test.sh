@@ -18,6 +18,7 @@ source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
 for bash_version in 4.4.23 5.0.11; do
   start_test "Bash version $bash_version should be supported"
+  export TEST_SCRIPT_DIR bash_version
   run_test_script do_test_bash_compat_51.sh
   cp "$LOG_DIR"/do_test_bash_compat_51.sh.out "$TEST_SCRIPT_DIR"/"$LOG_DIR_NAME"-$bash_version/main.out
 done
