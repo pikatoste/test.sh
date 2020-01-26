@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SUBSHELL=never
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 setup_test() {

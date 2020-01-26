@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SUBSHELL=never
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Regression #31: double error reporting"

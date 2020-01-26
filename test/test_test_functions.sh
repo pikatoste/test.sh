@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
 define_funcs() {
   eval '
 setup_test_suite() {
@@ -37,9 +39,6 @@ test_02() {
   echo test_02 >>"$OUTFILE"
 }
 
-SUBSHELL=always
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
-
 start_test "run_tests shoud invoke tests and setup methods when there are no failures"
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
@@ -62,7 +61,7 @@ start_test "run_tests shoud invoke tests and setup methods when there are failur
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-( ! CURRENT_TEST_NAME= subshell run_tests 3>&1 || false )
+( ! CURRENT_TEST_NAME= run_tests 3>&1 || false )
 unset_funcs
 
 diff - "$OUTFILE" <<EOF

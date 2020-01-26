@@ -113,32 +113,10 @@ Currently test.sh does not deal with running test scripts; for this purpose you 
 
 ### Sourcing test.sh
 
-There are specific requirements on the position in a test script of the source command that loads test.sh,
-depending on the setting of configuration variables SUBSHELL and REENTER:
-
-* If SUBSHELL is set to 'never' and the `subshell` function is not called explicitly, there are no specific requirements.
-
-* Otherwise, if REENTER is true, the source command should be after function definitions and before code at the
-main level. Any code before test.sh is sourced will be reexecuted in each subshell invocation.
-You should organize your script as follows: _function definitions_, _source test.sh_,
-_main code_.
-
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
-  is true, subshells restart the test script to redefine functions in the current subshell.
-  This redefinition is only accomplished if these functions
-  are defined before sourcing test.sh. You probably don't want to reexecute the test script main code
-  when reentered from a subshell, and that's why the main test script code is _after_ sourcing test.sh (when test.sh is
-  sourced as a result of a subshell invocation, the source command never returns).
-
-* Otherwise, the source command should be at the beginning of the test script, before function definitions and any code
-that affects these functions.
-
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
-  is false, subshells simply execute the requested code. All variables and functions are available in the subshell
-  because test.sh does `set -o allexport`, but this setting only affects code _after_ test.sh is sourced. Variables
-  and functions defined before test.sh is are not available in the subshell
-  unless explicitly exported, for example with `set -o allexport` at the beginning of the test
-  script.
+There are no specific requirements on the position in a test script of the source command that loads test.sh.
+Just be aware that you can set configuration variables directly in the test script before sourcing test.sh, and
+that configuration variables set this way will have precedence over the inherited environment and the configuration
+file.
 
 The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
 where test scripts can be run from.
@@ -200,7 +178,7 @@ a command returns non-zero, but does not imply exiting. It shares with errexit t
 ignored, i.e. ignored errexit context is also ignored ERR trap context.
 Because both the ERR trap and errexit are active at the
 same time, test.sh assumes that after an ERR trap the shell will exit, but this is not always true; this feature is
-leveraged to enforce teardown semantics even when SUBSHELL is set to 'never', but can have unexpected effects also.
+leveraged to enforce teardown semantics and support FAIL_FAST false, but can have unexpected effects also.
 The exact situation when this happens is in command substitutions (`$(...)` or `` `...` `` expressions) evaluated in
 the argument list of a command. For example, consider the expression `my_function $(false; true)`. The `false`
 command will trigger the ERR trap and, because of errexit, `true` will not execute, but the call to `my_function` will
@@ -315,17 +293,12 @@ as a warning in the main output and an error will be logged, but will not make t
 
 ### Subshells
 
-If allowed by the SUBSHELL configuration option, test.sh will execute in a subshell (i.e. `bash -c`)
-code whose exit status must be monitored but not terminate the script on failure.
-This includes test functions in managed mode, teardown functions and assert functions.
+test.sh will execute in a subshell environment code whose exit status must be monitored but not terminate
+the script on failure. This includes test functions in managed mode, teardown functions and assert expressions
+in `assert_false`.
 
 When code is executed in a subshell it cannot affect the environment of the caller. For example, variables set in
 a test function evaluated in a subshell will not be seen from other test functions or the main script.
-
-Subshells inherit the environment of the caller, which includes variables, functions and the shell
-options, but the source file and line numbers of functions inherited from the environment are lost
-in the subshell,
-affecting the quality of stack traces. The REENTER configuration option overcomes this limitation.
 
 ### Stack traces
 
@@ -340,8 +313,11 @@ If you use `return` with a value other than 0 inside a function to trigger failu
 the return statement to the calling function instead of the function to which the return belongs.
 For this reason, using return to indicate failure is discouraged.
 
-Stack traces include frames in test.sh, and they can be quite a large number if SUBSHELL is set to 'always'.
-For example, this test script (the line `set -o allexport` makes the script support also REENTER false):
+Stack traces include frames in test.sh which reveal the implementation but are usually not relevant to debug test
+scripts. Because of this you might be tempted to disable stack traces (configuration variable STACK_TRACE),
+thinking that the error message provides enough information to track the source of an error. But this is only
+true in simple inline mode scripts that don't call other functions, including test.sh assertion functions.
+For example, let's review the stack trace generated by this test script:
 
 ```shell script
 #!/bin/bash
@@ -352,7 +328,6 @@ test_01() {
   assert_true false "this is a test killer"
 }
 
-SUBSHELL=${SUBSHELL:-always}
 PRUNE_PATH="*/"
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 
@@ -360,32 +335,6 @@ run_tests
 ```
 
 will log this output:
-
-<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in source(test.sh:378): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:11)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:274)
-<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:343)
-<font color="#CC0000">[test.sh]</font>  at assert(test.sh:358)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:366)
-<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:6)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:196)
-<font color="#CC0000">[test.sh]</font>  at source(test.sh:378)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:11)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:274)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:226)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
-<font color="#CC0000">[test.sh]</font> FAILED: test_01
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:217): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
-</pre>
-
-Because the error was triggered from `assert_true` --which is an internal test.sh function-- the error
-message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
-Note that there's a second error: this one is triggered in managed mode and FAIL_FAST false when the script
-(not the test) fails. This second error also benefits from the stack trace.
-
-In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
 
 <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
 <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:343): &apos;false&apos; exited with status 1
@@ -398,33 +347,10 @@ In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more 
 <font color="#CC0000">[test.sh]</font> FAILED: test_01
 </pre>
 
-When REENTER is false, stack traces involving subshells are different.
-For example, the log output of the previous script executed as `REENTER= ./mytest.sh` is:
-
-<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in (:0): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at subshell(environment:10)
-<font color="#CC0000">[test.sh]</font>  at expect_true(environment:0)
-<font color="#CC0000">[test.sh]</font>  at assert(environment:7)
-<font color="#CC0000">[test.sh]</font>  at assert_true(environment:0)
-<font color="#CC0000">[test.sh]</font>  at test_01(environment:0)
-<font color="#CC0000">[test.sh]</font>  at run_test(environment:12)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:276)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:226)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
-<font color="#CC0000">[test.sh]</font> FAILED: test_01
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:217): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:13)
-</pre>
-
-The differences are:
-
-* The error message shows no source file and 0 as the line number. This happens when the subshell evaluates a
-simple expression.
-* The subshell invocation sequence is simpler.
-* All frames following the first subshell invocation show 'environment' as the source file and a line number
-relative to the definition of the function in the environment, wich might be different from the definition
-in the source file. For example, blank lines are removed from definitions of functions in the environment.
+Because the error was triggered from `assert_true` --which is an internal test.sh function-- the error
+message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
+Note that there's a second error: this one is triggered in managed mode false when the script fails because some
+tests failed. This second error also benefits from the stack trace.
 
 ### Assertions
 
@@ -443,7 +369,7 @@ be aware of:
 are used, then parameter expansion will occur at the evaluation point.
 * Double quotes inside the expression have to be escaped if the expression is surrounded by double quotes.
 
-The quoting issues also apply to the `subshell` function.
+The quoting issues also apply to the `result_of` function.
 
 ### Predefined variables
 
@@ -469,7 +395,8 @@ The configuration file is sourced, so it can contain any shell code. Normally yo
 put only variable assignments in the configuration file.
 
 If the variable CONFIG_FILE is defined, the configuration file will be loaded from that location.
-Otherwise a file named 'test.sh.config' will be searched in these locations (see section [Predefined variables](#predefined-variables)'):
+Otherwise a file named 'test.sh.config' will be searched in these locations (see section
+[Predefined variables](#predefined-variables)'):
 
 * $TEST_SCRIPT_DIR
 * $TESTSH_DIR
@@ -516,40 +443,7 @@ Temporary files are created in TMPDIR if set, otherwise in `/tmp`.
   If true, failure of a test function will interrupt the script and the remaining test functions will
   be skipped. Each skipped test is displayed in the main output as `[skipped] <test function>`.
 
-  If false, all test functions will be executed. Requires SUBSHELL=always.
-
-* SUBSHELL
-
-  Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
-
-  * never: never start subshells. Incompatible with FAIL_FAST false.
-
-  * teardown: only start subshells to execute `teardown_test` and `teardown_test_suite` functions.
-    Incompatible with FAIL_FAST false.
-
-  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false.
-
-  See [Subshells](#subshells).
-
-* REENTER
-
-  Boolean. Default true.
-
-  If true, when test.sh starts a subshell it will reexecute the test script and source again other involved scripts:
-  test.sh and included files. This redefines functions in the subshell's context and allows
-  stack traces to correctly refer to source files and line numbers.
-
-  If false, subshells will not reexecute the test script nor source again involved scripts.
-  Functions defined in the calling shell are
-  available to the subshell because they are exported in the environment, but the source file and line number of
-  these functions is lost; stack traces with frames referencing these functions will
-  show 'environment' as the source file and a line number relative to that function's definition
-  _in the environment_, which might be different from the original function's definition in the source file.
-  For example, blank lines are not present in the function definition in the environment.
-  See [Stack traces](#stack-traces).
-
-  The value of this variable affects the structure of test scripts (see [Sourcing test.sh](#sourcing-testsh)).
+  If false, all test functions will be executed.
 
 * STACK_TRACE
 
@@ -689,7 +583,6 @@ This is the list of functions defined by test.sh that you can use in a test scri
   ```shell script
   #!/bin/bash
 
-  SUBSHELL=never
   STACK_TRACE=full
   PRUNE_PATH="*/"
   source "$(dirname "$(readlink -f "$0")")"/test.sh
@@ -697,7 +590,7 @@ This is the list of functions defined by test.sh that you can use in a test scri
   assert_true false "this is a test killer"
   ```
 
-  will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+  will log the following output:
 
   <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
   <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
@@ -715,12 +608,11 @@ This is the list of functions defined by test.sh that you can use in a test scri
   ```
 
   Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
-  For example, the following test script (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+  For example, the following test script:
 
   ```shell script
   #!/bin/bash
 
-  SUBSHELL=never
   STACK_TRACE=full
   PRUNE_PATH="*/"
   source "$(dirname "$(readlink -f "$0")")"/test.sh
@@ -740,9 +632,9 @@ This is the list of functions defined by test.sh that you can use in a test scri
     **NOTE**: Because \<shell command\> is evaluated in a negated expression, it is executed in
     _ignored errexit context_ (see [Implicit assertion](#implicit-assertion)); if \<shell command\>
     calls a function designed to
-    run in errexit context, you should invoke \<shell command\> with the `subshell` function. For example,
+    run in errexit context, you should invoke \<shell command\> with the `result_of` function. For example,
     the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
-    context, should be written as: `assert_false "subshell my_validation_function"`.
+    context, should be written as: `assert_false "result_of my_validation_function"`.
 
 * assert_equals
 
@@ -756,17 +648,17 @@ This is the list of functions defined by test.sh that you can use in a test scri
   If the comparison fails, an error message is logged and an error triggered. The error message follows the pattern
   `Assertion failed: [<message>, ]expected '<expected>' but got '<current>'`.
 
-* subshell
+* result_of
 
   Syntax:
 
   ```text
-  subshell <shell command>
+  result_of <shell command> [result variable]
   ```
 
-  Executes \<shell command\> in a subshell with errexit context enabled. This is useful when you need to execute code
-  in errexit context but in a situation where bash is in ignored errexit context, such as when negating an expression
-  with `!`. It is also useful for capturing the result code of an expression that might fail.
+  Executes \<shell command\> in errexit context and returns the result code in the variable specified or
+  `LAST_RESULT` by default. Useful for capturing the result code of an expression that might fail. Can be used to avoid
+  situations which would force ignored errexit context, such as negating expressions with `!`.
   Use this function instead of plain `bash -c`
   invocations to preserve the error tracing capacity of test.sh. The \<shell command\> is subject to quoting issues
   that are discussed in section [Assertions](#assertions).

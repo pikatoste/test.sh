@@ -11,26 +11,26 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
-if [[ ! -v SUBSHELL_CMD ]]; then
-  set -o allexport
-  set -o errexit
-  set -o errtrace
-  set -o pipefail
-  export SHELLOPTS
-  shopt -s inherit_errexit
-  export BASHOPTS
-fi
+set -o allexport
+set -o errexit
+set -o errtrace
+set -o pipefail
+export SHELLOPTS
+shopt -s inherit_errexit
+export BASHOPTS
 
 get_result() {
   eval "${2:-LAST_IGNORE}"=$?
 }
 
 result_of() {
+  # TODO: try to implemnt with an alternative to mktemp
   # shellcheck disable=SC2155
   local pipe=$TSH_TMPDIR-pipe-$(mktemp -u XXXXXX)
   mkfifo "$pipe"
   cat <"$pipe" &
   local catpid=$!
+  # TODO: use save_variable/restore_variable
   DISABLE_STACK_TRACE=
   get_result "$(eval "$1" | { tee "$pipe" >/dev/null || true; })" "$2"
   unset DISABLE_STACK_TRACE
@@ -41,12 +41,12 @@ result_of() {
 
 exit_trap() {
   EXIT_CODE=${EXIT_CODE:-$?}
-  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || add_err_handler cleanup
+  add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
     # shellcheck disable=SC2016
     result_of 'eval "$handler"'
   done
-  [[ -v SUBSHELL_CMD || $SUBSHELL != never ]] || remove_err_handler
+  remove_err_handler
 }
 
 push_exit_handler() {
@@ -152,11 +152,7 @@ call_setup_test_suite() {
 
 call_teardown() {
   add_err_handler "remove_err_handler; warn_teardown_failed $1"
-  if [[ $SUBSHELL != 'never' ]]; then
-    subshell "call_if_exists $1"
-  else
-    call_if_exists "$1"
-  fi
+  call_if_exists "$1"
   remove_err_handler
 }
 
@@ -168,7 +164,6 @@ run_test_script() {
   shift
   ( unset \
       CURRENT_TEST_NAME \
-      SUBSHELL_CMD \
       MANAGED \
       FIRST_TEST \
       teardown_test_called \
@@ -192,6 +187,7 @@ run_test_script() {
     "$test_script" "$@" )
 }
 
+# TODO: not used
 with_exit_handler() {
   push_exit_handler "$2"
   $1
@@ -200,18 +196,15 @@ with_exit_handler() {
 
 run_test() {
   local test_func=$1
-  [[ ! -v SUBSHELL_CMD ]] || add_err_handler "print_stack_trace"
   add_err_handler "remove_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}; display_test_failed"
   call_if_exists setup_test
   teardown_test_called=
-  # shellcheck disable=SC2016
-  with_exit_handler "$test_func" '[[ ! -v SUBSHELL_CMD ]] || [[ $teardown_test_called ]] || call_teardown teardown_test'
+  "$test_func"
   CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
   display_test_passed
   remove_err_handler
   teardown_test_called=1
   result_of 'call_teardown "teardown_test"'
-  [[ ! -v SUBSHELL_CMD ]] || remove_err_handler
 }
 
 run_tests() {
@@ -229,12 +222,8 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    if [[ $SUBSHELL == always ]]; then
-      subshell "run_test $test_func" || failed=1
-    else
-      result_of "run_test \"$test_func\"" failed
-      [[ $failed = 0 ]] || [[ $teardown_test_called ]] || result_of 'call_teardown "teardown_test"'
-    fi
+    result_of "run_test \"$test_func\"" failed
+    [[ $failed = 0 ]] || [[ $teardown_test_called ]] || result_of 'call_teardown "teardown_test"'
     if [ $failed -ne 0 ]; then
       failures=$(( failures + 1 ))
       if [[ $FAIL_FAST ]]; then
@@ -255,7 +244,7 @@ load_includes() {
     local include_file=$1
     # shellcheck disable=SC1090
     source "$include_file"
-    [[ -v SUBSHELL_CMD ]] || log "Included: $include_file"
+    log "Included: $include_file"
   }
 
   local include_files=()
@@ -271,20 +260,6 @@ load_includes() {
   for file in "${include_files[@]}"; do
     [[ $file ]] && load_include_file "$file"
   done
-}
-
-subshell() {
-  call_stack() {
-    local_stack 1
-    FOREIGN_STACK=("${LOCAL_STACK[@]}" "${FOREIGN_STACK[@]}")
-    declare -p FOREIGN_STACK
-  }
-  rm -f "$STACK_FILE"
-  if [[ $REENTER ]]; then
-    BASH_ENV=<(call_stack; echo SUBSHELL_CMD="$(printf "%q" "$1")") /bin/bash --norc "$TEST_SCRIPT"
-  else
-    BASH_ENV=<(call_stack; echo SUBSHELL_CMD=) /bin/bash --norc -c "trap exit_trap EXIT; trap err_trap ERR; push_err_handler save_stack; $1"
-  fi
 }
 
 save_stack() {
@@ -372,11 +347,7 @@ assert() {
   tsh_assert_msg=$msg
   tsh_assert_why=$why
   push_err_handler "pop_err_handler; assert_err_msg"
-  if [[ $SUBSHELL == always ]]; then
-    $expect "subshell $(printf "%q" "$what")"
-  else
-    $expect "$what"
-  fi
+  $expect "$what"
   pop_err_handler
 }
 
@@ -386,6 +357,7 @@ assert_true() {
   assert "$what" expect_true "expected success but got failure in: '$what'" "$msg"
 }
 
+# TODO: leverage result_of() to execute the expression in errexit context
 assert_false() {
   local what=$1
   local msg=$2
@@ -403,181 +375,173 @@ assert_equals() {
   pop_err_handler
 }
 
-if [[ -v SUBSHELL_CMD ]]; then
-  load_includes
-  trap "EXIT_CODE=\$?; exit_trap" EXIT
-  trap err_trap ERR
-  push_err_handler save_stack
-  eval "$SUBSHELL_CMD"
-  exit 0
-else
-  # TODO: sort out global var names and control which are exported
-  VERSION=@VERSION@
-  TEST_SCRIPT=$(readlink -f "$0")
-  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-  # shellcheck disable=SC2128
-  TESTSH=$(readlink -f "$BASH_SOURCE")
-  TESTSH_DIR=$(dirname "$TESTSH")
+# TODO: sort out global var names and control which are exported
+VERSION=@VERSION@
+TEST_SCRIPT=$(readlink -f "$0")
+TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+# shellcheck disable=SC2128
+TESTSH=$(readlink -f "$BASH_SOURCE")
+TESTSH_DIR=$(dirname "$TESTSH")
 
-  FOREIGN_STACK=()
-  FIRST_TEST=
-  TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
-  STACK_FILE=$TSH_TMPDIR-stack
+FOREIGN_STACK=()
+FIRST_TEST=
+TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
+STACK_FILE=$TSH_TMPDIR-stack
 
-  set_color() {
-    if [[ $COLOR = yes ]]; then
-      GREEN='\033[0;32m'
-      ORANGE='\033[0;33m'
-      RED='\033[0;31m'
-      BLUE='\033[0;34m'
-      NC='\033[0m' # No Color'
-    else
-      unset GREEN ORANGE RED BLUE NC
-    fi
+set_color() {
+  if [[ $COLOR = yes ]]; then
+    GREEN='\033[0;32m'
+    ORANGE='\033[0;33m'
+    RED='\033[0;31m'
+    BLUE='\033[0;34m'
+    NC='\033[0m' # No Color'
+  else
+    unset GREEN ORANGE RED BLUE NC
+  fi
+}
+
+cleanup() {
+  exec 1>&- 2>&-
+  wait
+  rm -f "$STACK_FILE"
+}
+
+setup_io() {
+  PIPE=$TSH_TMPDIR/pipe
+  mkfifo "$PIPE"
+  # shellcheck disable=SC2031
+  mkdir -p "$(dirname "$LOG_FILE")"
+  [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
+  local redir=\>
+  [[ $LOG_MODE = overwrite ]] || redir=\>$redir
+  # shellcheck disable=SC2031
+  [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
+  redir=
+  [[ $LOG_MODE = overwrite ]] || redir=-a
+  # shellcheck disable=SC2031
+  [[ ! $VERBOSE ]] || tee $redir "$LOG_FILE" <"$PIPE" &
+  exec 3>&1 4>&2 >"$PIPE" 2>&1
+}
+
+config_defaults() {
+  default_VERBOSE=
+  default_DEBUG=
+  default_INCLUDE_GLOB='include*.sh'
+  # shellcheck disable=SC2016
+  default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
+  default_FAIL_FAST=1
+  # shellcheck disable=SC2016
+  default_PRUNE_PATH='$PWD/'
+  default_STACK_TRACE='full'
+  default_TEST_MATCH='^test_'
+  default_COLOR='yes'
+  default_LOG_DIR_NAME='testout'
+  # shellcheck disable=SC2016
+  # shellcheck disable=SC2016
+  default_LOG_DIR='$TEST_SCRIPT_DIR/$LOG_DIR_NAME'
+  # shellcheck disable=SC2016
+  default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
+  # shellcheck disable=SC2016
+  default_LOG_FILE='$LOG_DIR/$LOG_NAME'
+  default_LOG_MODE='overwrite'
+  default_SUBTEST_LOG_CONFIG='reset'
+}
+
+load_config() {
+  save_variable() {
+    local var=$1
+    # TODO: quotes are not necessary and introduce quoting issues when vallues contain quotes
+    [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
   }
 
-  cleanup() {
-    exec 1>&- 2>&-
-    wait
-    rm -f "$STACK_FILE"
+  restore_variable() {
+    local var=$1
+    local saved_var=saved_$var
+    # TODO: quotes are not necessary and introduce quoting issues when vallues contain quotes
+    [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
   }
 
-  setup_io() {
-    PIPE=$TSH_TMPDIR/pipe
-    mkfifo "$PIPE"
-    # shellcheck disable=SC2031
-    mkdir -p "$(dirname "$LOG_FILE")"
-    [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
-    local redir=\>
-    [[ $LOG_MODE = overwrite ]] || redir=\>$redir
-    # shellcheck disable=SC2031
-    [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
-    redir=
-    [[ $LOG_MODE = overwrite ]] || redir=-a
-    # shellcheck disable=SC2031
-    [[ ! $VERBOSE ]] || tee $redir "$LOG_FILE" <"$PIPE" &
-    exec 3>&1 4>&2 >"$PIPE" 2>&1
+  set_default() {
+    local var=$1
+    local default_var=default_$var
+    # TODO: echo is not necessary
+    [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
   }
 
-  config_defaults() {
-    default_VERBOSE=
-    default_DEBUG=
-    default_INCLUDE_GLOB='include*.sh'
-    # shellcheck disable=SC2016
-    default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
-    default_FAIL_FAST=1
-    default_REENTER=1
-    # shellcheck disable=SC2016
-    default_PRUNE_PATH='$PWD/'
-    default_SUBSHELL='never'
-    default_STACK_TRACE='full'
-    default_TEST_MATCH='^test_'
-    default_COLOR='yes'
-    default_LOG_DIR_NAME='testout'
-    # shellcheck disable=SC2016
-    # shellcheck disable=SC2016
-    default_LOG_DIR='$TEST_SCRIPT_DIR/$LOG_DIR_NAME'
-    # shellcheck disable=SC2016
-    default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
-    # shellcheck disable=SC2016
-    default_LOG_FILE='$LOG_DIR/$LOG_NAME'
-    default_LOG_MODE='overwrite'
-    default_SUBTEST_LOG_CONFIG='reset'
+  load_config_file() {
+    local config_file=$1
+    # shellcheck disable=SC1090
+    source "$config_file"
+    log "Loaded config from $config_file"
   }
 
-  load_config() {
-    save_variable() {
-      local var=$1
-      [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
-    }
-
-    restore_variable() {
-      local var=$1
-      local saved_var=saved_$var
-      [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
-    }
-
-    set_default() {
-      local var=$1
-      local default_var=default_$var
-      [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
-    }
-
-    load_config_file() {
-      local config_file=$1
-      # shellcheck disable=SC1090
-      source "$config_file"
-      log "Loaded config from $config_file"
-    }
-
-    try_config_path() {
-      CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
-      local current_IFS="$IFS"
-      IFS=":"
-      for path in $CONFIG_PATH; do
-        ! [ -f "$path"/test.sh.config ] || {
-          CONFIG_FILE="$path"/test.sh.config
-          load_config_file "$CONFIG_FILE"
-          break
-        }
-      done
-      IFS="$current_IFS"
-    }
-
-    local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST REENTER PRUNE_PATH SUBSHELL STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG"
-
-    # save environment config
-    for var in $config_vars; do
-      save_variable "$var"
+  try_config_path() {
+    CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
+    local current_IFS="$IFS"
+    IFS=":"
+    for path in $CONFIG_PATH; do
+      ! [ -f "$path"/test.sh.config ] || {
+        CONFIG_FILE="$path"/test.sh.config
+        load_config_file "$CONFIG_FILE"
+        break
+      }
     done
-
-    # load config file if present
-    [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
-    [ -n "$CONFIG_FILE" ] || try_config_path
-
-    # prioritize environment config
-    for var in $config_vars; do
-      restore_variable "$var"
-    done
-
-    # set defaults
-    for var in $config_vars; do
-      set_default "$var"
-    done
-
-    # validate config
-    validate_values() {
-      local var=$1
-      local val=${!var}
-      shift
-      # shellcheck disable=SC2071
-      for i in "$@"; do
-        [[ $i != "$val" ]] || return 0
-      done
-      local allowed_values="$*"
-      log_err "Configuration: invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }" && false
-    }
-
-    validate_values SUBSHELL never teardown always
-    validate_values STACK_TRACE no full
-    validate_values COLOR no yes
-    validate_values LOG_MODE overwrite append
-    validate_values SUBTEST_LOG_CONFIG reset noreset noredir
-    set_color
+    IFS="$current_IFS"
   }
 
-  trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
-  trap err_trap ERR
-  config_defaults
-  load_config
-  push_err_handler "print_stack_trace"
-  push_err_handler "save_stack"
-  setup_io
-  push_exit_handler "cleanup"
-  load_includes
-  push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
-  push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
-  push_exit_handler "[[ -v MANAGED ]] || display_last_test_result"
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG"
 
-  [[ ! $DEBUG ]] || set -x
-fi
+  # save environment config
+  for var in $config_vars; do
+    save_variable "$var"
+  done
+
+  # load config file if present
+  [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
+  [ -n "$CONFIG_FILE" ] || try_config_path
+
+  # prioritize environment config
+  for var in $config_vars; do
+    restore_variable "$var"
+  done
+
+  # set defaults
+  for var in $config_vars; do
+    set_default "$var"
+  done
+
+  # validate config
+  validate_values() {
+    local var=$1
+    local val=${!var}
+    shift
+    # shellcheck disable=SC2071
+    for i in "$@"; do
+      [[ $i != "$val" ]] || return 0
+    done
+    local allowed_values="$*"
+    log_err "Configuration: invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }" && false
+  }
+
+  # TODO: change to: no, yes... mmm what about the other booleans... not clear
+  validate_values STACK_TRACE no full
+  validate_values COLOR no yes
+  validate_values LOG_MODE overwrite append
+  validate_values SUBTEST_LOG_CONFIG reset noreset noredir
+  set_color
+}
+
+trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
+trap err_trap ERR
+config_defaults
+load_config
+push_err_handler "print_stack_trace"
+push_err_handler "save_stack"
+setup_io
+push_exit_handler "cleanup"
+load_includes
+push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
+push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
+push_exit_handler "[[ -v MANAGED ]] || display_last_test_result"
+
+[[ ! $DEBUG ]] || set -x
