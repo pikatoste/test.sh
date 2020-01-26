@@ -7,10 +7,9 @@ TESTS ?= \
     test_log.sh \
     test_assert.sh \
     test_ignored.sh \
-    test_REENTER.sh \
     test_teardown_fail.sh \
     test_inline.sh \
-    test_SUBSHELL.sh \
+    test_teardown.sh \
     test_STACK_TRACE.sh \
     test_error_reporting.sh \
     test_setup_error.sh \

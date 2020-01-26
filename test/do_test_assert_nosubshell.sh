@@ -1,4 +1,8 @@
 #!/bin/bash
+
+FAIL_FAST=1
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
 test_01_ok() {
   start_test "Assertions should not fail when the assertion succeeds"
   assert_true "true" "ok"
@@ -16,9 +20,5 @@ test_03_fail() {
   assert_false "true" "ok"
   assert_false "false" "nok"
 }
-
-FAIL_FAST=1
-SUBSHELL=never
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 run_tests

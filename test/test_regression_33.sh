@@ -1,6 +1,5 @@
 #!/bin/bash
 
-SUBSHELL=never
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Regression #33: when an include file is matched by more than one glob in INCLUDE_PATH, it is included only once"
