@@ -8,7 +8,8 @@ start_test "STACK_TRACE should accept only valid values"
   for i in no full; do
     STACK_TRACE=$i load_config
   done
-  ! STACK_TRACE=pepe subshell load_config || false
+  STACK_TRACE=pepe result_of load_config
+  [[ $LAST_RESULT != 0 ]]
 )
 
 start_test "When STACK_TRACE=no no stack traces should be produced"
