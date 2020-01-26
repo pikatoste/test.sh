@@ -9,8 +9,9 @@ See https://pikatoste.github.io/test.sh/.
 
 test.sh is a bash library for writing tests as shell scripts.
 
-Only GNU bash is supported. Requires bash \>=4.4. It has been tested succesfully with versions up to 5.0.11.
-test.sh is developed with bash version 4.4.20.
+Requires GNU bash version \>= 4.4.
+The development environment is Ubuntu 18.04 with bash version 4.4.20.
+It has been tested succesfully on versions up to 5.0.11.
 
 ## Installation
 
@@ -360,8 +361,8 @@ Currently there are three assert
 functions: `assert_true`, `assert_false` and `assert_equals`. See the description of these functions in the
 [Function reference](#function-reference).
 
-`assert_true` and `assert_false` accept an expression which is evaluated with `eval`. There are quoting issues to
-be aware of:
+`assert_true` and `assert_false` accept an expression which is evaluated with `eval` in errexit context.
+There are quoting issues to be aware of:
 
 * If the expression is surrounded by double quotes, parameter expansion will occur at call point. If single quotes
 are used, then parameter expansion will occur at the evaluation point.
@@ -626,13 +627,6 @@ This is the list of functions defined by test.sh that you can use in a test scri
   <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:373)
   <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
   </pre>
-
-    **NOTE**: Because \<shell command\> is evaluated in a negated expression, it is executed in
-    _ignored errexit context_ (see [Implicit assertion](#implicit-assertion)); if \<shell command\>
-    calls a function designed to
-    run in errexit context, you should invoke \<shell command\> with the `result_of` function. For example,
-    the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
-    context, should be written as: `assert_false "result_of my_validation_function"`.
 
 * assert_equals
 
