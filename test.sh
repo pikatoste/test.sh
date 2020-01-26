@@ -23,21 +23,13 @@ get_result() {
 }
 
 result_of() {
-  # TODO: try to implemnt with an alternative to mktemp
-  # shellcheck disable=SC2155
-  local pipe=$TSH_TMPDIR-pipe-$(mktemp -u XXXXXX)
-  mkfifo "$pipe"
-  cat <"$pipe" &
-  local catpid=$!
-  # TODO: use save_variable/restore_variable
+  # TODO: ¿shouldn't it be saved/restored?
   DISABLE_STACK_TRACE=
-  get_result "$(eval "$1" | { tee "$pipe" >/dev/null || true; })" "$2"
+  get_result "$(eval "$1" >&2)" "$2"
   unset DISABLE_STACK_TRACE
   LOCAL_STACK=()
   # TODO: think of some alternative to STACK_FILE
   rm -f "$STACK_FILE"
-  wait "$catpid"
-  rm -f "$pipe"
 }
 
 exit_trap() {
@@ -45,7 +37,7 @@ exit_trap() {
   add_err_handler cleanup
   for handler in "${EXIT_HANDLERS[@]}"; do
     # shellcheck disable=SC2016
-    result_of 'eval "$handler"'
+    result_of "$handler"
   done
   remove_err_handler
 }
@@ -352,7 +344,6 @@ assert_equals() {
   pop_err_handler
 }
 
-# TODO: sort out global var names and control which are exported
 VERSION=@VERSION@
 TEST_SCRIPT=$(readlink -f "$0")
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
@@ -364,7 +355,6 @@ FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
 LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
-declare -A PRUNE_PATH_CACHE
 
 set_color() {
   if [[ $COLOR = yes ]]; then
@@ -413,6 +403,7 @@ config_defaults() {
   default_STACK_TRACE='full'
   default_TEST_MATCH='^test_'
   default_COLOR='yes'
+  # TODO: log would be better
   default_LOG_DIR_NAME='testout'
   # shellcheck disable=SC2016
   # shellcheck disable=SC2016
