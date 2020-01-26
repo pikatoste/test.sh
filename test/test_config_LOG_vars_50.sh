@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
+export TEST_SCRIPT_DIR
 
 start_test "LOG_DIR_NANME"
 run_test_script do_test_config_LOG_vars.sh "LOG_DIR_NAME=config_LOG_vars"
