@@ -23,3 +23,14 @@ start_test "assert_equals shoud fail when the arguments are not equal"
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
 ( ! run_test_script do_test_assert_nosubshell.sh || false )
+
+ffail() {
+  false
+  echo "What?!" >"$OUT"
+}
+start_test "#89: assert_false should execute the expression in errexit context"
+OUT="$TEST_SCRIPT_DIR"/.test_assert.out
+rm -f "$OUT"
+assert_false ffail
+assert_false "[ -f \"$OUT\"" "The file should not have been created"
+rm -f "$OUT"

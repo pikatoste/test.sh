@@ -11,7 +11,6 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
-# TODO: function skip() before start_test() to skip a test
 set -o errexit
 set -o errtrace
 set -o pipefail
@@ -181,13 +180,6 @@ run_test_script() {
     "$test_script" "$@" )
 }
 
-# TODO: not used
-with_exit_handler() {
-  push_exit_handler "$2"
-  $1
-  pop_exit_handler
-}
-
 run_test() {
   local test_func=$1
   add_err_handler "remove_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}; display_test_failed"
@@ -271,6 +263,7 @@ current_stack() {
   local_stack $frame_idx
 }
 
+# TODO: cache paths and pruned path in an associative array
 prune_path() {
   if [[ $1 && $1 != environment ]]; then
     # shellcheck disable=SC2155
@@ -320,7 +313,8 @@ expect_true() {
 }
 
 expect_false() {
-  ! eval "$1" || false
+  result_of "$1"
+  [[ $LAST_RESULT != 0 ]]
 }
 
 assert() {
@@ -341,7 +335,6 @@ assert_true() {
   assert "$what" expect_true "expected success but got failure in: '$what'" "$msg"
 }
 
-# TODO: leverage result_of() to execute the expression in errexit context
 assert_false() {
   local what=$1
   local msg=$2
@@ -371,6 +364,7 @@ FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
 LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
+declare -A PRUNE_PATH_CACHE
 
 set_color() {
   if [[ $COLOR = yes ]]; then
@@ -434,22 +428,19 @@ config_defaults() {
 load_config() {
   save_variable() {
     local var=$1
-    # TODO: quotes are not necessary and introduce quoting issues when vallues contain quotes
-    [[ ! -v $var ]] || eval "saved_$var=\"${!var}\""
+    [[ ! -v $var ]] || eval "saved_$var=${!var}"
   }
 
   restore_variable() {
     local var=$1
     local saved_var=saved_$var
-    # TODO: quotes are not necessary and introduce quoting issues when vallues contain quotes
-    [[ ! -v $saved_var ]] || eval "$var=\"${!saved_var}\""
+    [[ ! -v $saved_var ]] || eval "$var=${!saved_var}"
   }
 
   set_default() {
     local var=$1
     local default_var=default_$var
-    # TODO: echo is not necessary
-    [[ -v $var ]] || eval "$var=$(eval "echo -n ${!default_var}")"
+    [[ -v $var ]] || eval "$var=${!default_var}"
   }
 
   load_config_file() {
