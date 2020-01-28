@@ -19,14 +19,31 @@ shopt -s inherit_errexit
 export BASHOPTS
 
 get_result() {
-  eval "${2:-LAST_IGNORE}"=$?
+  eval "${2:-LAST_RESULT}"=$?
+  push_err_handler "pop_err_handler; touch \"$STACK_FILE\""
+  [[ ! -f "$EVAL_PARSE_ERROR_FILE" ]]
+  pop_err_handler
+}
+
+eval_parse_error_trap() {
+  ERR_CODE=$EXIT_CODE
+  rm -f "$STACK_FILE"
+  log_err "Syntax error in the expression: \"$1\""
+  save_stack
+  print_stack_trace
+  touch "$EVAL_PARSE_ERROR_FILE"
+}
+
+eval_trace() {
+  rm -f "$EVAL_PARSE_ERROR_FILE"
+  trap "eval_parse_error_trap \"$1\"" EXIT; eval "trap - EXIT;" "$1"
 }
 
 result_of() {
-  # TODO: ¿shouldn't it be saved/restored?
-  DISABLE_STACK_TRACE=
-  get_result "$(eval "$1" >&2)" "$2"
-  unset DISABLE_STACK_TRACE
+  local save_DISABLE_STACK_TRACE=$DISABLE_STACK_TRACE
+  DISABLE_STACK_TRACE=1
+  get_result "$(eval_trace "$1" >&2)" "$2"
+  DISABLE_STACK_TRACE=$save_DISABLE_STACK_TRACE
   LOCAL_STACK=()
   # TODO: think of some alternative to STACK_FILE
   rm -f "$STACK_FILE"
@@ -223,7 +240,7 @@ load_includes() {
     # shellcheck disable=SC1090
     source "$include_file"
     log "Included: $include_file"
-    prune_path "$include_file"
+    [[ ! $INITIALIZE_SOURCE_CACHE ]] || prune_path "$include_file"
   }
 
   local include_files=()
@@ -293,7 +310,7 @@ print_stack_trace() {
     log_err " at ${LOCAL_STACK[i]}"
   done
   rm -f "$STACK_FILE"
-  [[ ! -v DISABLE_STACK_TRACE ]] || touch -f "$STACK_FILE"
+  [[ -z $DISABLE_STACK_TRACE ]] || touch -f "$STACK_FILE"
   LOCAL_STACK=()
 }
 
@@ -308,14 +325,27 @@ assert_err_msg() {
 }
 
 expect_true() {
-  eval "$1"
+  local save_HANDLERS=("${ERR_HANDLERS[@]}")
+  ERR_HANDLERS=(save_stack) result_of "$1"
+  ERR_HANDLERS=("${save_HANDLERS[@]}")
+  push_err_handler "pop_err_handler; assert_err_msg;# touch \"$STACK_FILE\""
+  add_err_handler "remove_err_handler; rm -f \"$STACK_FILE\""
+  [[ $LAST_RESULT = 0 ]]
+  remove_err_handler
+  pop_err_handler
 }
 
 expect_false() {
+  local save_HANDLERS=("${ERR_HANDLERS[@]}")
+  ERR_HANDLERS=()
   result_of "$1"
+  ERR_HANDLERS=("${save_HANDLERS[@]}")
+  push_err_handler "pop_err_handler; assert_err_msg"
   [[ $LAST_RESULT != 0 ]]
+  pop_err_handler
 }
 
+# TODO: maybe not needed anymore
 assert() {
   local what=$1
   local expect=$2
@@ -323,9 +353,7 @@ assert() {
   local msg=$4
   tsh_assert_msg=$msg
   tsh_assert_why=$why
-  push_err_handler "pop_err_handler; assert_err_msg"
   $expect "$what"
-  pop_err_handler
 }
 
 assert_true() {
@@ -362,6 +390,7 @@ FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
 LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
+EVAL_PARSE_ERROR_FILE=$TSH_TMPDIR-eval-parse-error
 declare -A PRUNE_PATH_CACHE
 
 set_color() {
@@ -391,11 +420,11 @@ setup_io() {
   local redir=\>
   [[ $LOG_MODE = overwrite ]] || redir=\>$redir
   # shellcheck disable=SC2031
-  [[   $VERBOSE ]] || eval cat $redir"$LOG_FILE" <"$PIPE" &
+  [[   $VERBOSE ]] || grep -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" &
   redir=
   [[ $LOG_MODE = overwrite ]] || redir=-a
   # shellcheck disable=SC2031
-  [[ ! $VERBOSE ]] || tee $redir "$LOG_FILE" <"$PIPE" &
+  [[ ! $VERBOSE ]] || grep --line-buffered -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" &
   exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
