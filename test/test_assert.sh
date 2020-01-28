@@ -9,7 +9,7 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
 start_test "Assertions should not fail when the assertion succeeds"
 ( assert_true "true" )
 ( assert_false "false" )
-( assert_false "subshell fail_validation" )
+( assert_false "fail_validation" )
 ( assert_equals a a )
 
 start_test "assert_true should fail when the assertion is false"
@@ -34,3 +34,5 @@ rm -f "$OUT"
 assert_false ffail
 assert_false "[ -f \"$OUT\"" "The file should not have been created"
 rm -f "$OUT"
+
+start_test "#98: eval syntax errors in assert_false expression should reaise the error over the assertion"
