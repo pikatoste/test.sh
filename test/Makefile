@@ -24,6 +24,7 @@ TESTS ?= \
     test_tmpdir_74.sh \
     test_assert_76.sh \
     test_prune_path_cache.sh \
+    test_eval_syntax_error.sh \
     \
     test_xxx_tmpfiles_74.sh
 

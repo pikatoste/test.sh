@@ -1,10 +1,11 @@
 #!/bin/bash
+INCLUDE_GLOB="include/*.sh"
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
 fail_validation() {
   false
   true
 }
-
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Assertions should not fail when the assertion succeeds"
 ( assert_true "true" )
@@ -13,16 +14,20 @@ start_test "Assertions should not fail when the assertion succeeds"
 ( assert_equals a a )
 
 start_test "assert_true should fail when the assertion is false"
-( ! subshell "assert_true \"false\" ok" || false )
+result_of "assert_true \"false\" ok"
+[[ $LAST_RESULT != 0 ]]
 
 start_test "assert_false shoud fail when the assertion is true"
-( ! subshell "assert_false \"true\" nok" || false )
+result_of "assert_false \"true\" nok"
+[[ $LAST_RESULT != 0 ]]
 
 start_test "assert_equals shoud fail when the arguments are not equal"
-( ! subshell "assert_equals expected current wrong" || false )
+result_of "assert_equals expected current wrong"
+[[ $LAST_RESULT != 0 ]]
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-( ! run_test_script do_test_assert_nosubshell.sh || false )
+result_of "run_test_script do_test_assert_nosubshell.sh"
+[[ $LAST_RESULT != 0 ]]
 
 ffail() {
   false
@@ -32,7 +37,9 @@ start_test "#89: assert_false should execute the expression in errexit context"
 OUT="$TEST_SCRIPT_DIR"/.test_assert.out
 rm -f "$OUT"
 assert_false ffail
-assert_false "[ -f \"$OUT\"" "The file should not have been created"
+assert_false "[[ -f \"$OUT\" ]]" "The file should not have been created"
 rm -f "$OUT"
 
-start_test "#98: eval syntax errors in assert_false expression should reaise the error over the assertion"
+start_test "#98: non-zero exit code in the expression of assert_false does not print an assertion failure nor an error report"
+test_generate_success_check 'assert_false "[[ a = b ]]"' <<EOF
+EOF
