@@ -1,5 +1,5 @@
 generate_test() {
-  THE_TEST_NAME=do_test_assert.sh
+  THE_TEST_NAME=the_test.sh
   THE_TEST=$TEST_TMP/$THE_TEST_NAME
   mkdir -p "$TEST_TMP"
   cat >"$THE_TEST" <<EOF

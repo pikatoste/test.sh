@@ -40,13 +40,15 @@ eval_trace() {
 }
 
 result_of() {
+  catch_result_of "$@"
+  rm -f "$STACK_FILE"
+}
+
+catch_result_of() {
   local save_DISABLE_STACK_TRACE=$DISABLE_STACK_TRACE
   DISABLE_STACK_TRACE=1
   get_result "$(eval_trace "$1" >&2)" "$2"
   DISABLE_STACK_TRACE=$save_DISABLE_STACK_TRACE
-  LOCAL_STACK=()
-  # TODO: think of some alternative to STACK_FILE
-  rm -f "$STACK_FILE"
 }
 
 exit_trap() {
@@ -284,7 +286,8 @@ current_stack() {
   local frame_idx=${1:-3}
   ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
   prune_path "${BASH_SOURCE[$frame_idx]}"
-  LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
+  #LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
+  echo "Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
   local_stack $frame_idx
 }
@@ -298,20 +301,21 @@ local_stack() {
 #    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
     # shellcheck disable=SC2155
     prune_path "${BASH_SOURCE[$i+1]}"
-    local line="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
-    LOCAL_STACK+=("$line")
+    local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
+    #LOCAL_STACK+=("$frame")
+    echo "$frame"
   done
 }
 
 print_stack_trace() {
-  [[ ${#LOCAL_STACK[@]} != 0 ]] || return 0
-  log_err "${LOCAL_STACK[0]}"
-  for ((i=1; i<${#LOCAL_STACK[@]}; i++)); do
-    log_err " at ${LOCAL_STACK[i]}"
-  done
+  [[ -f "$STACK_FILE" ]] || return 0
+  ( ! read line || log_err "$line"
+    while read line; do
+      log_err " at $line"
+    done
+  ) <"$STACK_FILE"
   rm -f "$STACK_FILE"
   [[ -z $DISABLE_STACK_TRACE ]] || touch -f "$STACK_FILE"
-  LOCAL_STACK=()
 }
 
 assert_msg() {
@@ -326,9 +330,9 @@ assert_err_msg() {
 
 expect_true() {
   local save_HANDLERS=("${ERR_HANDLERS[@]}")
-  ERR_HANDLERS=(save_stack) result_of "$1"
+  ERR_HANDLERS=(save_stack) catch_result_of "$1"
   ERR_HANDLERS=("${save_HANDLERS[@]}")
-  push_err_handler "pop_err_handler; assert_err_msg;# touch \"$STACK_FILE\""
+  push_err_handler "pop_err_handler; assert_err_msg"
   add_err_handler "remove_err_handler; rm -f \"$STACK_FILE\""
   [[ $LAST_RESULT = 0 ]]
   remove_err_handler
@@ -390,7 +394,6 @@ mkdir -p "$TEST_TMP"
 
 FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
-LOCAL_STACK=()
 STACK_FILE=$TSH_TMPDIR-stack
 EVAL_PARSE_ERROR_FILE=$TSH_TMPDIR-eval-parse-error
 declare -A PRUNE_PATH_CACHE
