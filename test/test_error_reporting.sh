@@ -29,7 +29,7 @@ grep "Error in teardown_test_suite(do_test_error_reporting.sh:23): '.*' exited w
 
 start_test "The error message should identify the source, line, command and exit code when triggered in assert"
 ! run_test_script do_test_error_reporting.sh [func_assert] || false
-grep "Error in expect_true(test.sh:[[:digit:]]\+): '.*' exited with status 1" "$OUT"
+grep "Error in eval_trace(test.sh:[[:digit:]]\+): 'false' exited with status 1" "$OUT"
 
 start_test "The error message should identify the source, line, command and exit code when triggered in setup_test_suite"
 ! INLINE=     run_test_script do_test_error_reporting.sh [setup_test_suite] || false
