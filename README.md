@@ -370,6 +370,9 @@ are used, then parameter expansion will occur at the evaluation point.
 
 The quoting issues also apply to the `result_of` function.
 
+If the expression is not syntactically correct a syntax error report is printed in the log file and the functions
+fail. No assertion failure message is printed because the expression could not be evaluated.
+
 ### Predefined variables
 
 test.sh defines these variables, which are available to the test script after test.sh is sourced:
@@ -610,7 +613,8 @@ This is the list of functions defined by test.sh that you can use in a test scri
   assert_false <shell command> [message]
   ```
 
-  Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
+  Executes \<shell command\>. If the exit code is 0, an error message is logged and an error triggered.
+  Non-zero exit codes don't generate an error report in the log file.
   For example, the following test script:
 
   ```shell script
@@ -659,6 +663,8 @@ This is the list of functions defined by test.sh that you can use in a test scri
   invocations to preserve the error tracing capacity of test.sh. The \<shell command\> is subject to quoting issues
   that are discussed in section [Assertions](#assertions).
 
+  Syntax errors in the expression generate an error report in the log file and `result_of` returns non-zero.
+
   See [Subshells](#subshells).
 
 * run_test_script
@@ -666,10 +672,10 @@ This is the list of functions defined by test.sh that you can use in a test scri
   Syntax:
 
   ```text
-  run_test_script <test script>
+  run_test_script <test script> [param...]
   ```
 
-  Executes \<test script\>, which is a relative or absolute path to a standalone test.sh-enabled test script.
+  Executes \<test script\>, which is a test.sh-enabled test script, with the supplied parameters.
   Relative paths are interpreted from `$TEST_SCRIPT_DIR`.
 
   Using this function is preferred over plain execution of the test script because it resets internal

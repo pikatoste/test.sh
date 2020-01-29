@@ -26,7 +26,7 @@ get_result() {
 }
 
 eval_parse_error_trap() {
-  ERR_CODE=$EXIT_CODE
+  ERR_CODE=$?
   rm -f "$STACK_FILE"
   log_err "Syntax error in the expression: \"$1\""
   save_stack
@@ -385,6 +385,8 @@ TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 # shellcheck disable=SC2128
 TESTSH=$(readlink -f "$BASH_SOURCE")
 TESTSH_DIR=$(dirname "$TESTSH")
+TEST_TMP=$TEST_SCRIPT_DIR/tmp
+mkdir -p "$TEST_TMP"
 
 FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
@@ -409,6 +411,7 @@ cleanup() {
   exec 1>&- 2>&-
   wait
   rm -f "$STACK_FILE"
+  [[ ! $CLEAN_TEST_TMP ]] || rm -rf "$TEST_TMP"
 }
 
 setup_io() {
@@ -452,6 +455,7 @@ config_defaults() {
   default_LOG_MODE='overwrite'
   default_SUBTEST_LOG_CONFIG='reset'
   default_INITIALIZE_SOURCE_CACHE=
+  default_CLEAN_TEST_TMP=1
 }
 
 load_config() {
@@ -493,7 +497,7 @@ load_config() {
     IFS="$current_IFS"
   }
 
-  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE"
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP"
 
   # save environment config
   for var in $config_vars; do
@@ -514,6 +518,8 @@ load_config() {
     set_default "$var"
   done
 
+  set_color
+
   # validate config
   validate_values() {
     local var=$1
@@ -532,7 +538,6 @@ load_config() {
   validate_values COLOR no yes
   validate_values LOG_MODE overwrite append
   validate_values SUBTEST_LOG_CONFIG reset noreset noredir
-  set_color
 }
 
 init_prune_path_cache() {
