@@ -41,5 +41,5 @@ assert_false "[[ -f \"$OUT\" ]]" "The file should not have been created"
 rm -f "$OUT"
 
 start_test "#98: non-zero exit code in the expression of assert_false does not print an assertion failure nor an error report"
-test_generate_success_check 'assert_false "[[ a = b ]]"' <<EOF
+generate_test_success_check 'assert_false "[[ a = b ]]"' <<EOF
 EOF

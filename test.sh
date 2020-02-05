@@ -18,47 +18,85 @@ export SHELLOPTS
 shopt -s inherit_errexit
 export BASHOPTS
 
-get_result() {
-  eval "${2:-LAST_RESULT}"=$?
-  push_err_handler "pop_err_handler; touch \"$STACK_FILE\""
-  [[ ! -f "$EVAL_PARSE_ERROR_FILE" ]]
-  pop_err_handler
+try() {
+  [[ ! -f $EXCEPTION ]] || throw "error.previous-exception" "An exception occurred before entering the 'try' block"
+  get_result "$(eval_trace "$1" >&2)" "$2"
 }
 
-eval_parse_error_trap() {
-  ERR_CODE=$?
-  rm -f "$STACK_FILE"
-  log_err "Syntax error in the expression: \"$1\""
-  save_stack
-  print_stack_trace
-  touch "$EVAL_PARSE_ERROR_FILE"
+catch() {
+  local err=${2:-$LAST_RESULT}
+  if [[ $err != 0 && -f "$EXCEPTION" ]]; then
+    local exception=$1
+    local the_exception=$(head -1 "$EXCEPTION")
+    [[ $the_exception =~ ^$exception ]] || exit $err
+    false
+  fi
+}
+
+# TODO: legacy, still used by tests
+result_of() {
+  try "$@"
+  catch "nonzero" || print_exception
+}
+
+get_result() {
+  eval "${2:-LAST_RESULT}"=$?
 }
 
 eval_trace() {
-  rm -f "$EVAL_PARSE_ERROR_FILE"
-  trap "eval_parse_error_trap \"$1\"" EXIT; eval "trap - EXIT;" "$1"
+  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1"
 }
 
-result_of() {
-  catch_result_of "$@"
-  rm -f "$STACK_FILE"
+throw() {
+  create_exception "$@"
+  false
 }
 
-catch_result_of() {
-  local save_DISABLE_STACK_TRACE=$DISABLE_STACK_TRACE
-  DISABLE_STACK_TRACE=1
-  get_result "$(eval_trace "$1" >&2)" "$2"
-  DISABLE_STACK_TRACE=$save_DISABLE_STACK_TRACE
+create_exception() {
+  exception=$1
+  exception_msg=$2
+  first_frame=${3:-2}
+  local cause
+  [[ ! -f $EXCEPTION ]] || cause=$(cat "$EXCEPTION")
+  echo "$exception" >"$EXCEPTION"
+  echo "$exception_msg" >>"$EXCEPTION"
+  local_stack $first_frame >>"$EXCEPTION"
+  if [[ $cause ]]; then
+    echo "Caused by:" >>"$EXCEPTION"
+    echo "$cause" >>"$EXCEPTION"
+  fi
+}
+
+rethrow() {
+  false
+}
+
+throw_eval_syntax_error_exception() {
+  ERR_CODE=$?
+  print_exception
+  local errmsg="Syntax error in the expression: \"$1\""
+  throw "error.eval-syntax-error" "$errmsg" 3
+}
+
+create_nonzero_implicit_exception() {
+  if [ ! -f "$EXCEPTION" ]; then
+    local err=$ERR_CODE
+    local errcmd=$(echo -n "$BASH_COMMAND" | head -1)
+    local frame_idx=2
+    prune_path "${BASH_SOURCE[$frame_idx]}"
+    local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
+    ((frame_idx+=2))
+    create_exception "nonzero.implicit" "$errmsg" $frame_idx
+  fi
 }
 
 exit_trap() {
   EXIT_CODE=${EXIT_CODE:-$?}
-  add_err_handler cleanup
+  print_exception
   for handler in "${EXIT_HANDLERS[@]}"; do
     # shellcheck disable=SC2016
-    result_of "$handler"
+    eval "$handler"
   done
-  remove_err_handler
 }
 
 push_exit_handler() {
@@ -84,14 +122,6 @@ pop_err_handler() {
   ERR_HANDLERS=("${ERR_HANDLERS[@]:1}")
 }
 
-add_err_handler() {
-  ERR_HANDLERS=("${ERR_HANDLERS[@]}" "$1")
-}
-
-remove_err_handler() {
-  ERR_HANDLERS=("${ERR_HANDLERS[@]:0:${#ERR_HANDLERS[@]}-1}")
-}
-
 display_last_test_result() {
   if [[ $EXIT_CODE == 0 ]]; then
     display_test_passed
@@ -103,7 +133,7 @@ display_last_test_result() {
 start_test() {
   [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
-  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; result_of 'call_teardown "teardown_test"'; }
+  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown "teardown_test"; }
   CURRENT_TEST_NAME="$1"
   [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
@@ -157,15 +187,13 @@ error_setup_test_suite() {
 }
 
 call_setup_test_suite() {
-  push_err_handler "pop_err_handler; error_setup_test_suite"
-  call_if_exists setup_test_suite
-  pop_err_handler
+  try "call_if_exists \"setup_test_suite\""
+  catch || { error_setup_test_suite; rethrow; }
 }
 
 call_teardown() {
-  add_err_handler "remove_err_handler; warn_teardown_failed $1"
-  call_if_exists "$1"
-  remove_err_handler
+  try "call_if_exists \"$1\""
+  catch || { print_exception; warn_teardown_failed "$1"; }
 }
 
 run_test_script() {
@@ -174,34 +202,31 @@ run_test_script() {
   local test_script
   test_script=$(cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
-  (
-    # TODO: give meaning to SUBSHELL_LOG_CONFIG and implement it
-#    # restore log-related config vars to initial values
-#    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
-#      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
-#        while [[ -v $var ]]; do unset $var; done
-#        restore_variable $var
-#      done
-#      # shellcheck disable=SC2030
-#      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
-#    fi
-
-    EXIT_HANDLERS=()
-    ERR_HANDLERS=(save_stack)
-    BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@" )
+#  (
+#    # TODO: give meaning to SUBSHELL_LOG_CONFIG and implement it
+##    # restore log-related config vars to initial values
+##    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
+##      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
+##        while [[ -v $var ]]; do unset $var; done
+##        restore_variable $var
+##      done
+##      # shellcheck disable=SC2030
+##      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
+##    fi
+#
+#    BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@" )
+  BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@"
 }
 
 run_test() {
   local test_func=$1
-  add_err_handler "remove_err_handler; CURRENT_TEST_NAME=\${CURRENT_TEST_NAME:-$test_func}; display_test_failed"
   call_if_exists setup_test
   teardown_test_called=
   "$test_func"
   CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
   display_test_passed
-  remove_err_handler
   teardown_test_called=1
-  result_of 'call_teardown "teardown_test"'
+  call_teardown "teardown_test"
 }
 
 run_tests() {
@@ -219,8 +244,13 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    result_of "run_test \"$test_func\"" failed
-    [[ $failed = 0 ]] || [[ $teardown_test_called ]] || result_of 'call_teardown "teardown_test"'
+    try "run_test \"$test_func\""
+    catch || {
+      print_exception
+      failed=1
+      CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
+      [[ $teardown_test_called ]] || call_teardown "teardown_test"
+    }
     if [ $failed -ne 0 ]; then
       failures=$(( failures + 1 ))
       if [[ $FAIL_FAST ]]; then
@@ -232,7 +262,7 @@ run_tests() {
       fi
     fi
   done
-  result_of 'call_teardown "teardown_test_suite"'
+  call_teardown "teardown_test_suite"
   [[ $failures == 0 ]]
 }
 
@@ -261,8 +291,8 @@ load_includes() {
 }
 
 save_stack() {
-  if [ ! -f "$STACK_FILE" ]; then
-    current_stack "$1" >"$STACK_FILE"
+  if [ ! -f "$EXCEPTION" ]; then
+    current_stack "$1" >"$EXCEPTION"
   fi
 }
 
@@ -286,7 +316,6 @@ current_stack() {
   local frame_idx=${1:-3}
   ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
   prune_path "${BASH_SOURCE[$frame_idx]}"
-  #LOCAL_STACK=("Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err")
   echo "Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
   ((frame_idx++))
   local_stack $frame_idx
@@ -302,20 +331,26 @@ local_stack() {
     # shellcheck disable=SC2155
     prune_path "${BASH_SOURCE[$i+1]}"
     local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
-    #LOCAL_STACK+=("$frame")
     echo "$frame"
   done
 }
 
-print_stack_trace() {
-  [[ -f "$STACK_FILE" ]] || return 0
-  ( ! read line || log_err "$line"
-    while read line; do
-      log_err " at $line"
-    done
-  ) <"$STACK_FILE"
-  rm -f "$STACK_FILE"
-  [[ -z $DISABLE_STACK_TRACE ]] || touch -f "$STACK_FILE"
+print_exception() {
+  if [[ -f "$EXCEPTION" ]]; then
+    local exception
+    ( while read -r exception; do
+        ! read -r line || log_err "$line"
+        while read -r line; do
+          if [[ $line =~ ^'Caused by' ]]; then
+            log_err "$line"
+            break
+          fi
+          log_err " at $line"
+        done
+      done
+    ) <"$EXCEPTION"
+    rm -f "$EXCEPTION"
+  fi
 }
 
 assert_msg() {
@@ -324,52 +359,26 @@ assert_msg() {
   echo "Assertion failed: ${msg:+$msg, }$why"
 }
 
+# TODO: obsolete, not used
 assert_err_msg() {
   log_err "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
-expect_true() {
-  local save_HANDLERS=("${ERR_HANDLERS[@]}")
-  ERR_HANDLERS=(save_stack) catch_result_of "$1"
-  ERR_HANDLERS=("${save_HANDLERS[@]}")
-  push_err_handler "pop_err_handler; assert_err_msg"
-  add_err_handler "remove_err_handler; rm -f \"$STACK_FILE\""
-  [[ $LAST_RESULT = 0 ]]
-  remove_err_handler
-  pop_err_handler
-}
-
-expect_false() {
-  local save_HANDLERS=("${ERR_HANDLERS[@]}")
-  ERR_HANDLERS=()
-  result_of "$1"
-  ERR_HANDLERS=("${save_HANDLERS[@]}")
-  push_err_handler "pop_err_handler; assert_err_msg"
-  [[ $LAST_RESULT != 0 ]]
-  pop_err_handler
-}
-
-# TODO: maybe not needed anymore
-assert() {
-  local what=$1
-  local expect=$2
-  local why=$3
-  local msg=$4
-  tsh_assert_msg=$msg
-  tsh_assert_why=$why
-  $expect "$what"
-}
-
 assert_true() {
   local what=$1
-  local msg=$2
-  assert "$what" expect_true "expected success but got failure in: '$what'" "$msg"
+  tsh_assert_msg=$2
+  tsh_assert_why="expected success but got failure in: '$what'"
+  try "$what"
+  catch nonzero || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")" # STACK_TRACE=no
 }
 
 assert_false() {
   local what=$1
-  local msg=$2
-  assert "$what" expect_false "expected failure but got success in: '$what'" "$msg"
+  tsh_assert_msg=$2
+  tsh_assert_why="expected failure but got success in: '$what'"
+  try "$what"
+  catch nonzero || rm -f "$EXCEPTION"
+  [[ $LAST_RESULT != 0 ]] || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 assert_equals() {
@@ -378,9 +387,8 @@ assert_equals() {
   local msg=$3
   tsh_assert_msg=$msg
   tsh_assert_why="expected '$expected' but got '$current'"
-  push_err_handler "pop_err_handler; assert_err_msg"
-  [[ "$expected" = "$current" ]]
-  pop_err_handler
+  try "[[ \"$(printf "%q" "$expected")\" = \"$(printf "%q" "$current")\" ]]"
+  catch nonzero || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 VERSION=@VERSION@
@@ -390,12 +398,12 @@ TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
 TESTSH=$(readlink -f "$BASH_SOURCE")
 TESTSH_DIR=$(dirname "$TESTSH")
 TEST_TMP=$TEST_SCRIPT_DIR/tmp
+rm -rf "$TEST_TMP"
 mkdir -p "$TEST_TMP"
 
 FIRST_TEST=
 TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
-STACK_FILE=$TSH_TMPDIR-stack
-EVAL_PARSE_ERROR_FILE=$TSH_TMPDIR-eval-parse-error
+EXCEPTION=$TSH_TMPDIR-stack
 declare -A PRUNE_PATH_CACHE
 
 set_color() {
@@ -413,8 +421,8 @@ set_color() {
 cleanup() {
   exec 1>&- 2>&-
   wait
-  rm -f "$STACK_FILE"
-  [[ ! $CLEAN_TEST_TMP ]] || rm -rf "$TEST_TMP"
+  rm -f "$EXCEPTION"
+  [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
 
 setup_io() {
@@ -425,12 +433,13 @@ setup_io() {
   [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
   local redir=\>
   [[ $LOG_MODE = overwrite ]] || redir=\>$redir
+  # TODO: --line-buffered incompatible con busybox
   # shellcheck disable=SC2031
-  [[   $VERBOSE ]] || grep -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" &
+  [[   $VERBOSE ]] || { grep --line-buffered -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" & }
   redir=
   [[ $LOG_MODE = overwrite ]] || redir=-a
   # shellcheck disable=SC2031
-  [[ ! $VERBOSE ]] || grep --line-buffered -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" &
+  [[ ! $VERBOSE ]] || { grep --line-buffered -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" & }
   exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
@@ -483,7 +492,6 @@ load_config() {
     local config_file=$1
     # shellcheck disable=SC1090
     source "$config_file"
-    log "Loaded config from $config_file"
   }
 
   try_config_path() {
@@ -557,11 +565,11 @@ trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
 trap err_trap ERR
 config_defaults
 load_config
-push_err_handler "print_stack_trace"
-push_err_handler "save_stack"
+push_err_handler "create_nonzero_implicit_exception"
 setup_io
-init_prune_path_cache
 push_exit_handler "cleanup"
+[[ -z $CONFIG_FILE ]] || log "Loaded config from $CONFIG_FILE"
+init_prune_path_cache
 load_includes
 push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
 push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"

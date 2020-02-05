@@ -1,7 +1,6 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-# TODO: move to teardown tests
 start_test "Teardown functions should be called"
 run_test_script do_test_teardown.sh
 OUTFILE="$LOG_DIR"/do_test_teardown.sh.out
