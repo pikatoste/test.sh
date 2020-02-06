@@ -16,13 +16,13 @@ check_output() {
   diff "$TEST_TMP"/expected "$OUT"
 }
 
-test_generate_fail_check() {
+generate_test_fail_check() {
   generate_test "$1"
   ! LC_ALL=C LOG_FILE="$OUT" COLOR=no PRUNE_PATH="*/" run_test_script "$THE_TEST" || false
   check_output
 }
 
-test_generate_success_check() {
+generate_test_success_check() {
   generate_test "$1"
   LC_ALL=C LOG_FILE="$OUT" COLOR=no PRUNE_PATH="*/" run_test_script "$THE_TEST"
   check_output

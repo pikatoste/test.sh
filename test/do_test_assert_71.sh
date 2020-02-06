@@ -1,4 +1,8 @@
 #!/bin/bash
+
+STACK_TRACE=no
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
 test_01() {
   assert_true false "test_01"
 }
@@ -11,9 +15,7 @@ teardown_test_suite() {
   assert_true false "teardown_test_suite"
 }
 
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
-
-result_of 'assert_true false "first"'
-result_of 'assert_true false "second"'
+try_catch_print 'assert_true false "first"'
+try_catch_print 'assert_true false "second"'
 
 run_tests

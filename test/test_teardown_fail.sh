@@ -6,7 +6,7 @@ run_test_script do_test_teardown_fail.sh
 
 start_test "Teardown functions should execute in errexit context"
 OUT=$LOG_DIR/do_test_teardown_fail.sh.out
-assert_equals 0 "$(grep -c "never reached" "$OUT")" "teardown function in ignored errexit context"
+assert_equals 0 "$(grep -c "never reached" "$OUT" || true)" "teardown function in ignored errexit context"
 
 start_test "Teardown functions should print a warning in the main output when they fail"
 OUT="$TEST_SCRIPT_DIR"/.do_test_teardown_fail.sh.mainout

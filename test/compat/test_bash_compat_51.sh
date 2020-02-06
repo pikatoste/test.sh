@@ -1,4 +1,5 @@
 #!/bin/bash
+source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
 build_docker_image() {
   sed -e s/@IMAGE_VERSION@/$1/ "$TEST_SCRIPT_DIR"/Dockerfile.template >"$TEST_SCRIPT_DIR"/Dockerfile
@@ -13,8 +14,6 @@ setup_test() {
 teardown_test() {
   docker container ls -a | grep test.sh | cut -d \  -f 1 | xargs docker container rm 2>/dev/null || true
 }
-
-source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
 for bash_version in 4.4.23 5.0.11; do
   start_test "Bash version $bash_version should be supported"
