@@ -380,6 +380,12 @@ TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
 EXCEPTION=$TSH_TMPDIR-stack
 declare -A PRUNE_PATH_CACHE
 
+if [[ $BUSYBOX ]]; then
+  GREP="grep"
+else
+  GREP="grep --line-buffered"
+fi
+
 set_color() {
   if [[ $COLOR = yes ]]; then
     GREEN='\033[0;32m'
@@ -408,11 +414,11 @@ setup_io() {
   [[ $LOG_MODE = overwrite ]] || redir=\>$redir
   # TODO: --line-buffered incompatible con busybox
   # shellcheck disable=SC2031
-  [[   $VERBOSE ]] || { grep --line-buffered -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" & }
+  [[   $VERBOSE ]] || { $GREP -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" & }
   redir=
   [[ $LOG_MODE = overwrite ]] || redir=-a
   # shellcheck disable=SC2031
-  [[ ! $VERBOSE ]] || { grep --line-buffered -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" & }
+  [[ ! $VERBOSE ]] || { $GREP -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" & }
   exec 3>&1 4>&2 >"$PIPE" 2>&1
 }
 
