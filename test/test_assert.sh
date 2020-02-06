@@ -14,20 +14,20 @@ start_test "Assertions should not fail when the assertion succeeds"
 ( assert_equals a a )
 
 start_test "assert_true should fail when the assertion is false"
-result_of "assert_true \"false\" ok"
-[[ $LAST_RESULT != 0 ]]
+try_catch_print "assert_true \"false\" ok"
+[[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "assert_false shoud fail when the assertion is true"
-result_of "assert_false \"true\" nok"
-[[ $LAST_RESULT != 0 ]]
+try_catch_print "assert_false \"true\" nok"
+[[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "assert_equals shoud fail when the arguments are not equal"
-result_of "assert_equals expected current wrong"
-[[ $LAST_RESULT != 0 ]]
+try_catch_print "assert_equals expected current wrong"
+[[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-result_of "run_test_script do_test_assert_nosubshell.sh"
-[[ $LAST_RESULT != 0 ]]
+try_catch_print "run_test_script do_test_assert_nosubshell.sh"
+[[ $TRY_EXIT_CODE != 0 ]]
 
 ffail() {
   false

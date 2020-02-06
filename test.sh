@@ -14,17 +14,19 @@ fi
 set -o errexit
 set -o errtrace
 set -o pipefail
-export SHELLOPTS
 shopt -s inherit_errexit
-export BASHOPTS
 
 try() {
-  [[ ! -f $EXCEPTION ]] || throw "error.previous-exception" "An exception occurred before entering the 'try' block"
-  get_result "$(eval_trace "$1" >&2)" "$2"
+  [[ ! -f $EXCEPTION ]] || throw "error.dangling-exception" "An exception occurred before entering the 'try' block"
+  get_result "$(trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1" >&2)"
+}
+
+get_result() {
+  TRY_EXIT_CODE=$?
 }
 
 catch() {
-  local err=${2:-$LAST_RESULT}
+  local err=$TRY_EXIT_CODE
   if [[ $err != 0 && -f "$EXCEPTION" ]]; then
     local exception=$1
     local the_exception=$(head -1 "$EXCEPTION")
@@ -34,17 +36,9 @@ catch() {
 }
 
 # TODO: legacy, still used by tests
-result_of() {
-  try "$@"
+try_catch_print() {
+  try "$*"
   catch "nonzero" || print_exception
-}
-
-get_result() {
-  eval "${2:-LAST_RESULT}"=$?
-}
-
-eval_trace() {
-  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1"
 }
 
 throw() {
@@ -67,12 +61,59 @@ create_exception() {
   fi
 }
 
+prune_path() {
+  if [[ $1 && $1 != environment ]]; then
+    if [[ ${PRUNE_PATH_CACHE[$1]} ]]; then
+      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
+    else
+      # shellcheck disable=SC2155
+      local path=$(realpath "$1")
+      PRUNE_PATH_CACHE[$1]=${path##$PRUNE_PATH}
+      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
+    fi
+  else
+    PRUNED_PATH="$1"
+  fi
+}
+
+local_stack() {
+  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
+  do
+    # shellcheck disable=SC2155
+#    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
+#    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
+#    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
+    # shellcheck disable=SC2155
+    prune_path "${BASH_SOURCE[$i+1]}"
+    local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
+    echo "$frame"
+  done
+}
+
+print_exception() {
+  if [[ -f "$EXCEPTION" ]]; then
+    local exception
+    ( while read -r exception; do
+        ! read -r line || log_err "$line"
+        while read -r line; do
+          if [[ $line =~ ^'Caused by' ]]; then
+            log_err "$line"
+            break
+          fi
+          log_err " at $line"
+        done
+      done
+    ) <"$EXCEPTION"
+    rm -f "$EXCEPTION"
+  fi
+}
+
 rethrow() {
   false
 }
 
 throw_eval_syntax_error_exception() {
-  ERR_CODE=$?
+#  ERR_CODE=$?
   print_exception
   local errmsg="Syntax error in the expression: \"$1\""
   throw "error.eval-syntax-error" "$errmsg" 3
@@ -215,7 +256,8 @@ run_test_script() {
 ##    fi
 #
 #    BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@" )
-  BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@"
+#  BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST='' "$test_script" "$@"
+  "$test_script" "$@"
 }
 
 run_test() {
@@ -290,78 +332,10 @@ load_includes() {
   done
 }
 
-save_stack() {
-  if [ ! -f "$EXCEPTION" ]; then
-    current_stack "$1" >"$EXCEPTION"
-  fi
-}
-
-prune_path() {
-  if [[ $1 && $1 != environment ]]; then
-    if [[ ${PRUNE_PATH_CACHE[$1]} ]]; then
-      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
-    else
-      # shellcheck disable=SC2155
-      local path=$(realpath "$1")
-      PRUNE_PATH_CACHE[$1]=${path##$PRUNE_PATH}
-      PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
-    fi
-  else
-    PRUNED_PATH="$1"
-  fi
-}
-
-current_stack() {
-  local err=$ERR_CODE
-  local frame_idx=${1:-3}
-  ERRCMD=$(echo -n "$BASH_COMMAND" | head -1)
-  prune_path "${BASH_SOURCE[$frame_idx]}"
-  echo "Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${ERRCMD}' exited with status $err"
-  ((frame_idx++))
-  local_stack $frame_idx
-}
-
-local_stack() {
-  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
-  do
-    # shellcheck disable=SC2155
-#    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
-#    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
-#    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
-    # shellcheck disable=SC2155
-    prune_path "${BASH_SOURCE[$i+1]}"
-    local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
-    echo "$frame"
-  done
-}
-
-print_exception() {
-  if [[ -f "$EXCEPTION" ]]; then
-    local exception
-    ( while read -r exception; do
-        ! read -r line || log_err "$line"
-        while read -r line; do
-          if [[ $line =~ ^'Caused by' ]]; then
-            log_err "$line"
-            break
-          fi
-          log_err " at $line"
-        done
-      done
-    ) <"$EXCEPTION"
-    rm -f "$EXCEPTION"
-  fi
-}
-
 assert_msg() {
   local msg=$1
   local why=$2
   echo "Assertion failed: ${msg:+$msg, }$why"
-}
-
-# TODO: obsolete, not used
-assert_err_msg() {
-  log_err "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 assert_true() {
@@ -378,7 +352,7 @@ assert_false() {
   tsh_assert_why="expected failure but got success in: '$what'"
   try "$what"
   catch nonzero || rm -f "$EXCEPTION"
-  [[ $LAST_RESULT != 0 ]] || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  [[ $TRY_EXIT_CODE != 0 ]] || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 assert_equals() {
@@ -421,7 +395,6 @@ set_color() {
 cleanup() {
   exec 1>&- 2>&-
   wait
-  rm -f "$EXCEPTION"
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
 

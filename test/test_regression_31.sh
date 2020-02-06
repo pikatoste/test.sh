@@ -24,6 +24,6 @@ EOF
 
 generate_test_fail_check 'run_test_script ./__I_dont_exist' <<EOF
 $TESTSH: line : $TEST_TMP/__I_dont_exist: No such file or directory
-[test.sh] Error in run_test_script(test.sh:): 'BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "\$test_script" "\$@"' exited with status 127
+[test.sh] Error in run_test_script(test.sh:): '"\$test_script" "\$@"' exited with status 127
 [test.sh]  at main(the_test.sh:)
 EOF
