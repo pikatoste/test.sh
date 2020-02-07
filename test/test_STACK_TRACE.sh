@@ -8,10 +8,10 @@ start_test "STACK_TRACE should accept only valid values"
   for i in no full; do
     STACK_TRACE=$i load_config
   done
-  TRY&&(:; STACK_TRACE=pepe load_config )
-  CATCH nonzero && print_exception
-  ENDTRY
-  [[ $TRY_EXIT_CODE != 0 ]]
+  try STACK_TRACE=pepe load_config
+  catch nonzero: print_exception
+  endtry
+  failed
 )
 
 start_test "When STACK_TRACE=no no stack traces should be produced"

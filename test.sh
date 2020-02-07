@@ -11,19 +11,22 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   exit 0
 fi
 
-set -o errexit
-set -o errtrace
-set -o pipefail
+set -o errexit -o errtrace -o pipefail
 shopt -s inherit_errexit
+shopt -s expand_aliases
+
+alias try="TRY;(set -e;"
+alias catch:=");CATCH&&{"
+alias catch=");CATCH "
+alias nonzero:="'nonzero'&&{"
+alias nonzero="'nonzero' "
+alias :="&&{"
+alias endtry="};ENDTRY"
 
 TRY() {
   [[ ! -f $EXCEPTION ]] || { throw "error.dangling-exception" "An exception occurred before entering the TRY block"; exit 1; }
   unset TRY_EXIT_CODE
   set +e
-}
-
-:() {
-  set -e
 }
 
 CATCH() {
@@ -48,6 +51,10 @@ ENDTRY() {
   set -e
 }
 
+failed() {
+  [[ $TRY_EXIT_CODE != 0 ]]
+}
+
 throw() {
   create_exception "$@"
   exit 1
@@ -64,11 +71,9 @@ create_exception() {
   local cause
   [[ ! -f $EXCEPTION ]] || cause=$(cat "$EXCEPTION")
   echo "$exception" >"$EXCEPTION"
-  { echo "$exception_msg"; echo '---'; } >>"$EXCEPTION"
-  local_stack $first_frame >>"$EXCEPTION"
+  { echo "$exception_msg"; echo '---'; local_stack "$first_frame"; } >>"$EXCEPTION"
   if [[ $cause ]]; then
-    echo "Caused by:" >>"$EXCEPTION"
-    echo "$cause" >>"$EXCEPTION"
+    { echo "Caused by:"; echo "$cause"; } >>"$EXCEPTION"
   fi
 }
 
@@ -86,8 +91,8 @@ prune_path() {
     if [[ ${PRUNE_PATH_CACHE[$1]} ]]; then
       PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
     else
-      # shellcheck disable=SC2155
-      local path=$(realpath "$1")
+      local path
+      path=$(realpath "$1")
       PRUNE_PATH_CACHE[$1]=${path##$PRUNE_PATH}
       PRUNED_PATH=${PRUNE_PATH_CACHE[$1]}
     fi
@@ -251,12 +256,12 @@ call_setup_test_suite() {
 }
 
 call_teardown() {
-  TRY&&(:
-    call_if_exists "$1")
-  CATCH&&{
+  try
+    call_if_exists "$1"
+  catch:
     print_exception
-    warn_teardown_failed "$1"; }
-  ENDTRY
+    warn_teardown_failed "$1"
+  endtry
 }
 
 run_test_script() {
@@ -304,14 +309,14 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    TRY&&(:
-      run_test "$test_func")
-    CATCH&&{
+    try
+      run_test "$test_func"
+    catch:
       print_exception
       failed=1
       CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
-      call_teardown 'teardown_test'; }
-    ENDTRY
+      call_teardown 'teardown_test'
+    endtry
     if [ $failed -ne 0 ]; then
       failures=$(( failures + 1 ))
       if [[ $FAIL_FAST ]]; then
@@ -361,22 +366,22 @@ assert_true() {
   local what=$1
   local msg=$2
   local why="expected success but got failure in: '$what'"
-  TRY&&(:
-    eval_throw_syntax "$what" )
-  CATCH 'nonzero' && {
-    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"; }
-  ENDTRY
+  try
+    eval_throw_syntax "$what"
+  catch nonzero:
+    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
+  endtry
 }
 
 assert_false() {
   local what=$1
   tsh_assert_msg=$2
   tsh_assert_why="expected failure but got success in: '$what'"
-  TRY&&(:
-    eval_throw_syntax "$what" )
-  CATCH 'nonzero'
-  ENDTRY
-  [[ $TRY_EXIT_CODE != 0 ]] || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  try
+    eval_throw_syntax "$what"
+  catch nonzero: true
+  endtry
+  failed || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 assert_equals() {
@@ -385,11 +390,11 @@ assert_equals() {
   local msg=$3
   tsh_assert_msg=$msg
   tsh_assert_why="expected '$expected' but got '$current'"
-  TRY&&(:
-    [[ "$expected" = "$current" ]] )
-  CATCH 'nonzero' && {
-    throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
-  ENDTRY
+  try
+    [[ "$expected" = "$current" ]]
+  catch nonzero:
+    throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  endtry
 }
 
 VERSION=@VERSION@
@@ -490,16 +495,13 @@ load_config() {
 
   try_config_path() {
     CONFIG_PATH="$TEST_SCRIPT_DIR:$TESTSH_DIR:$PWD"
-    local current_IFS="$IFS"
-    IFS=":"
     for path in $CONFIG_PATH; do
-      ! [ -f "$path"/test.sh.config ] || {
-        CONFIG_FILE="$path"/test.sh.config
+      if [[ -f $path/test.sh.config ]]; then
+        CONFIG_FILE=$path/test.sh.config
         load_config_file "$CONFIG_FILE"
         break
-      }
+      fi
     done
-    IFS="$current_IFS"
   }
 
   local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP"
@@ -511,7 +513,7 @@ load_config() {
 
   # load config file if present
   [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
-  [ -n "$CONFIG_FILE" ] || try_config_path
+  [ -n "$CONFIG_FILE" ] || IFS=':' try_config_path
 
   # prioritize environment config
   for var in $config_vars; do

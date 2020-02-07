@@ -21,7 +21,9 @@ $TESTSH: eval: line : conditional binary operator expected
 EOF
 
 start_test "#98: eval syntax errors in TRY/CATCH nonzero are not caught"
-STACK_TRACE=no generate_test_fail_check 'TRY&&(:; eval_throw_syntax "[[ = b ]]");CATCH nonzero;ENDTRY' <<EOF
+STACK_TRACE=no generate_test_fail_check 'try eval_throw_syntax "[[ = b ]]"
+catch nonzero: true
+endtry' <<EOF
 $TESTSH: eval: line : conditional binary operator expected
 [test.sh] Syntax error in the expression: "[[ = b ]]"
 EOF
