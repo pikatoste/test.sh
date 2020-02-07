@@ -5,7 +5,7 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
 start_test "Regression #31: double error reporting"
 
 generate_test_fail_check 'assert_equals "$(false)" ""' <<EOF
-[test.sh] An exception occurred before entering the 'try' block
+[test.sh] An exception occurred before entering the TRY block
 [test.sh]  at TRY(test.sh:)
 [test.sh]  at assert_equals(test.sh:)
 [test.sh]  at main(the_test.sh:)
@@ -14,7 +14,7 @@ generate_test_fail_check 'assert_equals "$(false)" ""' <<EOF
 EOF
 
 generate_test_fail_check 'assert_equals "$(false)" "a"' <<EOF
-[test.sh] An exception occurred before entering the 'try' block
+[test.sh] An exception occurred before entering the TRY block
 [test.sh]  at TRY(test.sh:)
 [test.sh]  at assert_equals(test.sh:)
 [test.sh]  at main(the_test.sh:)

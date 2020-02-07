@@ -61,8 +61,8 @@ start_test "run_tests shoud invoke tests and setup methods when there are failur
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-TRY&&(block; run_tests 3>&1 )
-CATCH nonzero || print_exception
+TRY&&(:; run_tests 3>&1 )
+CATCH nonzero && print_exception
 ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 unset_funcs
