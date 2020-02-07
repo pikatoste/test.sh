@@ -17,7 +17,7 @@ start_test "Any command that fails in the body of a test function should make th
 rm -f "$TEST_TMPR"/.test_ok "$TEST_TMP"/.test_fail
 TRY&&(block
   CURRENT_TEST_NAME= run_tests "test_fail" 3>&1 )
-CATCH nonzero || print_exception
+CATCH nonzero && print_exception
 ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 [ -f "$TEST_TMP"/.test_fail ]
@@ -26,7 +26,7 @@ start_test "When FAIL_FAST is true the first test failure should interrupt the s
 rm -f "$TEST_TMP"/.test_ok "$TEST_TMP"/.test_fail
 TRY&&(block
   FAIL_FAST=1 CURRENT_TEST_NAME= run_tests "test_fail" "test_ok" 3>&1 )
-CATCH nonzero || print_exception
+CATCH nonzero && print_exception
 ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 [ ! -f "$TEST_TMP"/.test_ok ]
@@ -36,7 +36,7 @@ start_test "When FAIL_FAST is false failures should not interrupt the script but
 rm -f "$TEST_TMP"/.test_ok "$TEST_TMP"/.test_fail
 TRY&&(block
   FAIL_FAST= CURRENT_TEST_NAME= run_tests "test_fail" "test_ok" 3>&1 )
-CATCH nonzero || print_exception
+CATCH nonzero && print_exception
 ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 [ -f "$TEST_TMP"/.test_ok ]

@@ -34,11 +34,15 @@ CATCH() {
     local the_exception=$(head -1 "$EXCEPTION")
     [[ $the_exception =~ ^$exception ]] || exit $TRY_EXIT_CODE
     EXCEPTION_CLEARED=
+    set -e
+  else
+    trap - ERR
     false
   fi
 }
 
 ENDTRY() {
+  trap 'err_trap' ERR
   [[ $EXCEPTION_CLEARED ]] || rm -f "$EXCEPTION"
   EXCEPTION_CLEARED=1
   set -e
@@ -255,15 +259,13 @@ call_setup_test_suite() {
 call_teardown() {
   TRY&&(block
     call_if_exists "$1")
-  CATCH||{ block
+  CATCH&&{
     print_exception
     warn_teardown_failed "$1"; }
   ENDTRY
 }
 
 run_test_script() {
-  # commented out to supprt realpath in busybox (for bash compat test in containers)
-#  local test_script=$(pwd=$PWD; cd "$TEST_SCRIPT_DIR"; realpath --relative-to "$pwd" "$1")
   local test_script
   test_script=$(cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
@@ -312,7 +314,7 @@ run_tests() {
     local failed=0
     TRY&&(block
       run_test "$test_func")
-    CATCH||{ block
+    CATCH&&{
       print_exception
       failed=1
       CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
@@ -330,7 +332,7 @@ run_tests() {
     fi
   done
   call_teardown "teardown_test_suite"
-  [[ $failures == 0 ]]
+  [[ $failures == 0 ]] || throw 'nonzero.explicit' 'Some tests failed'
 }
 
 load_includes() {
@@ -369,7 +371,7 @@ assert_true() {
   local why="expected success but got failure in: '$what'"
   TRY&&(block
     eval_throw_syntax "$what" )
-  CATCH 'nonzero' || { block
+  CATCH 'nonzero' && {
     throw "nonzero.explicit.assert" "$(assert_msg "$msg" "$why")"; }
   ENDTRY
 }
@@ -393,7 +395,7 @@ assert_equals() {
   tsh_assert_why="expected '$expected' but got '$current'"
   TRY&&(block
     [[ "$expected" = "$current" ]] )
-  CATCH 'nonzero' || { block
+  CATCH 'nonzero' && {
     throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
   ENDTRY
 }
@@ -574,7 +576,7 @@ init_prune_path_cache() {
 }
 
 trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
-trap err_trap ERR
+trap 'err_trap' ERR
 config_defaults
 load_config
 push_err_handler "create_nonzero_implicit_exception"
