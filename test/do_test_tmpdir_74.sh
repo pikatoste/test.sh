@@ -6,4 +6,4 @@ start_test "#74: Use TMPDIR for temporary files"
 create_exception "fake" "fake"
 TMPFILE_COUNT=$(find "$TMPDIR" -type f -o -type p | wc -l)
 rm -f "$EXCEPTION"
-assert_equals 2 "$TMPFILE_COUNT" "Expected two temporary files in $TMPDIR"
+assert_equals $1 "$TMPFILE_COUNT" "Wrong count of temporary files in $TMPDIR"

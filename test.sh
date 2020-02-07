@@ -30,9 +30,9 @@ CATCH() {
   TRY_EXIT_CODE=$?
   if [[ $TRY_EXIT_CODE != 0 ]]; then
     # TODO: fatal error if no EXCEPTION
-    local exception=$1
-    local the_exception=$(head -1 "$EXCEPTION")
-    [[ $the_exception =~ ^$exception ]] || exit $TRY_EXIT_CODE
+    local exception_filter=$1
+    local texception=$(head -1 "$EXCEPTION")
+    [[ $texception =~ ^$exception_filter ]] || exit $TRY_EXIT_CODE
     EXCEPTION_CLEARED=
     set -e
   else
@@ -99,11 +99,6 @@ prune_path() {
 local_stack() {
   [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
-    # shellcheck disable=SC2155
-#    local source_basename=$(basename "${BASH_SOURCE[$i+1]}")
-#    [[ $STACK_TRACE != pruned || $source_basename != test.sh ]] || break
-#    [[ $STACK_TRACE != compact || $source_basename != test.sh ]] || continue
-    # shellcheck disable=SC2155
     prune_path "${BASH_SOURCE[$i+1]}"
     local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
     echo "$frame"
@@ -133,13 +128,13 @@ print_exception() {
 }
 
 eval_throw_syntax() {
-  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1"
+  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval 'trap - EXIT;' "$1"
 }
 
 throw_eval_syntax_error_exception() {
   print_exception
   local errmsg="Syntax error in the expression: \"$1\""
-  throw "error.eval-syntax-error" "$errmsg" 3
+  throw 'error.eval-syntax-error' "$errmsg" 3
 }
 
 create_nonzero_implicit_exception() {
@@ -150,7 +145,7 @@ create_nonzero_implicit_exception() {
     prune_path "${BASH_SOURCE[$frame_idx]}"
     local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
     ((frame_idx+=2))
-    create_exception "nonzero.implicit" "$errmsg" $frame_idx
+    create_exception 'nonzero.implicit' "$errmsg" $frame_idx
   fi
 }
 
@@ -158,7 +153,6 @@ exit_trap() {
   EXIT_CODE=${EXIT_CODE:-$?}
   print_exception
   for handler in "${EXIT_HANDLERS[@]}"; do
-    # shellcheck disable=SC2016
     eval "$handler"
   done
 }
@@ -197,7 +191,7 @@ display_last_test_result() {
 start_test() {
   [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
-  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown "teardown_test"; }
+  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
   CURRENT_TEST_NAME="$1"
   [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
@@ -252,7 +246,7 @@ error_setup_test_suite() {
 
 call_setup_test_suite() {
   push_err_handler 'error_setup_test_suite'
-  call_if_exists "setup_test_suite"
+  call_if_exists 'setup_test_suite'
   pop_err_handler
 }
 
@@ -289,12 +283,10 @@ run_test_script() {
 run_test() {
   local test_func=$1
   call_if_exists setup_test
-  teardown_test_called=
   "$test_func"
   CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
   display_test_passed
-  teardown_test_called=1
-  call_teardown "teardown_test"
+  call_teardown 'teardown_test'
 }
 
 run_tests() {
@@ -318,7 +310,7 @@ run_tests() {
       print_exception
       failed=1
       CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
-      call_teardown "teardown_test"; }
+      call_teardown 'teardown_test'; }
     ENDTRY
     if [ $failed -ne 0 ]; then
       failures=$(( failures + 1 ))
@@ -331,7 +323,7 @@ run_tests() {
       fi
     fi
   done
-  call_teardown "teardown_test_suite"
+  call_teardown 'teardown_test_suite'
   [[ $failures == 0 ]] || throw 'nonzero.explicit' 'Some tests failed'
 }
 
@@ -372,7 +364,7 @@ assert_true() {
   TRY&&(:
     eval_throw_syntax "$what" )
   CATCH 'nonzero' && {
-    throw "nonzero.explicit.assert" "$(assert_msg "$msg" "$why")"; }
+    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"; }
   ENDTRY
 }
 
@@ -384,7 +376,7 @@ assert_false() {
     eval_throw_syntax "$what" )
   CATCH 'nonzero'
   ENDTRY
-  [[ $TRY_EXIT_CODE != 0 ]] || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  [[ $TRY_EXIT_CODE != 0 ]] || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
 assert_equals() {
@@ -396,14 +388,13 @@ assert_equals() {
   TRY&&(:
     [[ "$expected" = "$current" ]] )
   CATCH 'nonzero' && {
-    throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
+    throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
   ENDTRY
 }
 
 VERSION=@VERSION@
 TEST_SCRIPT=$(readlink -f "$0")
 TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-# shellcheck disable=SC2128
 TESTSH=$(readlink -f "$BASH_SOURCE")
 TESTSH_DIR=$(dirname "$TESTSH")
 TEST_TMP=$TEST_SCRIPT_DIR/tmp
@@ -411,15 +402,10 @@ rm -rf "$TEST_TMP"
 mkdir -p "$TEST_TMP"
 
 FIRST_TEST=
-TSH_TMPDIR=$(mktemp -d -p "${TMPDIR:-/tmp}" tsh-XXXXXXXXX)
-EXCEPTION=$TSH_TMPDIR-stack
+TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
+EXCEPTION=$TSH_TMP_PFX-stack
 declare -A PRUNE_PATH_CACHE
-
-if [[ $BUSYBOX ]]; then
-  GREP="grep"
-else
-  GREP="grep --line-buffered"
-fi
+EXCEPTION_CLEARED=1
 
 set_color() {
   if [[ $COLOR = yes ]]; then
@@ -440,43 +426,37 @@ cleanup() {
 }
 
 setup_io() {
-  PIPE=$TSH_TMPDIR/pipe
-  mkfifo "$PIPE"
-  # shellcheck disable=SC2031
-  mkdir -p "$(dirname "$LOG_FILE")"
   [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
-  local redir=\>
-  [[ $LOG_MODE = overwrite ]] || redir=\>$redir
-  # TODO: --line-buffered incompatible con busybox
-  # shellcheck disable=SC2031
-  [[   $VERBOSE ]] || { $GREP -v ': pop_scope: ' <"$PIPE" | eval cat $redir"$LOG_FILE" & }
-  redir=
-  [[ $LOG_MODE = overwrite ]] || redir=-a
-  # shellcheck disable=SC2031
-  [[ ! $VERBOSE ]] || { $GREP -v ': pop_scope: ' <"$PIPE" | tee $redir "$LOG_FILE" & }
-  exec 3>&1 4>&2 >"$PIPE" 2>&1
+  mkdir -p "$(dirname "$LOG_FILE")"
+  if [[ $VERBOSE ]]; then
+    PIPE=$TSH_TMP_PFX-pipe
+    mkfifo "$PIPE"
+    local redir=
+    [[ $LOG_MODE = overwrite ]] || redir=-a
+    tee $redir <"$PIPE" "$LOG_FILE" &
+    exec 3>&1 4>&2 >"$PIPE" 2>&1
+  else
+    PIPE=
+    local redir=\>
+    [[ $LOG_MODE = overwrite ]] || redir=\>$redir
+    eval exec 3\>\&1 4\>\&2 $redir"$LOG_FILE" 2\>\&1
+  fi
 }
 
 config_defaults() {
   default_VERBOSE=
   default_DEBUG=
   default_INCLUDE_GLOB='include*.sh'
-  # shellcheck disable=SC2016
   default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
   default_FAIL_FAST=1
-  # shellcheck disable=SC2016
   default_PRUNE_PATH='$PWD/'
   default_STACK_TRACE='full'
   default_TEST_MATCH='^test_'
   default_COLOR='yes'
   # TODO: log would be better
   default_LOG_DIR_NAME='testout'
-  # shellcheck disable=SC2016
-  # shellcheck disable=SC2016
   default_LOG_DIR='$TEST_SCRIPT_DIR/$LOG_DIR_NAME'
-  # shellcheck disable=SC2016
   default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
-  # shellcheck disable=SC2016
   default_LOG_FILE='$LOG_DIR/$LOG_NAME'
   default_LOG_MODE='overwrite'
   default_SUBTEST_LOG_CONFIG='reset'
@@ -550,7 +530,6 @@ load_config() {
     local var=$1
     local val=${!var}
     shift
-    # shellcheck disable=SC2071
     for i in "$@"; do
       [[ $i != "$val" ]] || return 0
     done
@@ -575,18 +554,18 @@ init_prune_path_cache() {
   prune_path "$BASH_SOURCE"
 }
 
-trap 'EXIT_CODE=$?; rm -rf $TSH_TMPDIR; exit_trap' EXIT
+trap 'EXIT_CODE=$?; [[ -z $PIPE ]] || rm -f "$PIPE"; exit_trap' EXIT
 trap 'err_trap' ERR
 config_defaults
 load_config
-push_err_handler "create_nonzero_implicit_exception"
+push_err_handler 'create_nonzero_implicit_exception'
 setup_io
-push_exit_handler "cleanup"
-[[ -z $CONFIG_FILE ]] || log "Loaded config from $CONFIG_FILE"
+push_exit_handler 'cleanup'
+[[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
 init_prune_path_cache
 load_includes
-push_exit_handler "[[ -v MANAGED ]] || call_teardown teardown_test_suite"
-push_exit_handler "[[ -v MANAGED || -n \$teardown_test_called ]] || call_teardown teardown_test"
-push_exit_handler "[[ -v MANAGED ]] || display_last_test_result"
+push_exit_handler '[[ -v MANAGED ]] || call_teardown teardown_test_suite'
+push_exit_handler '[[ -v MANAGED || -n $teardown_test_called ]] || call_teardown teardown_test'
+push_exit_handler '[[ -v MANAGED ]] || display_last_test_result'
 
 [[ ! $DEBUG ]] || set -x
