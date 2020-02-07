@@ -17,12 +17,12 @@ set -o pipefail
 shopt -s inherit_errexit
 
 TRY() {
-  [[ ! -f $EXCEPTION ]] || { throw "error.dangling-exception" "An exception occurred before entering the 'try' block"; exit 1; }
+  [[ ! -f $EXCEPTION ]] || { throw "error.dangling-exception" "An exception occurred before entering the TRY block"; exit 1; }
   unset TRY_EXIT_CODE
   set +e
 }
 
-block() {
+:() {
   set -e
 }
 
@@ -257,7 +257,7 @@ call_setup_test_suite() {
 }
 
 call_teardown() {
-  TRY&&(block
+  TRY&&(:
     call_if_exists "$1")
   CATCH&&{
     print_exception
@@ -312,7 +312,7 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    TRY&&(block
+    TRY&&(:
       run_test "$test_func")
     CATCH&&{
       print_exception
@@ -369,7 +369,7 @@ assert_true() {
   local what=$1
   local msg=$2
   local why="expected success but got failure in: '$what'"
-  TRY&&(block
+  TRY&&(:
     eval_throw_syntax "$what" )
   CATCH 'nonzero' && {
     throw "nonzero.explicit.assert" "$(assert_msg "$msg" "$why")"; }
@@ -380,7 +380,7 @@ assert_false() {
   local what=$1
   tsh_assert_msg=$2
   tsh_assert_why="expected failure but got success in: '$what'"
-  TRY&&(block
+  TRY&&(:
     eval_throw_syntax "$what" )
   CATCH 'nonzero'
   ENDTRY
@@ -393,7 +393,7 @@ assert_equals() {
   local msg=$3
   tsh_assert_msg=$msg
   tsh_assert_why="expected '$expected' but got '$current'"
-  TRY&&(block
+  TRY&&(:
     [[ "$expected" = "$current" ]] )
   CATCH 'nonzero' && {
     throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
