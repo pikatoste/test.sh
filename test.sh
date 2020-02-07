@@ -53,12 +53,21 @@ create_exception() {
   local cause
   [[ ! -f $EXCEPTION ]] || cause=$(cat "$EXCEPTION")
   echo "$exception" >"$EXCEPTION"
-  echo "$exception_msg" >>"$EXCEPTION"
+  { echo "$exception_msg"; echo '---'; } >>"$EXCEPTION"
   local_stack $first_frame >>"$EXCEPTION"
   if [[ $cause ]]; then
     echo "Caused by:" >>"$EXCEPTION"
     echo "$cause" >>"$EXCEPTION"
   fi
+}
+
+mutate_exception() {
+  exception=$1
+  exception_msg=$2
+  echo "$exception" >"$EXCEPTION".tmp
+  { echo "$exception_msg"; tail -n +2 "$EXCEPTION"; } >>"$EXCEPTION".tmp
+  rm -f "$EXCEPTION"
+  mv "$EXCEPTION".tmp "$EXCEPTION"
 }
 
 prune_path() {
@@ -94,7 +103,10 @@ print_exception() {
   if [[ -f "$EXCEPTION" ]]; then
     local exception
     ( while read -r exception; do
-        ! read -r line || log_err "$line"
+        while read -r line; do
+          [[ $line != '---' ]] || break
+          log_err "$line"
+        done
         while read -r line; do
           if [[ $line =~ ^'Caused by' ]]; then
             log_err "$line"
