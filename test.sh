@@ -16,34 +16,41 @@ set -o errtrace
 set -o pipefail
 shopt -s inherit_errexit
 
-try() {
-  [[ ! -f $EXCEPTION ]] || throw "error.dangling-exception" "An exception occurred before entering the 'try' block"
-  get_result "$(trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1" >&2)"
+TRY() {
+  [[ ! -f $EXCEPTION ]] || { throw "error.dangling-exception" "An exception occurred before entering the 'try' block"; exit 1; }
+  unset TRY_EXIT_CODE
+  set +e
 }
 
-get_result() {
+block() {
+  set -e
+}
+
+CATCH() {
   TRY_EXIT_CODE=$?
-}
-
-catch() {
-  local err=$TRY_EXIT_CODE
-  if [[ $err != 0 && -f "$EXCEPTION" ]]; then
+  if [[ $TRY_EXIT_CODE != 0 ]]; then
+    # TODO: fatal error if no EXCEPTION
     local exception=$1
     local the_exception=$(head -1 "$EXCEPTION")
-    [[ $the_exception =~ ^$exception ]] || exit $err
+    [[ $the_exception =~ ^$exception ]] || exit $TRY_EXIT_CODE
+    EXCEPTION_CLEARED=
     false
   fi
 }
 
-# TODO: legacy, still used by tests
-try_catch_print() {
-  try "$*"
-  catch "nonzero" || print_exception
+ENDTRY() {
+  [[ $EXCEPTION_CLEARED ]] || rm -f "$EXCEPTION"
+  EXCEPTION_CLEARED=1
+  set -e
 }
 
 throw() {
   create_exception "$@"
-  false
+  exit 1
+}
+
+rethrow() {
+  exit 1
 }
 
 create_exception() {
@@ -117,15 +124,15 @@ print_exception() {
       done
     ) <"$EXCEPTION"
     rm -f "$EXCEPTION"
+    EXCEPTION_CLEARED=1
   fi
 }
 
-rethrow() {
-  false
+eval_throw_syntax() {
+  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval "trap - EXIT;" "$1"
 }
 
 throw_eval_syntax_error_exception() {
-#  ERR_CODE=$?
   print_exception
   local errmsg="Syntax error in the expression: \"$1\""
   throw "error.eval-syntax-error" "$errmsg" 3
@@ -239,14 +246,22 @@ error_setup_test_suite() {
   echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
 }
 
+# TODO: do not run in try block, to allow visible changes to variables
 call_setup_test_suite() {
-  try "call_if_exists \"setup_test_suite\""
-  catch || { error_setup_test_suite; rethrow; }
+  TRY&&(block
+    call_if_exists "setup_test_suite")
+  CATCH||{ block
+    error_setup_test_suite; rethrow; }
+  ENDTRY
 }
 
 call_teardown() {
-  try "call_if_exists \"$1\""
-  catch || { print_exception; warn_teardown_failed "$1"; }
+  TRY&&(block
+    call_if_exists "$1")
+  CATCH||{ block
+    print_exception
+    warn_teardown_failed "$1"; }
+  ENDTRY
 }
 
 run_test_script() {
@@ -298,13 +313,14 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    try "run_test \"$test_func\""
-    catch || {
+    TRY&&(block
+      run_test "$test_func")
+    CATCH||{ block
       print_exception
       failed=1
       CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
-      [[ $teardown_test_called ]] || call_teardown "teardown_test"
-    }
+      call_teardown "teardown_test"; }
+    ENDTRY
     if [ $failed -ne 0 ]; then
       failures=$(( failures + 1 ))
       if [[ $FAIL_FAST ]]; then
@@ -352,18 +368,23 @@ assert_msg() {
 
 assert_true() {
   local what=$1
-  tsh_assert_msg=$2
-  tsh_assert_why="expected success but got failure in: '$what'"
-  try "$what"
-  catch nonzero || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")" # STACK_TRACE=no
+  local msg=$2
+  local why="expected success but got failure in: '$what'"
+  TRY&&(block
+    eval_throw_syntax "$what" )
+  CATCH 'nonzero' || { block
+    throw "nonzero.explicit.assert" "$(assert_msg "$msg" "$why")"; }
+  ENDTRY
 }
 
 assert_false() {
   local what=$1
   tsh_assert_msg=$2
   tsh_assert_why="expected failure but got success in: '$what'"
-  try "$what"
-  catch nonzero || rm -f "$EXCEPTION"
+  TRY&&(block
+    eval_throw_syntax "$what" )
+  CATCH 'nonzero'
+  ENDTRY
   [[ $TRY_EXIT_CODE != 0 ]] || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
 }
 
@@ -373,8 +394,11 @@ assert_equals() {
   local msg=$3
   tsh_assert_msg=$msg
   tsh_assert_why="expected '$expected' but got '$current'"
-  try "[[ \"$(printf "%q" "$expected")\" = \"$(printf "%q" "$current")\" ]]"
-  catch nonzero || throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  TRY&&(block
+    [[ "$expected" = "$current" ]] )
+  CATCH 'nonzero' || { block
+    throw "nonzero.explicit.assert" "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"; }
+  ENDTRY
 }
 
 VERSION=@VERSION@

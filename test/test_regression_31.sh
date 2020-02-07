@@ -6,7 +6,7 @@ start_test "Regression #31: double error reporting"
 
 generate_test_fail_check 'assert_equals "$(false)" ""' <<EOF
 [test.sh] An exception occurred before entering the 'try' block
-[test.sh]  at try(test.sh:)
+[test.sh]  at TRY(test.sh:)
 [test.sh]  at assert_equals(test.sh:)
 [test.sh]  at main(the_test.sh:)
 [test.sh] Caused by:
@@ -15,7 +15,7 @@ EOF
 
 generate_test_fail_check 'assert_equals "$(false)" "a"' <<EOF
 [test.sh] An exception occurred before entering the 'try' block
-[test.sh]  at try(test.sh:)
+[test.sh]  at TRY(test.sh:)
 [test.sh]  at assert_equals(test.sh:)
 [test.sh]  at main(the_test.sh:)
 [test.sh] Caused by:

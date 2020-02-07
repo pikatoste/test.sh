@@ -61,7 +61,10 @@ start_test "run_tests shoud invoke tests and setup methods when there are failur
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-( CURRENT_TEST_NAME= try_catch_print run_tests 3>&1; [[ $TRY_EXIT_CODE != 0 ]] )
+TRY&&(block; run_tests 3>&1 )
+CATCH nonzero || print_exception
+ENDTRY
+[[ $TRY_EXIT_CODE != 0 ]]
 unset_funcs
 
 diff - "$OUTFILE" <<EOF

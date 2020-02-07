@@ -22,12 +22,16 @@ assert_equals "\""'$(ls|wc -l)' "\""'$(ls|wc -l)'
 
 start_test "#76: failures in assertion functions don't reevaluate the expression"
 rm -f "$OUT"
-try_catch_print "assert_true \"! my_func\""
+TRY&&(block; assert_true "! my_func" )
+CATCH nonzero || print_exception
+ENDTRY
 diff - "$OUT" <<EOF
 called
 EOF
 rm -f "$OUT"
-try_catch_print "assert_false my_func" || true
+TRY&&(block; assert_false 'my_func' )
+CATCH nonzero || print_exception
+ENDTRY
 diff - "$OUT" <<EOF
 called
 EOF

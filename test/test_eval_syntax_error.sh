@@ -6,7 +6,7 @@ start_test "#98: eval syntax errors in the expression of assert_true are reporte
 generate_test_fail_check 'assert_true "[[ = b ]]"' <<EOF
 $TESTSH: eval: line : conditional binary operator expected
 [test.sh] Syntax error in the expression: "[[ = b ]]"
-[test.sh]  at try(test.sh:)
+[test.sh]  at eval_throw_syntax(test.sh:)
 [test.sh]  at assert_true(test.sh:)
 [test.sh]  at main(the_test.sh:)
 EOF
@@ -15,13 +15,13 @@ start_test "#98: eval syntax errors in the expression of assert_false are report
 generate_test_fail_check 'assert_false "[[ = b ]]"' <<EOF
 $TESTSH: eval: line : conditional binary operator expected
 [test.sh] Syntax error in the expression: "[[ = b ]]"
-[test.sh]  at try(test.sh:)
+[test.sh]  at eval_throw_syntax(test.sh:)
 [test.sh]  at assert_false(test.sh:)
 [test.sh]  at main(the_test.sh:)
 EOF
 
-start_test "#98: eval syntax errors in the expression of try_catch_print are reported as such and make it fail"
-STACK_TRACE=no generate_test_fail_check 'try_catch_print "[[ = b ]]"' <<EOF
+start_test "#98: eval syntax errors in TRY/CATCH nonzero are not caught"
+STACK_TRACE=no generate_test_fail_check 'TRY&&(block; eval_throw_syntax "[[ = b ]]");CATCH nonzero||rm -f "$STACK_TRACE";ENDTRY' <<EOF
 $TESTSH: eval: line : conditional binary operator expected
 [test.sh] Syntax error in the expression: "[[ = b ]]"
 EOF
