@@ -8,7 +8,9 @@ start_test "STACK_TRACE should accept only valid values"
   for i in no full; do
     STACK_TRACE=$i load_config
   done
-  STACK_TRACE=pepe try_catch_print load_config
+  TRY&&(block; STACK_TRACE=pepe load_config )
+  CATCH nonzero || print_exception
+  ENDTRY
   [[ $TRY_EXIT_CODE != 0 ]]
 )
 

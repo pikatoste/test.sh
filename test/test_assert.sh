@@ -14,19 +14,27 @@ start_test "Assertions should not fail when the assertion succeeds"
 ( assert_equals a a )
 
 start_test "assert_true should fail when the assertion is false"
-try_catch_print "assert_true \"false\" ok"
+TRY&&(block; assert_true false "ok" )
+CATCH nonzero || print_exception
+ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "assert_false shoud fail when the assertion is true"
-try_catch_print "assert_false \"true\" nok"
+TRY&&(block; assert_false true "nok" )
+CATCH nonzero || print_exception
+ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "assert_equals shoud fail when the arguments are not equal"
-try_catch_print "assert_equals expected current wrong"
+TRY&&(block; assert_equals 'expected' 'current' 'wrong' )
+CATCH nonzero || print_exception
+ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-try_catch_print "run_test_script do_test_assert_nosubshell.sh"
+TRY&&(block; run_test_script do_test_assert_nosubshell.sh )
+CATCH nonzero || print_exception
+ENDTRY
 [[ $TRY_EXIT_CODE != 0 ]]
 
 ffail() {
