@@ -246,13 +246,10 @@ error_setup_test_suite() {
   echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
 }
 
-# TODO: do not run in try block, to allow visible changes to variables
 call_setup_test_suite() {
-  TRY&&(block
-    call_if_exists "setup_test_suite")
-  CATCH||{ block
-    error_setup_test_suite; rethrow; }
-  ENDTRY
+  push_err_handler 'error_setup_test_suite'
+  call_if_exists "setup_test_suite"
+  pop_err_handler
 }
 
 call_teardown() {
