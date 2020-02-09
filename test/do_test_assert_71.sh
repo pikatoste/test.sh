@@ -15,11 +15,11 @@ teardown_test_suite() {
   assert_true false "teardown_test_suite"
 }
 
-TRY&&(:; assert_true false "first" )
-CATCH nonzero && print_exception
-ENDTRY
-TRY&&(:; assert_true false "second" )
-CATCH nonzero && print_exception
-ENDTRY
+try assert_true false "first"
+catch: print_exception
+endtry
+try assert_true false "second"
+catch: print_exception
+endtry
 
 run_tests

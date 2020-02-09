@@ -13,25 +13,25 @@ rm -f "$OUT"
 assert_equals my_func my_func
 [[ ! -f "$OUT" ]]
 echo -n $(assert_equals zzz my_func)
-rm -f "$EXCEPTION"
+rm -f "$EXCEPTIONS_FILE"
 [[ ! -f "$OUT" ]]
 echo -n $(assert_equals my_func zzz)
-rm -f "$EXCEPTION"
+rm -f "$EXCEPTIONS_FILE"
 [[ ! -f "$OUT" ]]
 assert_equals "\""'$(ls|wc -l)' "\""'$(ls|wc -l)'
 
 start_test "#76: failures in assertion functions don't reevaluate the expression"
 rm -f "$OUT"
-TRY&&(:; assert_true "! my_func" )
-CATCH nonzero && print_exception
-ENDTRY
+try assert_true "! my_func"
+catch: print_exception
+endtry
 diff - "$OUT" <<EOF
 called
 EOF
 rm -f "$OUT"
-TRY&&(:; assert_false 'my_func' )
-CATCH nonzero && print_exception
-ENDTRY
+try assert_false 'my_func'
+catch: print_exception
+endtry
 diff - "$OUT" <<EOF
 called
 EOF

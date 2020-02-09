@@ -14,4 +14,4 @@
 [test.sh] Assertion failed: teardown_test_suite, expected success but got failure in: 'false'
 [test.sh] Caused by:
 [test.sh] Error in eval_throw_syntax(test.sh:): 'false' exited with status 1
-[test.sh] Some tests failed
+[test.sh] 1 test(s) failed
