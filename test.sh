@@ -14,7 +14,7 @@ fi
 set -o errexit -o errtrace -o pipefail
 shopt -s inherit_errexit expand_aliases
 
-alias try="_try;(set -e;trap 'err_trap' ERR;"
+alias try:="_try;(set -e;trap 'err_trap' ERR;"
 alias catch:=");_catch&&{"
 alias catch=");_catch "
 alias nonzero:="'nonzero'&&{"
@@ -297,7 +297,7 @@ call_setup_test_suite() {
 }
 
 call_teardown() {
-  try
+  try:
     call_if_exists "$1"
   catch:
     print_exception
@@ -350,7 +350,7 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    try
+    try:
       run_test "$test_func"
     catch:
       print_exception
@@ -411,7 +411,7 @@ assert_true() {
   local what=$1
   local msg=$2
   local why="expected success but got failure in: '$what'"
-  try
+  try:
     eval_throw_syntax "$what"
   catch nonzero:
     CAUSED_BY= throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
@@ -421,13 +421,14 @@ assert_true() {
 assert_false() {
   check_pending_exceptions
   local what=$1
-  tsh_assert_msg=$2
-  tsh_assert_why="expected failure but got success in: '$what'"
-  try
+  local msg=$2
+  local why="expected failure but got success in: '$what'"
+  try:
     eval_throw_syntax "$what"
   catch nonzero: true
+    # TODO: log exception with log_ok
   endtry
-  failed || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  failed || throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
 }
 
 assert_equals() {
@@ -435,9 +436,9 @@ assert_equals() {
   local expected=$1
   local current=$2
   local msg=$3
-  tsh_assert_msg=$msg
-  tsh_assert_why="expected '$expected' but got '$current'"
-  [[ "$expected" = "$current" ]] || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  local why="expected '$expected' but got '$current'"
+  [[ "$expected" = "$current" ]] ||
+    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
 }
 
 VERSION=@VERSION@
@@ -467,7 +468,7 @@ set_color() {
 }
 
 cleanup() {
-  exec 1>&- 2>&-
+  exec 1>&- 2>&- 1>&3 2>&4
   wait
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }

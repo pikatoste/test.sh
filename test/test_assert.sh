@@ -14,25 +14,25 @@ start_test "Assertions should not fail when the assertion succeeds"
 ( assert_equals a a )
 
 start_test "assert_true should fail when the assertion is false"
-try assert_true false "ok"
+try: assert_true false "ok"
 catch nonzero: print_exception
 endtry
 failed
 
 start_test "assert_false shoud fail when the assertion is true"
-try assert_false true "nok"
+try: assert_false true "nok"
 catch nonzero: print_exception
 endtry
 failed
 
 start_test "assert_equals shoud fail when the arguments are not equal"
-try assert_equals 'expected' 'current' 'wrong'
+try: assert_equals 'expected' 'current' 'wrong'
 catch nonzero: print_exception
 endtry
 failed
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-try run_test_script do_test_assert_nosubshell.sh
+try: run_test_script do_test_assert_nosubshell.sh
 catch nonzero: print_exception
 endtry
 failed

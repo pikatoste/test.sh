@@ -15,10 +15,10 @@ teardown_test_suite() {
   assert_true false "teardown_test_suite"
 }
 
-try assert_true false "first"
+try: assert_true false "first"
 catch: print_exception
 endtry
-try assert_true false "second"
+try: assert_true false "second"
 catch: print_exception
 endtry
 

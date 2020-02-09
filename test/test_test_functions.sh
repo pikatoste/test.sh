@@ -61,7 +61,7 @@ start_test "run_tests shoud invoke tests and setup methods when there are failur
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-try run_tests 3>&1
+try: run_tests 3>&1
 catch: print_exception
 endtry
 failed

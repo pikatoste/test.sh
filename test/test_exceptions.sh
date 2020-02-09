@@ -4,7 +4,7 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 start_test "Exceptions should be caugh in the catch block"
   CAUGHT=
-  try
+  try:
     false
   catch:
     CAUGHT=1
@@ -12,10 +12,10 @@ start_test "Exceptions should be caugh in the catch block"
   assert_equals 1 "$CAUGHT" "The catch block has not been executed"
 
 start_test "Exceptions in the catch block should not overwrite the current exception or TRY_EXIT_CODE"
-  try
+  try:
     false
   catch:
-    try
+    try:
       true
     catch: true
     endtry
@@ -24,14 +24,14 @@ start_test "Exceptions in the catch block should not overwrite the current excep
   assert_equals 1 "$TRY_EXIT_CODE" "The exit code of the outer try/catch block is wrong"
 
 start_test "Exceptions thrown from a catch block should ignore the current exception"
-  STACK_TRACE=no generate_test_fail_check 'try false
+  STACK_TRACE=no generate_test_fail_check 'try: false
   catch: false
   endtry' <<EOF
 [test.sh] Error in main(the_test.sh:): 'false' exited with status 1
 EOF
 
 start_test "Try blocks that exit but not throw generate exception"
-  try
+  try:
     exit 1
   catch: print_exception
   endtry

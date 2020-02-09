@@ -8,7 +8,7 @@ start_test "STACK_TRACE should accept only valid values"
   for i in no full; do
     STACK_TRACE=$i load_config
   done
-  try STACK_TRACE=pepe load_config
+  try: STACK_TRACE=pepe load_config
   catch nonzero: print_exception
   endtry
   failed
