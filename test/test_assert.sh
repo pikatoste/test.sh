@@ -8,31 +8,31 @@ fail_validation() {
 }
 
 start_test "Assertions should not fail when the assertion succeeds"
-( assert_true "true" )
-( assert_false "false" )
-( assert_false "fail_validation" )
+( assert_success "true" )
+( assert_failure "false" )
+( assert_failure "fail_validation" )
 ( assert_equals a a )
 
-start_test "assert_true should fail when the assertion is false"
-try assert_true false "ok"
+start_test "assert_success should fail when the assertion is false"
+try: assert_success false "ok"
 catch nonzero: print_exception
 endtry
 failed
 
-start_test "assert_false shoud fail when the assertion is true"
-try assert_false true "nok"
+start_test "assert_failure should fail when the assertion is true"
+try: assert_failure true "nok"
 catch nonzero: print_exception
 endtry
 failed
 
-start_test "assert_equals shoud fail when the arguments are not equal"
-try assert_equals 'expected' 'current' 'wrong'
+start_test "assert_equals should fail when the arguments are not equal"
+try: assert_equals 'expected' 'current' 'wrong'
 catch nonzero: print_exception
 endtry
 failed
 
 start_test "Failed assertions should interrupt the test when FAIL_FAST is true"
-try run_test_script do_test_assert_nosubshell.sh
+try: run_test_script do_test_assert_nosubshell.sh
 catch nonzero: print_exception
 endtry
 failed
@@ -41,13 +41,17 @@ ffail() {
   false
   echo "What?!" >"$OUT"
 }
-start_test "#89: assert_false should execute the expression in errexit context"
+start_test "#89: assert_failure should execute the expression in errexit context"
 OUT="$TEST_SCRIPT_DIR"/.test_assert.out
 rm -f "$OUT"
-assert_false ffail
-assert_false "[[ -f \"$OUT\" ]]" "The file should not have been created"
+assert_failure ffail
+assert_failure "[[ -f \"$OUT\" ]]" "The file should not have been created"
 rm -f "$OUT"
 
-start_test "#98: non-zero exit code in the expression of assert_false does not print an assertion failure nor an error report"
-generate_test_success_check 'assert_false "[[ a = b ]]"' <<EOF
+start_test "#98: non-zero exit code in the expression of assert_failure prints the failure but does not print an assertion failure"
+generate_test_success_check 'assert_failure "[[ a = b ]]"' <<EOF
+[test.sh] Expected failure:
+[test.sh] Error in eval_throw_syntax(test.sh:): '[[ a = b ]]' exited with status 1
+[test.sh]  at assert_failure(test.sh:)
+[test.sh]  at main(the_test.sh:)
 EOF

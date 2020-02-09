@@ -24,3 +24,11 @@ teardown_test
 teardown_test_suite
 EOF
 rm "$OUTFILE"
+
+start_test "teardown_test_suite should not get called if setup_test_suite has not been called"
+! run_test_script do_test_inline.sh fail || false
+[[ ! -f $OUTFILE ]]
+
+start_test "teardown_test should not get called if no test has started"
+! run_test_script do_test_inline.sh fail || false
+[[ ! -f $OUTFILE ]]

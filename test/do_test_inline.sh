@@ -17,6 +17,8 @@ teardown_test() {
   echo teardown_test >>"$OUTFILE"
 }
 
+[ "$1" != fail ] || false
+
 start_test "do_test_inline ok"
 
 start_test "do_test_inline fail"

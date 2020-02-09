@@ -14,15 +14,15 @@ fi
 set -o errexit -o errtrace -o pipefail
 shopt -s inherit_errexit expand_aliases
 
-alias try="_try;(set -e;trap 'err_trap' ERR;"
+alias try:="_try;(set -e;trap 'err_trap' ERR;"
 alias catch:=");_catch&&{"
 alias catch=");_catch "
 alias nonzero:="'nonzero'&&{"
 alias endtry="};_endtry"
 
 check_pending_exceptions() {
-  [[ ! -f $EXCEPTIONS_FILE ]] || {
-    throw "error.dangling-exception" "Pending exception, probably a masked error in command substitution"; }
+  [[ ! -f $EXCEPTIONS_FILE ]] ||
+    throw 'error.dangling-exception' 'Pending exception, probably a masked error in command substitution'
 }
 
 _try() {
@@ -152,27 +152,24 @@ local_stack() {
 }
 
 handle_exception() {
-  if [ -f "$EXCEPTIONS_FILE" ]; then
-    EXCEPTION=$(cat "$EXCEPTIONS_FILE")
-    rm -f "$EXCEPTIONS_FILE"
-    return 0
-  fi
-  false
+  EXCEPTION=$(cat "$EXCEPTIONS_FILE")
+  rm -f "$EXCEPTIONS_FILE"
 }
 
 print_exception() {
+  local log_function=${1:-log_err}
   local exception_type
   ( while read -r exception_type; do
       while read -r line; do
         [[ $line != '---' ]] || break
-        log_err "$line"
+        $log_function "$line"
       done
       while read -r line; do
         if [[ $line =~ ^'chained:' ]]; then
-          log_err "${line#chained:}"
+          $log_function "${line#chained:}"
           break
         fi
-        log_err " at $line"
+        $log_function " at $line"
       done
     done
   ) <<<"$EXCEPTION"
@@ -188,15 +185,14 @@ throw_eval_syntax_error_exception() {
 }
 
 unhandled_exception() {
-  if handle_exception; then
-    print_exception
-    EXCEPTION=
-  fi
+  handle_exception
+  print_exception
+  EXCEPTION=
 }
 
 exit_trap() {
   EXIT_CODE=$?
-  unhandled_exception
+  [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
   [[ -z $PIPE ]] || rm -f "$PIPE"
   for handler in "${EXIT_HANDLERS[@]}"; do
     eval "$handler"
@@ -239,9 +235,9 @@ start_test() {
   [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
   [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
   CURRENT_TEST_NAME="$1"
+  unset FIRST_TEST
   [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
-  unset FIRST_TEST
 }
 
 display_test_passed() {
@@ -291,13 +287,14 @@ error_setup_test_suite() {
 }
 
 call_setup_test_suite() {
+  setup_test_suite_called=1
   push_err_handler 'error_setup_test_suite'
   call_if_exists 'setup_test_suite'
   pop_err_handler
 }
 
 call_teardown() {
-  try
+  try:
     call_if_exists "$1"
   catch:
     print_exception
@@ -350,7 +347,7 @@ run_tests() {
     local test_func=$1
     shift
     local failed=0
-    try
+    try:
       run_test "$test_func"
     catch:
       print_exception
@@ -406,28 +403,30 @@ assert_msg() {
   echo "Assertion failed: ${msg:+$msg, }$why"
 }
 
-assert_true() {
+assert_success() {
   check_pending_exceptions
   local what=$1
   local msg=$2
   local why="expected success but got failure in: '$what'"
-  try
+  try:
     eval_throw_syntax "$what"
   catch nonzero:
     CAUSED_BY= throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
   endtry
 }
 
-assert_false() {
+assert_failure() {
   check_pending_exceptions
   local what=$1
-  tsh_assert_msg=$2
-  tsh_assert_why="expected failure but got success in: '$what'"
-  try
+  local msg=$2
+  local why="expected failure but got success in: '$what'"
+  try:
     eval_throw_syntax "$what"
   catch nonzero: true
+    log_ok "Expected failure:"
+    print_exception log_ok
   endtry
-  failed || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  failed || throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
 }
 
 assert_equals() {
@@ -435,9 +434,9 @@ assert_equals() {
   local expected=$1
   local current=$2
   local msg=$3
-  tsh_assert_msg=$msg
-  tsh_assert_why="expected '$expected' but got '$current'"
-  [[ "$expected" = "$current" ]] || throw 'nonzero.explicit.assert' "$(assert_msg "$tsh_assert_msg" "$tsh_assert_why")"
+  local why="expected '$expected' but got '$current'"
+  [[ "$expected" = "$current" ]] ||
+    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
 }
 
 VERSION=@VERSION@
@@ -467,7 +466,7 @@ set_color() {
 }
 
 cleanup() {
-  exec 1>&- 2>&-
+  exec 1>&- 2>&- 1>&3 2>&4
   wait
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
@@ -608,10 +607,8 @@ push_exit_handler 'cleanup'
 [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
 init_prune_path_cache
 load_includes
-# TODO: inline mode can call teardown_test_suite when setup has not been called
-push_exit_handler '[[ -v MANAGED ]] || call_teardown teardown_test_suite'
-# TODO: inline mode can call teardown_test when setup has not been called
-push_exit_handler '[[ -v MANAGED || -n $teardown_test_called ]] || call_teardown teardown_test'
+push_exit_handler '[[ -v MANAGED || -z $setup_test_suite_called ]] || call_teardown teardown_test_suite'
+push_exit_handler '[[ -v MANAGED || -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test'
 push_exit_handler '[[ -v MANAGED ]] || display_last_test_result'
 
 [[ ! $DEBUG ]] || set -x

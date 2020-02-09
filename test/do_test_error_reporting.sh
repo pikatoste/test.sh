@@ -25,7 +25,7 @@ teardown_test_suite() {
 }
 
 func_assert() {
-  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || assert_true false
+  [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || assert_success false
   true
 }
 
