@@ -25,7 +25,7 @@ teardown_test_suite
 EOF
 rm "$OUTFILE2"
 
-start_test "A failure in teardown_test_suite should terminate the test with failure"
+start_test "A failure in teardown_test_suite should not terminate the test with failure"
 run_test_script do_test_teardown.sh teardown_test_suite
 OUTFILE="$LOG_DIR"/do_test_teardown.sh.out
 OUTFILE2="$TEST_SCRIPT_DIR"/.do_test_teardown.out

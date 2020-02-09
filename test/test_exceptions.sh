@@ -35,3 +35,43 @@ start_test "Try blocks that exit but not throw generate exception"
     exit 1
   catch: print_exception
   endtry
+
+start_test "Nested try/catch blocks do not repeat exceptions if rethrown"
+  try:
+    try:
+      false
+    catch: rethrow
+    endtry
+  catch:
+    print_exception
+    assert_equals 1 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+  endtry
+
+start_test "Nested try/catch blocks do not repeat exceptions if uncaught"
+  try:
+    try:
+      throw 'error' "Error"
+    catch nonzero: rethrow
+    endtry
+  catch:
+    print_exception
+    assert_equals 1 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+  endtry
+
+start_test "Pending exceptions are not lost"
+  try:
+    echo -n $(false) $(false)
+    false
+  catch:
+    print_exception
+    assert_equals 3 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+  endtry
+
+
+start_test "Exceptions in a subshell environment duplicate the exception (undesired feature)"
+  try:
+    $(false)
+  catch:
+    print_exception
+    assert_equals 2 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+  endtry

@@ -47,7 +47,7 @@ grep "Error in setup_test(do_test_error_reporting.sh:33): 'false' exited with st
 grep "Error in setup_test(do_test_error_reporting.sh:33): 'false' exited with status 1" "$OUT"
 [[ $(grep "Error in setup_test(do_test_error_reporting.sh:33): '.*' exited with status 1" "$OUT" | wc -l) = 1 ]]
 
-start_test "Teardown semantics should be enforced when both teardown_test and teardon_test_suite fail"
+start_test "Teardown semantics should be enforced when both teardown_test and teardown_test_suite fail"
 INLINE=     run_test_script do_test_error_reporting.sh [teardown_test][teardown_test_suite]
 # aparente error en bash: el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'
 grep "Error in teardown_test(do_test_error_reporting.sh:18): '.*' exited with status 1" "$OUT"
@@ -59,7 +59,7 @@ grep "Error in teardown_test(do_test_error_reporting.sh:18): '.*' exited with st
 grep "Error in teardown_test_suite(do_test_error_reporting.sh:23): '.*' exited with status 1" "$OUT"
 [[ $(grep "Error in teardown_test(do_test_error_reporting.sh:18): '.*' exited with status 1" "$OUT" | wc -l) = 2 ]]
 
-start_test "Teardown semantics should be enforced when the test, teardown_test and teardon_test_suite fail"
+start_test "Teardown semantics should be enforced when the test, teardown_test and teardown_test_suite fail"
 ! INLINE=     run_test_script do_test_error_reporting.sh [test_01][teardown_test][teardown_test_suite] || false
 grep "Error in test_01(do_test_error_reporting.sh:13): 'false' exited with status 1" "$OUT"
 # aparente error en bash: el comando reportado pasa a ser '[[ $FAIL_FUNC != $FUNCNAME ]]' en lugar de 'false'

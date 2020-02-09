@@ -26,7 +26,7 @@ From sources:
     make
     ```
 
-2. Copy `build/test.sh` to your project or put or to a central location, such as /opt/test.sh/test.sh.
+2. Copy `build/test.sh` to your project or to a central location, such as /opt/test.sh/test.sh.
 
 ## Usage
 

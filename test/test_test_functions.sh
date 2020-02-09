@@ -39,7 +39,7 @@ test_02() {
   echo test_02 >>"$OUTFILE"
 }
 
-start_test "run_tests shoud invoke tests and setup methods when there are no failures"
+start_test "run_tests should invoke tests and setup methods when there are no failures"
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
 define_funcs
@@ -57,7 +57,7 @@ teardown_test
 teardown_test_suite
 EOF
 
-start_test "run_tests shoud invoke tests and setup methods when there are failures"
+start_test "run_tests should invoke tests and setup methods when there are failures"
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
