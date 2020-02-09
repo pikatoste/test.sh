@@ -56,7 +56,7 @@ _catch() {
   if [[ $TRY_EXIT_CODE != 0 ]]; then
     local exception_filter=$1
     local exception_type=$(head -1 "$EXCEPTIONS_FILE")
-    [[ $exception_type =~ ^$exception_filter ]] || exit $TRY_EXIT_CODE
+    [[ $exception_type =~ ^$exception_filter ]] || exit "$TRY_EXIT_CODE"
     handle_exception
     set -e
     trap 'err_trap' ERR
@@ -92,7 +92,6 @@ create_exception() {
   local exception_msg=$2
   local first_frame=${3:-2}
 
-  # TODO: save exceptions reversed so that they can be appended to the current file
   local uncaught_exceptions
   [[ ! -f $EXCEPTIONS_FILE ]] || uncaught_exceptions=$(cat "$EXCEPTIONS_FILE")
   echo "$exception_type" >"$EXCEPTIONS_FILE"
@@ -146,8 +145,7 @@ local_stack() {
   [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
   do
     prune_path "${BASH_SOURCE[$i+1]}"
-    local frame="${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
-    echo "$frame"
+    echo "${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
   done
 }
 
@@ -159,7 +157,7 @@ handle_exception() {
 print_exception() {
   local log_function=${1:-log_err}
   local exception_type
-  ( while read -r exception_type; do
+  while read -r exception_type; do
       while read -r line; do
         [[ $line != '---' ]] || break
         $log_function "$line"
@@ -171,8 +169,7 @@ print_exception() {
         fi
         $log_function " at $line"
       done
-    done
-  ) <<<"$EXCEPTION"
+    done <<<"$EXCEPTION"
 }
 
 eval_throw_syntax() {
@@ -422,9 +419,9 @@ assert_failure() {
   local why="expected failure but got success in: '$what'"
   try:
     eval_throw_syntax "$what"
-  catch nonzero: true
-    log_ok "Expected failure:"
-    print_exception log_ok
+  catch nonzero:
+    log "Expected failure:"
+    print_exception log
   endtry
   failed || throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
 }
@@ -466,7 +463,7 @@ set_color() {
 }
 
 cleanup() {
-  exec 1>&- 2>&- 1>&3 2>&4
+  exec 1>&- 2>&-
   wait
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
