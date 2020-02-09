@@ -13,10 +13,10 @@ rm -f "$OUT"
 assert_equals my_func my_func
 [[ ! -f "$OUT" ]]
 echo -n $(assert_equals zzz my_func)
-rm -f "$EXCEPTION"
+rm -f "$EXCEPTIONS_FILE"
 [[ ! -f "$OUT" ]]
 echo -n $(assert_equals my_func zzz)
-rm -f "$EXCEPTION"
+rm -f "$EXCEPTIONS_FILE"
 [[ ! -f "$OUT" ]]
 assert_equals "\""'$(ls|wc -l)' "\""'$(ls|wc -l)'
 
