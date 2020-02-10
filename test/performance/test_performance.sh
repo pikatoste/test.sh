@@ -2,7 +2,7 @@
 STACK_TRACE=full
 source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
-NUM_RUNS=100
+NUM_RUNS=${NUM_RUNS:-100}
 
 start_test "Performance of inline test"
 time for (( i=0; i<NUM_RUNS; i++)); do "$TEST_SCRIPT_DIR"/test_inline.sh >/dev/null 2>&1; done;
