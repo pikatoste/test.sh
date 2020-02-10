@@ -14,41 +14,46 @@ fi
 set -o errexit -o errtrace -o pipefail
 shopt -s inherit_errexit expand_aliases
 
+alias @test:='define_test'
+alias @body:='validate@body'
+alias @skip='SKIP=1 '
+alias @setup_fixture:='setup_test_suite()'
+alias @teardown_fixture:='teardown_test_suite()'
+alias @setup:='setup_test()'
+alias @teardown:='teardown_test()'
+declare -A testdescs
+declare -A testskip
+TEST_NUM=1
+
+define_test() {
+  testfunc=test_$(printf "%02d" "$TEST_NUM")
+  testfuncs[$TEST_NUM]=$testfunc
+  testskip[$testfunc]=$SKIP
+  testdescs[$testfunc]=${1:-$testfunc}
+  eval "alias @body:='validate@body; $testfunc()'"
+  ((TEST_NUM++))
+}
+
+validate@body() {
+  [[ -v testfunc ]] || echo "Misplaced @body tag"
+  unset testfunc
+}
+
+@run_tests() {
+  _run_tests "${testfuncs[@]}"
+}
+
 alias try:="_try;(set -e;trap 'err_trap' ERR;"
 alias catch:=");_catch&&{"
 alias catch=");_catch "
 alias nonzero:="'nonzero'&&{"
 alias endtry="};_endtry"
 
-check_pending_exceptions() {
-  [[ ! -f $EXCEPTIONS_FILE ]] ||
-    throw 'error.dangling-exception' 'Pending exception, probably a masked error in command substitution'
-}
-
 _try() {
   push_caught_exception
   set +e
   # in case the try block executes exit instead of throw
   trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_nonzero_implicit_exception 1' ERR
-}
-
-push_try_exit_code() {
-  TRY_EXIT_CODE=$?
-  TRY_EXIT_CODES=("$TRY_EXIT_CODE" "${TRY_EXIT_CODES[@]}")
-}
-
-pop_try_exit_code() {
-  TRY_EXIT_CODE=$TRY_EXIT_CODES
-  TRY_EXIT_CODES=("${TRY_EXIT_CODES[@]:1}")
-}
-
-push_caught_exception() {
-  CAUGHT_EXCEPTIONS=("$EXCEPTION" "${CAUGHT_EXCEPTIONS[@]}")
-}
-
-pop_caught_exception() {
-  EXCEPTION=$CAUGHT_EXCEPTIONS
-  CAUGHT_EXCEPTIONS=("${CAUGHT_EXCEPTIONS[@]:1}")
 }
 
 _catch() {
@@ -71,6 +76,30 @@ _endtry() {
   pop_try_exit_code
   set -e
   trap 'err_trap' ERR
+}
+
+check_pending_exceptions() {
+  [[ ! -f $EXCEPTIONS_FILE ]] ||
+    throw 'error.dangling-exception' 'Pending exception, probably a masked error in command substitution'
+}
+
+push_try_exit_code() {
+  TRY_EXIT_CODE=$?
+  TRY_EXIT_CODES=("$TRY_EXIT_CODE" "${TRY_EXIT_CODES[@]}")
+}
+
+pop_try_exit_code() {
+  TRY_EXIT_CODE=$TRY_EXIT_CODES
+  TRY_EXIT_CODES=("${TRY_EXIT_CODES[@]:1}")
+}
+
+push_caught_exception() {
+  CAUGHT_EXCEPTIONS=("$EXCEPTION" "${CAUGHT_EXCEPTIONS[@]}")
+}
+
+pop_caught_exception() {
+  EXCEPTION=$CAUGHT_EXCEPTIONS
+  CAUGHT_EXCEPTIONS=("${CAUGHT_EXCEPTIONS[@]:1}")
 }
 
 failed() {
@@ -228,12 +257,16 @@ display_last_test_result() {
 }
 
 start_test() {
-  [[ -v MANAGED || ! -v FIRST_TEST ]] || call_setup_test_suite
-  [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
-  [[ -v MANAGED || -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
+  if [[ ! -v MANAGED ]]; then
+    [[ ! -v FIRST_TEST ]] || call_setup_test_suite
+    [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
+    [[ -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
+  fi
   CURRENT_TEST_NAME="$1"
-  unset FIRST_TEST
-  [[ -v MANAGED ]] || { teardown_test_called=; call_if_exists setup_test; }
+  if [[ ! -v MANAGED ]]; then
+    unset FIRST_TEST
+    teardown_test_called=; call_if_exists setup_test
+  fi
   [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
 }
 
@@ -320,17 +353,8 @@ run_test_script() {
   "$test_script" "$@"
 }
 
-run_test() {
-  local test_func=$1
-  call_if_exists setup_test
-  "$test_func"
-  CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
-  display_test_passed
-  call_teardown 'teardown_test'
-}
-
+# TODO: deprecated
 run_tests() {
-  MANAGED=
   discover_tests() {
     declare -F | cut -d \  -f 3 | grep "$TEST_MATCH" || true
   }
@@ -338,25 +362,38 @@ run_tests() {
   # shellcheck disable=SC2086
   # shellcheck disable=SC2155
   [ $# -gt 0 ] || { local discovered=$(discover_tests); [ -z "$discovered" ] || set $discovered; }
+  _run_tests "$@"
+}
+
+_run_tests() {
+  #[[ $# -gt 0 ]] || return 0
+  MANAGED=
   local failures=0
   call_setup_test_suite
   while [ $# -gt 0 ]; do
     local test_func=$1
     shift
-    local failed=0
+    if [[ ${testskip[$test_func]} ]]; then
+      display_test_skipped "${testdescs[$test_func]}"
+      continue
+    fi
+    [[ ! ${testdescs[$test_func]} ]] || start_test "${testdescs[$test_func]}"
+    CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
     try:
-      run_test "$test_func"
+      call_if_exists setup_test
+      "$test_func"
+      display_test_passed
+      call_teardown 'teardown_test'
     catch:
       print_exception
-      failed=1
-      CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}; display_test_failed;
+      display_test_failed
       call_teardown 'teardown_test'
     endtry
-    if [ $failed -ne 0 ]; then
+    if failed; then
       failures=$(( failures + 1 ))
       if [[ $FAIL_FAST ]]; then
         while [ $# -gt 0 ]; do
-          display_test_skipped "$1"
+          display_test_skipped "${testdescs[$1]:-$1}"
           shift
         done
         break
@@ -366,7 +403,7 @@ run_tests() {
   call_teardown 'teardown_test_suite'
   if [[ $failures != 0 ]]; then
     log_err "$failures test(s) failed"
-    exit 5
+    exit 1
   fi
 }
 
