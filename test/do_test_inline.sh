@@ -1,19 +1,19 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-setup_test_suite() {
+@setup_fixture: {
   echo setup_test_suite >>"$OUTFILE"
 }
 
-teardown_test_suite() {
+@teardown_fixture: {
   echo teardown_test_suite >>"$OUTFILE"
 }
 
-setup_test() {
+@setup: {
   echo setup_test >>"$OUTFILE"
 }
 
-teardown_test() {
+@teardown: {
   echo teardown_test >>"$OUTFILE"
 }
 

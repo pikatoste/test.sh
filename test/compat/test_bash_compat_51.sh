@@ -6,12 +6,12 @@ build_docker_image() {
   docker build -t test.sh:$bash_version --rm "$TEST_SCRIPT_DIR"
 }
 
-setup_test() {
+@setup: {
   # build docker image if not already built
   docker image ls test.sh:$bash_version 2>/dev/null | grep -q $bash_version || build_docker_image $bash_version
 }
 
-teardown_test() {
+@teardown: {
   docker container ls -a | grep test.sh | cut -d \  -f 1 | xargs docker container rm 2>/dev/null || true
 }
 

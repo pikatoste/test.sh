@@ -1,20 +1,21 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-teardown_test_suite() {
+@teardown_fixture: {
   echo teardown_test_suite
   [[ $command != teardown_test_suite ]] || false
 }
 
-teardown_test() {
+@teardown: {
   echo teardown_test
   [[ $command != teardown_test ]] || false
 }
 
-test_01() {
+@test:
+@body: {
   echo test_01
   true
 }
 
 command=$1
-run_tests
+@run_tests

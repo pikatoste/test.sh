@@ -8,7 +8,7 @@ echo "regression #33"
 EOF
 cat >"$TEST_SCRIPT_DIR"/test-regression-33.sh <<EOF
 source test.sh
-run_tests
+@run_tests
 EOF
 chmod a+x "$TEST_SCRIPT_DIR"/test-regression-33.sh
 cp "$TESTSH" "$TEST_SCRIPT_DIR"

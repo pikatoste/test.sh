@@ -2,14 +2,14 @@
 
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-setup_test() {
+@setup: {
   unset -f include_test1
   unset -f include_test2
   cp "$TEST_SCRIPT_DIR"/files/_include_test1.sh "$TESTSH_DIR"/${SETUP_PREFIX}include_test.sh
   cp "$TEST_SCRIPT_DIR"/files/_include_test2.sh "$TEST_SCRIPT_DIR"/${SETUP_PREFIX}include_test.sh
 }
 
-teardown_test() {
+@teardown: {
   rm "$TESTSH_DIR"/${TEARDOWN_PREFIX}include_test.sh
   rm "$TEST_SCRIPT_DIR"/${TEARDOWN_PREFIX}include_test.sh
   unset include_test1

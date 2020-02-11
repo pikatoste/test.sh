@@ -1,18 +1,19 @@
 #!/bin/bash
-teardown_test_suite() {
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
+@teardown_fixture: {
   false
   echo "ERROR: never reached"
 }
 
-teardown_test() {
+@teardown: {
   false
   echo "ERROR: never reached"
 }
 
-test_01() {
+@test:
+@body: {
   true
 }
 
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
-
-run_tests
+@run_tests

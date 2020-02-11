@@ -11,8 +11,9 @@ func2() {
   false
 }
 
-test_01() {
+@test:
+@body: {
   func1
 }
 
-run_tests
+@run_tests
