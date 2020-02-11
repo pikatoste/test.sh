@@ -4,7 +4,6 @@
 #
 # See https://github.com/pikatoste/test.sh/
 #
-# shellcheck disable=SC2128
 if [ "$0" = "${BASH_SOURCE}" ]; then
   echo "This is test.sh version @VERSION@"
   echo "See https://github.com/pikatoste/test.sh"
@@ -21,8 +20,8 @@ alias @setup_fixture:='setup_test_suite()'
 alias @teardown_fixture:='teardown_test_suite()'
 alias @setup:='setup_test()'
 alias @teardown:='teardown_test()'
-declare -A testdescs
-declare -A testskip
+alias @run_tests='run_tests'
+declare -A testdescs testskip
 TEST_NUM=1
 
 define_test() {
@@ -39,22 +38,28 @@ validate@body() {
   unset testfunc
 }
 
-@run_tests() {
-  run_tests "${testfuncs[@]}"
-}
-
-alias try:="_try;(set -e;trap 'err_trap' ERR;trap '[ \$? -ne 0 ] || check_pending_exceptions' EXIT;"
+alias try:="_try;(_try_prolog;"
 alias nonzero:="'nonzero'&&{"
-alias catch:=");_catch&&{"
-alias catch=");_catch "
+alias catch:="_try_epilog);_catch&&{"
+alias catch="_try_epilog);_catch "
 alias success:="}; _success&&{"
 alias endtry="};_endtry"
+alias chain:='CAUSED_BY= '
 
 _try() {
   push_caught_exception
   set +e
   # in case the try block executes exit instead of throw
   trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_nonzero_implicit_exception 1' ERR
+}
+
+_try_prolog() {
+  set -e
+  trap 'err_trap' ERR
+}
+
+_try_epilog() {
+  check_pending_exceptions
 }
 
 _catch() {
@@ -256,29 +261,32 @@ display_last_test_result() {
 }
 
 start_test() {
-  if [[ ! -v MANAGED ]]; then
-    # TODO: check pending exceptions after the last inline test
-    check_pending_exceptions
-    [[ ! -v FIRST_TEST ]] || call_setup_test_suite
-    [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
-    [[ -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
+  [[ ! -v MANAGED ]] || return
+  # TODO: check pending exceptions after the last inline test
+  check_pending_exceptions
+  if [[ -v FIRST_TEST ]]; then
+    setup_test_suite_called=1
+    call_setup_test_suite
+    unset FIRST_TEST
+  else
+    display_test_passed
+    unset CURRENT_TEST_NAME
+    teardown_test_called=1
+    call_teardown 'teardown_test'
   fi
   CURRENT_TEST_NAME="$1"
-  if [[ ! -v MANAGED ]]; then
-    unset FIRST_TEST
-    teardown_test_called=; call_if_exists setup_test
-  fi
-  [ -z "$CURRENT_TEST_NAME" ] || log "Start test: $CURRENT_TEST_NAME"
+  teardown_test_called=; call_if_exists setup_test
+  log "Start test: $CURRENT_TEST_NAME"
 }
 
 display_test_passed() {
-  [ -z "$CURRENT_TEST_NAME" ] || { log_ok "PASSED: ${CURRENT_TEST_NAME}"; echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3; }
-  unset CURRENT_TEST_NAME
+  log_ok "PASSED: ${CURRENT_TEST_NAME}"
+  echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_failed() {
-  [ -z "$CURRENT_TEST_NAME" ] || { log_err "FAILED: ${CURRENT_TEST_NAME}"; echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3; }
-  unset CURRENT_TEST_NAME
+  log_err "FAILED: ${CURRENT_TEST_NAME}"
+  echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_skipped() {
@@ -313,15 +321,14 @@ call_if_exists() {
   ! declare -f "$1" >/dev/null || $1
 }
 
-error_setup_test_suite() {
-  echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
-}
-
 call_setup_test_suite() {
-  setup_test_suite_called=1
-  push_err_handler 'error_setup_test_suite'
-  call_if_exists 'setup_test_suite'
-  pop_err_handler
+  declare -f 'setup_test_suite' >/dev/null || return 0
+  try:
+    setup_test_suite
+  catch:
+    echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
+    rethrow
+  endtry
 }
 
 call_teardown() {
@@ -337,19 +344,6 @@ run_test_script() {
   local test_script
   test_script=$(cd "$TEST_SCRIPT_DIR"; realpath "$1")
   shift
-#  (
-#    # TODO: give meaning to SUBSHELL_LOG_CONFIG and implement it
-##    # restore log-related config vars to initial values
-##    if [[ $SUBTEST_LOG_CONFIG = reset ]]; then
-##      for var in LOG_DIR_NAME LOG_DIR LOG_NAME; do
-##        while [[ -v $var ]]; do unset $var; done
-##        restore_variable $var
-##      done
-##      # shellcheck disable=SC2030
-##      while [[ -v LOG_FILE ]]; do unset LOG_FILE; done
-##    fi
-#
-#    BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST= "$test_script" "$@" )
 #  BASH_ENV=<(declare -p PRUNE_PATH_CACHE) SUBTEST='' "$test_script" "$@"
   "$test_script" "$@"
 }
@@ -359,11 +353,8 @@ run_tests() {
   local failures=0
   local test_func
   call_setup_test_suite
-  while [ $# -gt 0 ]; do
-    test_func=$1
-    shift
-
-    if [[ ${testskip[$test_func]} ]]; then
+  for test_func in "${testfuncs[@]}"; do
+    if [[ $failures > 0 && $FAIL_FAST || ${testskip[$test_func]} ]]; then
       display_test_skipped "${testdescs[$test_func]}"
       continue
     fi
@@ -378,16 +369,10 @@ run_tests() {
       display_test_failed
       call_teardown 'teardown_test'
       failures=$(( failures + 1 ))
-      [[ ! $FAIL_FAST ]] || break
     success:
       display_test_passed
       call_teardown 'teardown_test'
     endtry
-  done
-
-  while [ $# -gt 0 ]; do
-    display_test_skipped "${testdescs[$1]}"
-    shift
   done
 
   call_teardown 'teardown_test_suite'
@@ -400,7 +385,6 @@ run_tests() {
 load_includes() {
   load_include_file() {
     local include_file=$1
-    # shellcheck disable=SC1090
     source "$include_file"
     log "Included: $include_file"
     [[ ! $INITIALIZE_SOURCE_CACHE ]] || prune_path "$include_file"
@@ -410,7 +394,6 @@ load_includes() {
   local saved_IFS=$IFS
   IFS=":"
   for path in $INCLUDE_PATH; do
-    # shellcheck disable=SC2066
     for file in "$path"; do
       [[ -f $file ]] && include_files=("${include_files[@]/$file}" "$file")
     done
@@ -427,6 +410,10 @@ assert_msg() {
   echo "Assertion failed: ${msg:+$msg, }$why"
 }
 
+throw_assert() {
+  throw 'nonzero.explicit.assert' "$(assert_msg "$1" "$2")"
+}
+
 assert_success() {
   check_pending_exceptions
   local what=$1
@@ -435,7 +422,7 @@ assert_success() {
     eval_throw_syntax "$what"
   catch nonzero:
     local why="expected success but got failure in: '$what'"
-    CAUSED_BY= throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
+    chain: throw_assert "$msg" "$why"
   endtry
 }
 
@@ -450,7 +437,7 @@ assert_failure() {
     print_exception log
   success:
     local why="expected failure but got success in: '$what'"
-    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
+    throw_assert "$msg" "$why"
   endtry
 }
 
@@ -461,7 +448,7 @@ assert_equals() {
   local msg=$3
   [[ "$expected" = "$current" ]] || {
     local why="expected '$expected' but got '$current'"
-    throw 'nonzero.explicit.assert' "$(assert_msg "$msg" "$why")"
+    throw_assert "$msg" "$why"
   }
 }
 
@@ -497,6 +484,12 @@ cleanup() {
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
 
+inline_exit_handler() {
+  [[ ! -v CURRENT_TEST_NAME ]] || display_last_test_result
+  [[ -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test
+  [[ -z $setup_test_suite_called ]] || call_teardown teardown_test_suite
+}
+
 setup_io() {
   [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
   mkdir -p "$(dirname "$LOG_FILE")"
@@ -520,7 +513,7 @@ config_defaults() {
   default_DEBUG=
   default_INCLUDE_GLOB='include*.sh'
   default_INCLUDE_PATH='$TESTSH_DIR/$INCLUDE_GLOB:$TEST_SCRIPT_DIR/$INCLUDE_GLOB'
-  default_FAIL_FAST=1
+  default_FAIL_FAST=
   default_PRUNE_PATH='$PWD/'
   default_STACK_TRACE='full'
   default_COLOR='yes'
@@ -555,7 +548,6 @@ load_config() {
 
   load_config_file() {
     local config_file=$1
-    # shellcheck disable=SC1090
     source "$config_file"
   }
 
@@ -632,8 +624,6 @@ push_exit_handler 'cleanup'
 [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
 init_prune_path_cache
 load_includes
-push_exit_handler '[[ -v MANAGED || -z $setup_test_suite_called ]] || call_teardown teardown_test_suite'
-push_exit_handler '[[ -v MANAGED || -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test'
-push_exit_handler '[[ -v MANAGED ]] || display_last_test_result'
+push_exit_handler '[[ -v MANAGED ]] || inline_exit_handler'
 
 [[ ! $DEBUG ]] || set -x

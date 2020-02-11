@@ -45,7 +45,7 @@ start_test "@run_tests should invoke tests and setup methods when there are no f
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
 define_funcs
-( CURRENT_TEST_NAME= @run_tests 3>&1 )
+( @run_tests 3>&1 )
 unset_funcs
 
 diff - "$OUTFILE" <<EOF
@@ -63,10 +63,7 @@ start_test "@run_tests should invoke tests and setup methods when there are fail
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-try: @run_tests 3>&1
-catch: print_exception
-endtry
-failed
+assert_failure '@run_tests 3>&1'
 unset_funcs
 
 diff - "$OUTFILE" <<EOF
