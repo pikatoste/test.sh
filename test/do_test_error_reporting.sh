@@ -1,4 +1,8 @@
 #!/bin/bash
+STACK_TRACE=no
+PRUNE_PATH='*/'
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
 func1() {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func2
@@ -9,17 +13,18 @@ func2() {
   func_assert
 }
 
-test_01() {
+@test:
+@body: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   func1
 }
 
-teardown_test() {
+@teardown: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }
 
-teardown_test_suite() {
+@teardown_fixture: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }
@@ -29,19 +34,15 @@ func_assert() {
   true
 }
 
-setup_test() {
+@setup: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }
 
-setup_test_suite() {
+@setup_fixture: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }
-
-STACK_TRACE=no
-PRUNE_PATH='*/'
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
 FAIL_FUNC=$1
 
@@ -50,5 +51,5 @@ if [[ $INLINE ]]; then
   test_01
   start_test "do_test_error_reporting inline maybe not reached"
 else
-  run_tests
+  @run_tests
 fi

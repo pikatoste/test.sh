@@ -40,7 +40,7 @@ validate@body() {
 }
 
 @run_tests() {
-  _run_tests "${testfuncs[@]}"
+  run_tests "${testfuncs[@]}"
 }
 
 alias try:="_try;(set -e;trap 'err_trap' ERR;trap '[ \$? -ne 0 ] || check_pending_exceptions' EXIT;"
@@ -257,6 +257,8 @@ display_last_test_result() {
 
 start_test() {
   if [[ ! -v MANAGED ]]; then
+    # TODO: check pending exceptions after the last inline test
+    check_pending_exceptions
     [[ ! -v FIRST_TEST ]] || call_setup_test_suite
     [ -z "$CURRENT_TEST_NAME" ] || display_test_passed
     [[ -v FIRST_TEST ]] || { teardown_test_called=1; call_teardown 'teardown_test'; }
@@ -352,35 +354,23 @@ run_test_script() {
   "$test_script" "$@"
 }
 
-# TODO: deprecated
 run_tests() {
-  discover_tests() {
-    declare -F | cut -d \  -f 3 | grep "$TEST_MATCH" || true
-  }
-
-  # shellcheck disable=SC2086
-  # shellcheck disable=SC2155
-  [ $# -gt 0 ] || { local discovered=$(discover_tests); [ -z "$discovered" ] || set $discovered; }
-  _run_tests "$@"
-}
-
-_run_tests() {
-  #[[ $# -gt 0 ]] || return 0
   MANAGED=
   local failures=0
+  local test_func
   call_setup_test_suite
   while [ $# -gt 0 ]; do
-    local test_func=$1
+    test_func=$1
     shift
+
     if [[ ${testskip[$test_func]} ]]; then
       display_test_skipped "${testdescs[$test_func]}"
       continue
     fi
-    # TODO: supports deprecated run_tests()
+
     CURRENT_TEST_NAME=${testdescs[$test_func]}
-    [[ ! $CURRENT_TEST_NAME ]] || log "Start test: $CURRENT_TEST_NAME"
-    CURRENT_TEST_NAME=${CURRENT_TEST_NAME:-$test_func}
     try:
+      log "Start test: $CURRENT_TEST_NAME"
       call_if_exists setup_test
       "$test_func"
     catch:
@@ -394,11 +384,12 @@ _run_tests() {
       call_teardown 'teardown_test'
     endtry
   done
+
   while [ $# -gt 0 ]; do
-    # TODO: supports deprecated run_tests()
-    display_test_skipped "${testdescs[$1]:-$1}"
+    display_test_skipped "${testdescs[$1]}"
     shift
   done
+
   call_teardown 'teardown_test_suite'
   if [[ $failures != 0 ]]; then
     log_err "$failures test(s) failed"
@@ -532,7 +523,6 @@ config_defaults() {
   default_FAIL_FAST=1
   default_PRUNE_PATH='$PWD/'
   default_STACK_TRACE='full'
-  default_TEST_MATCH='^test_'
   default_COLOR='yes'
   # TODO: log would be better
   default_LOG_DIR_NAME='testout'
@@ -580,7 +570,7 @@ load_config() {
     done
   }
 
-  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE TEST_MATCH COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP"
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP"
 
   # save environment config
   for var in $config_vars; do

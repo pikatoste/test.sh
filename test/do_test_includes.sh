@@ -1,9 +1,9 @@
 #!/bin/bash
-
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-test_01() {
+@test:
+@body: {
   true
 }
 
-run_tests
+@run_tests

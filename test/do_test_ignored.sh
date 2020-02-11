@@ -1,14 +1,14 @@
 #!/bin/bash
-test_01() {
-  start_test "test_01"
+source "$(dirname "$(readlink -f "$0")")"/../test.sh
+
+@test: "test_01"
+@body: {
   false
 }
 
-test_02() {
-  start_test "test_02"
+@test: "test_02"
+@body: {
   true
 }
 
-source "$(dirname "$(readlink -f "$0")")"/../test.sh
-
-run_tests
+@run_tests

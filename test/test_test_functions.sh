@@ -29,21 +29,23 @@ unset_funcs() {
   unset teardown_test
 }
 
-test_01() {
+@test:
+@body: {
   [ -z "$test_01_fail" ]
   echo test_01 >>"$OUTFILE"
 }
 
-test_02() {
+@test:
+@body: {
   [ -z "$test_02_fail" ]
   echo test_02 >>"$OUTFILE"
 }
 
-start_test "run_tests should invoke tests and setup methods when there are no failures"
+start_test "@run_tests should invoke tests and setup methods when there are no failures"
 OUTFILE="$TEST_SCRIPT_DIR"/.test_test_functions.out
 rm -rf "$OUTFILE"
 define_funcs
-( CURRENT_TEST_NAME= run_tests 3>&1 )
+( CURRENT_TEST_NAME= @run_tests 3>&1 )
 unset_funcs
 
 diff - "$OUTFILE" <<EOF
@@ -57,11 +59,11 @@ teardown_test
 teardown_test_suite
 EOF
 
-start_test "run_tests should invoke tests and setup methods when there are failures"
+start_test "@run_tests should invoke tests and setup methods when there are failures"
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-try: run_tests 3>&1
+try: @run_tests 3>&1
 catch: print_exception
 endtry
 failed
