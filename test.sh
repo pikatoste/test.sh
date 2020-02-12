@@ -118,8 +118,8 @@ failed() {
 }
 
 throw() {
-  create_exception "$@"
-  exit 1
+  first_frame=$first_frame create_exception "$@"
+  exit ${exit_code:-1}
 }
 
 rethrow() {
@@ -130,7 +130,7 @@ rethrow() {
 create_exception() {
   local exception_type=$1
   local exception_msg=$2
-  local first_frame=${3:-2}
+  local first_frame=${first_frame:-2}
 
   local uncaught_exceptions
   [[ ! -f $EXCEPTIONS_FILE ]] || uncaught_exceptions=$(cat "$EXCEPTIONS_FILE")
@@ -155,8 +155,7 @@ create_nonzero_implicit_exception() {
   local frame_idx=${1:-2}
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
-  ((frame_idx+=2))
-  CHAIN_REASON='Previous exception' create_exception 'nonzero.implicit' "$errmsg" $frame_idx
+  first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception 'nonzero.implicit' "$errmsg"
 }
 
 prune_path() {
@@ -205,13 +204,17 @@ print_exception() {
     done <<<"$EXCEPTION"
 }
 
-eval_throw_syntax() {
-  trap "throw_eval_syntax_error_exception \"$1\"" EXIT; eval 'trap - EXIT;' "$1"
+_eval() {
+  if [[ $BASHPID == $$ ]]; then
+    trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
+  else
+    trap "create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval 'trap - EXIT;' "$1"
+  fi
 }
 
-throw_eval_syntax_error_exception() {
-  local errmsg="Syntax error in the expression: \"$1\""
-  throw 'error.eval-syntax-error' "$errmsg" 3
+create_eval_syntax_error_exception() {
+  local errmsg="Syntax error in the expression: $1"
+  create_exception 'error.eval-syntax-error' "$errmsg"
 }
 
 unhandled_exception() {
@@ -221,7 +224,7 @@ unhandled_exception() {
 }
 
 exit_trap() {
-  EXIT_CODE=$?
+  EXIT_CODE=${EXIT_CODE:-$?}
   [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
   [[ -z $PIPE ]] || rm -f "$PIPE"
   for handler in "${EXIT_HANDLERS[@]}"; do
@@ -419,7 +422,7 @@ assert_success() {
   local what=$1
   local msg=$2
   try:
-    eval_throw_syntax "$what"
+    _eval "$what"
   catch nonzero:
     local why="expected success but got failure in: '$what'"
     chain: throw_assert "$msg" "$why"
@@ -431,7 +434,7 @@ assert_failure() {
   local what=$1
   local msg=$2
   try:
-    eval_throw_syntax "$what"
+    _eval "$what"
   catch nonzero:
     log "Expected failure:"
     print_exception log
