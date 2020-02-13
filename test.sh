@@ -41,6 +41,7 @@ validate@body() {
 alias try:="_try;(_try_prolog;"
 alias catch:="_try_epilog);_catch&&{"
 alias catch="_try_epilog);_catch "
+alias :="&&{"
 alias success:="}; _success&&{"
 alias endtry="};_endtry"
 alias chain:='CAUSED_BY= '
@@ -53,6 +54,7 @@ declare_exception() {
   exceptions[$exception]=$super
   type_of_exception $exception
   eval "alias $exception:=\"$exception_type&&{\""
+  eval "alias $exception,=\"$exception_type&&{\" "
 }
 
 type_of_exception() {
@@ -66,12 +68,11 @@ type_of_exception() {
 
 declare_exception nonzero
 declare_exception implicit nonzero
-declare_exception explicit nonzero
-declare_exception assert explicit
+declare_exception assert nonzero
 declare_exception error
 declare_exception internal error
 declare_exception test_syntax error
-declare_exception pending error
+declare_exception pending_exception error
 declare_exception eval_syntax_error error
 
 _try() {
@@ -93,10 +94,12 @@ _try_epilog() {
 _catch() {
   push_try_exit_code
   if [[ $TRY_EXIT_CODE != 0 ]]; then
-    local exception_filter=$1
     local exception_type
     read -r exception_type <"$EXCEPTIONS_FILE" || throw 'internal' 'Try block failed but no exception generated'
-    [[ $exception_type =~ ^$exception_filter ]] || exit "$TRY_EXIT_CODE"
+    local exception_filter
+    for exception_filter in "$@"; do
+      [[ $exception_type =~ ^$exception_filter ]] || exit "$TRY_EXIT_CODE"
+    done
     handle_exception
     set -e
     trap 'err_trap' ERR
