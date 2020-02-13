@@ -34,23 +34,51 @@ define_test() {
 }
 
 validate@body() {
-  [[ -v testfunc ]] || throw 'nonzero.explicit.test-syntax' 'Misplaced @body tag'
+  [[ -v testfunc ]] || throw 'test_syntax' 'Misplaced @body tag'
   unset testfunc
 }
 
 alias try:="_try;(_try_prolog;"
-alias nonzero:="'nonzero'&&{"
 alias catch:="_try_epilog);_catch&&{"
 alias catch="_try_epilog);_catch "
 alias success:="}; _success&&{"
 alias endtry="};_endtry"
 alias chain:='CAUSED_BY= '
 
+declare -A exceptions
+
+declare_exception() {
+  local exception=$1
+  local super=$2
+  exceptions[$exception]=$super
+  type_of_exception $exception
+  eval "alias $exception:=\"$exception_type&&{\""
+}
+
+type_of_exception() {
+  exception_type=$1
+  local x=$exception_type
+  while [[ ${exceptions[$x]} ]]; do
+    x=${exceptions[$x]}
+    exception_type=$x.$exception_type
+  done
+}
+
+declare_exception nonzero
+declare_exception implicit nonzero
+declare_exception explicit nonzero
+declare_exception assert explicit
+declare_exception error
+declare_exception internal error
+declare_exception test_syntax error
+declare_exception pending error
+declare_exception eval_syntax_error error
+
 _try() {
   push_caught_exception
   set +e
   # in case the try block executes exit instead of throw
-  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_nonzero_implicit_exception 1' ERR
+  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1' ERR
 }
 
 _try_prolog() {
@@ -67,7 +95,7 @@ _catch() {
   if [[ $TRY_EXIT_CODE != 0 ]]; then
     local exception_filter=$1
     local exception_type
-    read -r exception_type <"$EXCEPTIONS_FILE" || throw "error.internal" "Try block failed but no exception generated"
+    read -r exception_type <"$EXCEPTIONS_FILE" || throw 'internal' 'Try block failed but no exception generated'
     [[ $exception_type =~ ^$exception_filter ]] || exit "$TRY_EXIT_CODE"
     handle_exception
     set -e
@@ -91,7 +119,7 @@ _endtry() {
 
 check_pending_exceptions() {
   [[ ! -f $EXCEPTIONS_FILE ]] ||
-    throw 'error.dangling-exception' 'Pending exception, probably a masked error in a command substitution'
+    throw 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
 }
 
 push_try_exit_code() {
@@ -128,12 +156,13 @@ rethrow() {
 }
 
 create_exception() {
-  local exception_type=$1
+  local exception=$1
   local exception_msg=$2
   local first_frame=${first_frame:-2}
 
   local uncaught_exceptions
   [[ ! -f $EXCEPTIONS_FILE ]] || uncaught_exceptions=$(cat "$EXCEPTIONS_FILE")
+  type_of_exception "$exception"
   echo "$exception_type" >"$EXCEPTIONS_FILE"
   # TODO: replace '---' mark with something unambiguous
   { echo "$exception_msg"; echo '---'; local_stack "$first_frame"; } >>"$EXCEPTIONS_FILE"
@@ -142,12 +171,14 @@ create_exception() {
   fi
   # TODO: replace 'chained:' mark with something unambiguous
   if [[ $uncaught_exceptions ]]; then
+    # TODO: only implicit and pending_exception exceptions should chain, others should throw a
+    #       pending exceptions found while handling exception ...
     local chain_reason=${CHAIN_REASON:-Pending exception}
     { echo "chained:$chain_reason:"; echo "$uncaught_exceptions"; } >>"$EXCEPTIONS_FILE"
   fi
 }
 
-create_nonzero_implicit_exception() {
+create_implicit_exception() {
   local err=$ERR_CODE
   local errcmd=
   # TODO: truncate... do better
@@ -155,7 +186,7 @@ create_nonzero_implicit_exception() {
   local frame_idx=${1:-2}
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
-  first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception 'nonzero.implicit' "$errmsg"
+  first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception 'implicit' "$errmsg"
 }
 
 prune_path() {
@@ -214,7 +245,7 @@ _eval() {
 
 create_eval_syntax_error_exception() {
   local errmsg="Syntax error in the expression: $1"
-  create_exception 'error.eval-syntax-error' "$errmsg"
+  create_exception 'eval_syntax_error' "$errmsg"
 }
 
 unhandled_exception() {
@@ -414,7 +445,7 @@ assert_msg() {
 }
 
 throw_assert() {
-  throw 'nonzero.explicit.assert' "$(assert_msg "$1" "$2")"
+  throw 'assert' "$(assert_msg "$1" "$2")"
 }
 
 assert_success() {
@@ -621,7 +652,7 @@ trap 'exit_trap' EXIT
 trap 'err_trap' ERR
 config_defaults
 load_config
-push_err_handler 'create_nonzero_implicit_exception'
+push_err_handler 'create_implicit_exception'
 setup_io
 push_exit_handler 'cleanup'
 [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
