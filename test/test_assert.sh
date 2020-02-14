@@ -51,7 +51,7 @@ start_test "#89: assert_failure should execute the expression in errexit context
 start_test "#98: non-zero exit code in the expression of assert_failure prints the failure but does not print an assertion failure"
   generate_test_success_check 'assert_failure "[[ a = b ]]"' <<EOF
 [test.sh] Expected failure:
-[test.sh] Error in eval_throw_syntax(test.sh:): '[[ a = b ]]' exited with status 1
+[test.sh] Error in _eval(test.sh:): '[[ a = b ]]' exited with status 1
 [test.sh]  at assert_failure(test.sh:)
 [test.sh]  at main(the_test.sh:)
 EOF

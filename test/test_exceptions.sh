@@ -44,7 +44,7 @@ start_test "Nested try/catch blocks do not repeat exceptions if rethrown"
     endtry
   catch:
     print_exception
-    assert_equals 1 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+    assert_equals 1 "$(printf "%s\n" "${EXCEPTION[@]}" | grep Error | wc -l)" "Wrong exception count"
   endtry
 
 start_test "Nested try/catch blocks do not repeat exceptions if uncaught"
@@ -55,7 +55,7 @@ start_test "Nested try/catch blocks do not repeat exceptions if uncaught"
     endtry
   catch:
     print_exception
-    assert_equals 1 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+    assert_equals 1 "$(printf "%s\n" "${EXCEPTION[@]}" | grep Error | wc -l)" "Wrong exception count"
   endtry
 
 start_test "Pending exceptions are not lost"
@@ -64,7 +64,7 @@ start_test "Pending exceptions are not lost"
     false
   catch:
     print_exception
-    assert_equals 3 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+    assert_equals 3 "$(printf "%s\n" "${EXCEPTION[@]}" | grep Error | wc -l)" "Wrong exception count"
   endtry
 
 
@@ -73,5 +73,30 @@ start_test "Exceptions in a subshell environment duplicate the exception (undesi
     $(false)
   catch:
     print_exception
-    assert_equals 2 "$(echo "$EXCEPTION" | grep Error | wc -l)" "Wrong exception count"
+    assert_equals 2 "$(printf "%s\n" "${EXCEPTION[@]}" | grep Error | wc -l)" "Wrong exception count"
+  endtry
+
+start_test "The catch block can select multiple exceptions"
+  try:
+    false
+  catch error, nonzero:
+    print_exception
+  endtry
+  try:
+    throw error "Error"
+  catch error, nonzero:
+    print_exception
+  endtry
+
+start_test "The catch block does not catch non selected exceptions"
+  declare_exception pepe
+  try: true
+    try:
+      throw pepe "Pepe"
+    catch error, nonzero:
+      print_exception
+      throw 'test_failed' "Caught non-selected exception"
+    endtry
+  catch pepe:
+    print_exception
   endtry
