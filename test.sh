@@ -39,22 +39,21 @@ validate@body() {
 }
 
 alias try:="_try;(_try_prolog;"
-alias catch:="_try_epilog);_catch&&{"
+alias catch:="_try_epilog);_catch ''&&{"
 alias catch="_try_epilog);_catch "
 alias :="&&{"
 alias success:="}; _success&&{"
 alias endtry="};_endtry"
 alias chain:='CAUSED_BY= '
 
-declare -A exceptions
+declare -A exceptions exception_types
 
 declare_exception() {
-  local exception=$1
-  local super=$2
+  local exception=$1 super=$2
   exceptions[$exception]=$super
   type_of_exception $exception
-  eval "alias $exception:=\"$exception_type&&{\""
-  eval "alias $exception,=\"$exception_type&&{\" "
+  exception_types[$exception]=$exception_type
+  eval "alias $exception:=\"$exception_type&&{\"; alias $exception,=\"$exception_type \""
 }
 
 type_of_exception() {
@@ -94,15 +93,16 @@ _try_epilog() {
 _catch() {
   push_try_exit_code
   if [[ $TRY_EXIT_CODE != 0 ]]; then
-    local exception_type
-    read -r exception_type <"$EXCEPTIONS_FILE" || throw 'internal' 'Try block failed but no exception generated'
-    local exception_filter
+    readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
+    local exception_type=${EXCEPTION[-1]} exception_filter
     for exception_filter in "$@"; do
-      [[ $exception_type =~ ^$exception_filter ]] || exit "$TRY_EXIT_CODE"
+      [[ $exception_type =~ ^$exception_filter ]] || continue
+      rm -f "$EXCEPTIONS_FILE"
+      set -e
+      trap 'err_trap' ERR
+      return 0
     done
-    handle_exception
-    set -e
-    trap 'err_trap' ERR
+    exit "$TRY_EXIT_CODE"
   else
     trap - ERR
     false
@@ -136,12 +136,16 @@ pop_try_exit_code() {
 }
 
 push_caught_exception() {
-  CAUGHT_EXCEPTIONS=("$EXCEPTION" "${CAUGHT_EXCEPTIONS[@]}")
+  [[ ! -v EXCEPTION ]] || CAUGHT_EXCEPTIONS=("$(declare -p EXCEPTION)" "${CAUGHT_EXCEPTIONS[@]}")
 }
 
 pop_caught_exception() {
-  EXCEPTION=$CAUGHT_EXCEPTIONS
-  CAUGHT_EXCEPTIONS=("${CAUGHT_EXCEPTIONS[@]:1}")
+  if [[ ${#CAUGHT_EXCEPTIONS[@]} > 0 ]]; then
+    eval "$CAUGHT_EXCEPTIONS"
+    CAUGHT_EXCEPTIONS=("${CAUGHT_EXCEPTIONS[@]:1}")
+  else
+    unset EXCEPTION
+  fi
 }
 
 failed() {
@@ -154,7 +158,7 @@ throw() {
 }
 
 rethrow() {
-  echo "$EXCEPTION" >"$EXCEPTIONS_FILE"
+  printf "%s\n" "${EXCEPTION[@]}" >"$EXCEPTIONS_FILE"
   exit "$TRY_EXIT_CODE"
 }
 
@@ -163,22 +167,19 @@ create_exception() {
   local exception_msg=$2
   local first_frame=${first_frame:-2}
 
-  local uncaught_exceptions
-  [[ ! -f $EXCEPTIONS_FILE ]] || uncaught_exceptions=$(cat "$EXCEPTIONS_FILE")
-  type_of_exception "$exception"
-  echo "$exception_type" >"$EXCEPTIONS_FILE"
-  # TODO: replace '---' mark with something unambiguous
-  { echo "$exception_msg"; echo '---'; local_stack "$first_frame"; } >>"$EXCEPTIONS_FILE"
-  if [[ -v CAUSED_BY ]]; then
-    { echo "chained:Caused by:"; echo "$EXCEPTION"; } >>"$EXCEPTIONS_FILE"
-  fi
   # TODO: replace 'chained:' mark with something unambiguous
-  if [[ $uncaught_exceptions ]]; then
+  if [[ -f $EXCEPTIONS_FILE ]]; then
     # TODO: only implicit and pending_exception exceptions should chain, others should throw a
     #       pending exceptions found while handling exception ...
     local chain_reason=${CHAIN_REASON:-Pending exception}
-    { echo "chained:$chain_reason:"; echo "$uncaught_exceptions"; } >>"$EXCEPTIONS_FILE"
+    echo -e "chained:${RED}$chain_reason:${NC}" >>"$EXCEPTIONS_FILE"
   fi
+  if [[ -v CAUSED_BY ]]; then
+    { printf "%s\n" "${EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$EXCEPTIONS_FILE"
+  fi
+  local exception_type=${exception_types[$exception]:-$exception}
+  # TODO: replace '---' mark with something unambiguous
+  { local_stack "$first_frame"; echo '---'; echo "$exception_msg"; echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
@@ -208,7 +209,7 @@ prune_path() {
 }
 
 local_stack() {
-  [[ $STACK_TRACE == no ]] || for ((i=${1:-0}; i<${#FUNCNAME[@]}-1; i++))
+  [[ $STACK_TRACE == no ]] || for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
   do
     prune_path "${BASH_SOURCE[$i+1]}"
     echo "${FUNCNAME[$i+1]}($PRUNED_PATH:${BASH_LINENO[$i]})"
@@ -216,26 +217,26 @@ local_stack() {
 }
 
 handle_exception() {
-  EXCEPTION=$(cat "$EXCEPTIONS_FILE")
+  readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
   rm -f "$EXCEPTIONS_FILE"
 }
 
 print_exception() {
-  local log_function=${1:-log_err}
-  local exception_type
-  while read -r exception_type; do
-      while read -r line; do
-        [[ $line != '---' ]] || break
-        $log_function "$line"
+  local log_function=${1:-log_err} i exception_type
+  for ((i=${#EXCEPTION[@]}-1; i>=0; i--)); do
+      exception_type=${EXCEPTION[$i]}
+      for ((i--; i>=0; i--)); do
+        [[ ${EXCEPTION[$i]} != '---' ]] || break
+        $log_function "${EXCEPTION[$i]}"
       done
-      while read -r line; do
-        if [[ $line =~ ^'chained:' ]]; then
-          $log_function "${line#chained:}"
+      for ((i--; i>=0; i--)); do
+        if [[ ${EXCEPTION[$i]} =~ ^'chained:' ]]; then
+          $log_function "${EXCEPTION[$i]#chained:}"
           break
         fi
-        $log_function " at $line"
+        $log_function " at ${EXCEPTION[$i]}"
       done
-    done <<<"$EXCEPTION"
+    done
 }
 
 _eval() {
@@ -254,7 +255,7 @@ create_eval_syntax_error_exception() {
 unhandled_exception() {
   handle_exception
   print_exception
-  EXCEPTION=
+  unset EXCEPTION
 }
 
 exit_trap() {
