@@ -68,7 +68,6 @@ declare_exception nonzero
 declare_exception implicit nonzero
 declare_exception assert nonzero
 declare_exception error
-declare_exception internal error
 declare_exception test_syntax error
 declare_exception pending_exception error
 declare_exception eval_syntax_error error
