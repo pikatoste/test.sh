@@ -100,3 +100,17 @@ start_test "The catch block does not catch non selected exceptions"
   catch pepe:
     print_exception
   endtry
+
+start_test "Implicit exceptions propagate the type of the existing pending exception"
+declare_exception pepe
+try:
+  try:
+    ( throw pepe "Pepe" )
+  catch nonzero:
+    print_exception
+    throw 'test_failed' "Implicit exception did not propagate the pending exception's type"
+  endtry
+catch pepe:
+  echo exception=${EXCEPTION[-1]}
+  print_exception
+endtry
