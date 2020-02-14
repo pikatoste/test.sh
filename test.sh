@@ -34,17 +34,16 @@ define_test() {
 }
 
 validate@body() {
-  [[ -v testfunc ]] || throw 'test_syntax' 'Misplaced @body tag'
+  [[ -v testfunc ]] || throw 'test_syntax' 'Misplaced @body: tag'
   unset testfunc
 }
 
 alias try:="_try;(_try_prolog;"
 alias catch:="_try_epilog);_catch ''&&{"
 alias catch="_try_epilog);_catch "
-alias :="&&{"
 alias success:="}; _success&&{"
 alias endtry="};_endtry"
-alias chain:='CAUSED_BY= '
+alias with_cause:='WITH_CAUSE= '
 
 declare -A exceptions exception_types
 
@@ -174,23 +173,26 @@ create_exception() {
     local chain_reason=${CHAIN_REASON:-Pending exception}
     echo -e "chained:${RED}$chain_reason:${NC}" >>"$EXCEPTIONS_FILE"
   fi
-  if [[ -v CAUSED_BY ]]; then
+  if [[ -v WITH_CAUSE ]]; then
     { printf "%s\n" "${EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$EXCEPTIONS_FILE"
   fi
   local exception_type=${exception_types[$exception]:-$exception}
   # TODO: replace '---' mark with something unambiguous
-  { local_stack "$first_frame"; echo '---'; echo "$exception_msg"; echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
+  { stack_trace "$first_frame"; echo '---'; echo "$exception_msg"; echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
+  local frame_idx=${1:-2}
   local err=$ERR_CODE
   local errcmd=
   # TODO: truncate... do better
   read -r errcmd <<<"$BASH_COMMAND" || true
-  local frame_idx=${1:-2}
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
-  first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception 'implicit' "$errmsg"
+  local pending_exception=('implicit')
+  [[ ! -f $EXCEPTIONS_FILE ]] || readarray -t pending_exception <"$EXCEPTIONS_FILE"
+  local exception=${pending_exception[-1]}
+  first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception "$exception" "$errmsg"
 }
 
 prune_path() {
@@ -208,7 +210,7 @@ prune_path() {
   fi
 }
 
-local_stack() {
+stack_trace() {
   [[ $STACK_TRACE == no ]] || for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
   do
     prune_path "${BASH_SOURCE[$i+1]}"
@@ -253,6 +255,7 @@ create_eval_syntax_error_exception() {
 }
 
 unhandled_exception() {
+  [[ $EXIT_CODE != 0 ]] || first_frame=1 create_exception 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
   handle_exception
   print_exception
   unset EXCEPTION
@@ -460,7 +463,7 @@ assert_success() {
     _eval "$what"
   catch nonzero:
     local why="expected success but got failure in: '$what'"
-    chain: throw_assert "$msg" "$why"
+    with_cause: throw_assert "$msg" "$why"
   endtry
 }
 
