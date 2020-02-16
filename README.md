@@ -61,6 +61,7 @@ The output of a test script is a colorized summary with the result of each test.
 <font color="#CC0000">* This is a failing test</font>
 </pre>
 
+This report is printed to the standard output of the test script, referred in this document as the 'main output'.
 The standard output and error of the test script are redirected to a log file.
 This file is named after the test script with the
 suffix '.out' appended and is located in directory 'testout' relative to the test script. For example, if your
@@ -69,9 +70,9 @@ Lines in the log file coming from test.sh, i.e. not from the test script or the 
 are prefixed with the string '[testsh]', which is colorized to show the
 category of the message: blue for info, orange for warnings and red for errors. test.sh logs the following events:
 * The start of each test
-* The outcome of each test
-* Any non-zero return from any command is logged as an exception: an error message and a stack trace
-(see [Stack traces](#stack-traces))
+* The outcome of each test, either success or failure
+* Any errors, basically non-zero exit status from any command. Errors are handled as exceptions; they log an error
+message and a stack trace
 
 The log output of the test example above is:
 
@@ -79,17 +80,17 @@ The log output of the test example above is:
 <font color="#4E9A06">[test.sh]</font> PASSED: This is a passing test
 <font color="#3465A4">[test.sh]</font> Start test: This is a failing test
 <font color="#CC0000">[test.sh]</font> Assertion failed: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font>  at throw_assert(test.sh:434)
-<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:445)
-<font color="#CC0000">[test.sh]</font>  at test_02(mymanagedtest.sh:11)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:386)
-<font color="#CC0000">[test.sh]</font>  at main(mymanagedtest.sh:14)
+<font color="#CC0000">[test.sh]</font>  at throw_assert(test.sh:474)
+<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:485)
+<font color="#CC0000">[test.sh]</font>  at test_02(myfirsttest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:426)
+<font color="#CC0000">[test.sh]</font>  at main(myfirsttest.sh:14)
 <font color="#CC0000">[test.sh]</font> Caused by:
-<font color="#CC0000">[test.sh]</font> Error in eval_throw_syntax(test.sh:229): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:442)
-<font color="#CC0000">[test.sh]</font>  at test_02(mymanagedtest.sh:11)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:386)
-<font color="#CC0000">[test.sh]</font>  at main(mymanagedtest.sh:14)
+<font color="#CC0000">[test.sh]</font> Error in _eval(test.sh:267): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:482)
+<font color="#CC0000">[test.sh]</font>  at test_02(myfirsttest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:426)
+<font color="#CC0000">[test.sh]</font>  at main(myfirsttest.sh:14)
 <font color="#CC0000">[test.sh]</font> FAILED: This is a failing test
 <font color="#CC0000">[test.sh]</font> 1 test(s) failed
 </pre>
@@ -146,8 +147,8 @@ Error handling is where test.sh excels: errors are processed and reported in an 
 that returns non-zero is considered an error, and as such throws an exception; these are _implicit exceptions_, as
 if each command was followed by 'if command failed then throw exception'. Therefore, the test script is run in
 the so-called "implicit assertion" mode. There are also normal, explicit exceptions: those that are thrown
-with the `throw` function. Code can be wrapped in try/catch constructs, which is what test.sh does to support
-running al tests in managed mode. Al this is implemented with a combination of shell options and ERR/EXIT traps.
+with the `throw` function. Code can be wrapped in try/catch constructs, which is what test.sh does to run tests
+and call teardown functions. Al this is implemented with a combination of shell options and ERR/EXIT traps.
 
 The exact set of options set by test.sh are:
 
@@ -172,17 +173,16 @@ false
 
 prints:
 
-```text
-[test.sh] Error in main(myimpliciterror.sh:3): 'false' exited with status 1
-```
+<pre><font color="#CC0000">[test.sh]</font> Error in main(myimpliciterror.sh:3): &apos;false&apos; exited with status 1
+</pre>
 
 and the exit code is 1.
 
 #### Exceptions
-test.sh internally uses internally a try/catch construct to implement test and teardown semantics.
+test.sh uses internally a try/catch construct to implement test and teardown semantics.
 This construct is also available to the test script. The syntax of the try/catch construct is:
 
-```shell script
+```text
 try:
   [commands...]
 catch: | catch exception[, exception...]:
@@ -192,11 +192,11 @@ catch: | catch exception[, exception...]:
 endtry
 ```
 
-* `try:`, `catch:`, `success:` and `endtry` must be at the beginig of a line.
-* `try:`, `catch:`, and `endtry`  are all required. `success:` is optional.
+* `try:`, `catch:`, `success:` and `endtry` must be at the beginning of a line.
+* `try:`, `catch:`, and `endtry`  are all required, `success:` is optional.
 * The body of the `catch:` and `success:` blocks must contain at least one command.
-* The `catch:` clause can optionally specify a comma-separated list of caught exceptions. No spaces are allowed
-before a comma, which must be followed by at least one space. The final exception must end with a colon.
+* The `catch:` clause can optionally specify a comma-separated list of exceptions. No spaces are allowed
+before a comma, which must be followed by at least one space. The last exception must end with a colon.
 
 For example:
 
@@ -215,12 +215,12 @@ The try block is executed in a subshell: changes to variables in the try block a
 not visible outside the try block. catch and success blocks are not executed in a subshell.
 try/catch constructs can be nested.
 
-Exceptions are thrown implicitly when the exit code of a command is non-zero or explicitly with the
+Exceptions are thrown implicitly when the exit code of a command is non-zero, or explicitly with the
 `throw <exception> <message>` function. \<exception\> is the exception type. Exceptions can inherit from
 other exceptions. Inheritance is defined with function `declare_exception <exception> <super>`, where \<super\>
 is the exception supertype of \<exception\>. Non-declared exceptions do not have a supertype. Only declared
 exceptions can be specified in the list of caught exceptions in the catch clause. `catch:` catches all exceptions.
-Exceptions listed in the catch clause are tried in order; each specified exception matches itself and all subtypes.
+Exceptions listed in the catch clause are tried in order; each specified exception matches itself and all its subtypes.
 
 The `throw` function in a catch block can be optionally preceded by `with_cause:` to chain the current exception
 to the thrown exception with the link message 'Caused by:'. Pending exceptions are always linked to the thrown
@@ -239,25 +239,28 @@ test.sh defines a hierarchy of exceptions. Some of them are abstract, i.e. they 
 are the supertype of concrete exceptions. The list of predefined exceptions is:
 * nonzero: abstract. Represents a command failure.
 * implicit (nonzero): concrete. Type of implicit exceptions when there are no pending exceptions.
-* assert (nonzero): concrete. Thrown from assert funcions when the assertion fails.
+* assert (nonzero): concrete. Thrown from assert functions when the assertion fails.
 * error: abstract. Represents runtime errors.
 * test_syntax (error): concrete. A misplaced `@body:` tag.
 * pending_exception (error): concrete. Pending exceptions detected.
 * eval_syntax_error (error): concrete. A syntax error in the command of `assert_success` or `assert_failure`.
 
 #### Pending exceptions
-test.sh relies on errexit to propagate thrown exceptions accross subshell environments, but there are situations
-when exception propagation is interrupted. The exception remains, though, and test.sh checks at certain
-points that there are no pending exceptions, otherwise a 'pending_exception' exception is thrown. Pending exceptions
-are created when triggered from a command substitution that is part of the arguments of another command or construct
+test.sh relies on errexit to propagate thrown exceptions across subshell environments, but there are situations
+when this propagation is interrupted. The exception remains, though, and test.sh checks at certain
+points whether there are pending exceptions and throws 'pending_exception' exception. Pending exceptions
+are created when thrown from a command substitution that is part of the arguments of another command or construct
 that returns its own exit code. Multiple pending exceptions can accumulate until they are detected, as demonstrated
 by this script:
 
 ```shell script
+#!/bin/bash
 VERBOSE=1 source ./test.sh
-echo -n $(false) $(false)
+echo -n $(false) $(throw error Error!)
 echo still here...
 ```
+
+which prints:
 
 <pre>still here...
 <font color="#CC0000">[test.sh]</font> Pending exception, probably a masked error in a command substitution
@@ -275,7 +278,7 @@ This pending_exception was thrown from the EXIT trap, as shown by the stack trac
 checks for pending exceptions are:
 
 * At the start of each assert function. This is intended to trap pending exceptions early when using command
-substitutions in arguments to assert functinos, such as `assert_equals "" "$(false)"`.
+substitutions in arguments to assert functions, such as `assert_equals "" "$(false)"`.
 * At the end of each try block, before the catch block. Each test is executed in a try block, so pending exceptions
 generated during a test will not pass the test undetected.
 
@@ -284,12 +287,10 @@ The ERR trap that creates an implicit exception is inherited by subshells. Each 
 implicit exception, resulting in repeated exceptions for the same original exception thrown from an inner subshell.
 For example, the command `(false)` creates two exceptions:
 
-```text
 <pre><font color="#CC0000">[test.sh]</font> Error in main(doubleexception.sh:3): &apos;( false )&apos; exited with status 1
 <font color="#CC0000">[test.sh]</font> <font color="#CC0000">Previous exception:</font>
 <font color="#CC0000">[test.sh]</font> Error in main(doubleexception.sh:3): &apos;false&apos; exited with status 1
 </pre>
-```
 
 There's no way to distinguish a pending exception from a current exception at implicit exception creation, so
 an existing exception is chained to the current exception with the ambiguous link message "Previous exception:".
@@ -298,7 +299,7 @@ Subshells introduced by try blocks do not repeat exceptions even when nested.
 
 The type of an implicit exception is the type of the pending exception or `implicit` if there are no pending exceptions.
 
-#### ignored errexit context
+#### Ignored errexit context
 
 There are some pitfalls with `-o errexit` to be aware of. Bash ignores this setting in the following situations:
 
@@ -325,7 +326,7 @@ then, expressions of the form `if validate; then ... fi`, `while validate; do ..
 `! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
 of the negated expression will not trigger exit even if it evaluates to false.
 
-The ERR trap shares with errexit the conditions under which it is ignores, i.e. ignored errexit context is also
+The ERR trap shares with errexit the conditions under which it is ignored, i.e. ignored errexit context is also
 ignored ERR trap context. No implicit exceptions are thrown in ignored ERR trap context.
 
 ### Assertions
@@ -510,11 +511,35 @@ This is the list of functions and aliases defined by test.sh that you can use in
   @run_tests
   ```
 
+  Alias for function `run_tests`.
   Runs all tests. You should call `run_tests` only once. Alias for function `run_tests`.
+
+* _eval
+
+  Syntax:
+
+  ```text
+  _eval [arguments]
+  ```
+
+  Wrapper for the `eval` builtin. Throws `eval_syntax_error` exception.
+
+  The `eval` builtin behaviour when the evaluated command contains syntax errors is to exit with exit code 2. No ERR
+  trap is triggered in the shell environment where `eval` is executed; if this is the main shell environment, no
+  exception is generated. The `_eval` function does throw `eval_syntax_error` in this event and is a better fit
+  for test.sh error handling.
 
 * @setup_fixture:
 
-  Alias for function `setup_test_suite`.
+  Syntax:
+
+  ```text
+  @setup_fixture: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `setup_test_suite`.
   If defined, this function will be called only once before any test.
   A failure in this function will cause failure of the script and no test will be executed.
 
@@ -522,7 +547,15 @@ This is the list of functions and aliases defined by test.sh that you can use in
 
 * @teardown_fixture:
 
-  Alias for function `teardown_test_suite`.
+  Syntax:
+
+  ```text
+  @teardown_fixture: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `teardown_test_suite`.
   If defined, this function will be called once after all tests even if there are failures.
   A failure in this function will not cause failure of the script, but will cause a warning
   message to be displayed on the main output.
@@ -531,7 +564,15 @@ This is the list of functions and aliases defined by test.sh that you can use in
 
 * @setup:
 
-  Alias for function `setup_test`.
+  Syntax:
+
+  ```text
+  @setup: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `setup_test`.
   If defined, this function will be called before each test.
   A failure in this function will cause failure of the test.
 
@@ -539,7 +580,15 @@ This is the list of functions and aliases defined by test.sh that you can use in
 
 * @teardown:
 
-  Alias for function `teardown_test`.
+  Syntax:
+
+  ```text
+  @teardown: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `teardown_test`.
   If defined, this function will be called after each test even if the test fails.
   A failure in this function will not cause failure of the test, but will cause a warning
   message to be displayed on the main output.
