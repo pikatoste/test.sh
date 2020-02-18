@@ -79,12 +79,26 @@ _try() {
   push_caught_exception
   set +e
   # in case the try block executes exit instead of throw
+  # TODO: reports the whole try block as the failed command
   trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1 exit' ERR
+#  trap '' ERR
+}
+
+save_vars() {
+  declare -p "$@" >"$TRY_VARS_FILE"
+}
+
+restore_vars() {
+  alias declare='declare -g'
+  eval "$(cat "$TRY_VARS_FILE")"
+  unalias declare
 }
 
 _try_prolog() {
   set -e
   trap 'err_trap' ERR
+#  trap 'ERR_CODE=$?; [ "$ERR_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1 exit' EXIT
+  [[ ! $TRY_VARS ]] || trap "save_vars $TRY_VARS" EXIT
 }
 
 _try_epilog() {
@@ -93,6 +107,7 @@ _try_epilog() {
 
 _catch() {
   push_try_exit_code
+  [[ ! $TRY_VARS ]] || restore_vars
   if [[ $TRY_EXIT_CODE != 0 ]]; then
     readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
     local exception_type=${EXCEPTION[-1]} exception_filter
@@ -248,7 +263,9 @@ _eval() {
   if [[ $BASHPID == $$ ]]; then
     trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
   else
-    trap "create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval 'trap - EXIT;' "$1"
+    local trap=${TRY_VARS:+save_vars}
+    trap "${trap:+$trap; }create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap \"${trap:--}\" EXIT;" "$1"
+#    trap "create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap - EXIT;" "$1"
   fi
 }
 
@@ -268,6 +285,7 @@ exit_trap() {
   EXIT_CODE=${EXIT_CODE:-$?}
   [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
   [[ -z $PIPE ]] || rm -f "$PIPE"
+  rm -f "$TRY_VARS_FILE"
   for handler in "${EXIT_HANDLERS[@]}"; do
     eval "$handler"
   done
@@ -394,12 +412,15 @@ run_test_script() {
 
 run_tests() {
   MANAGED=
-  local failures=0
+  TRY_VARS=
+  failures=0
+  skipped=0
   local test_func
   call_setup_test_suite
   for test_func in "${testfuncs[@]}"; do
     if [[ $failures > 0 && $FAIL_FAST || ${testskip[$test_func]} ]]; then
       display_test_skipped "${testdescs[$test_func]}"
+      skipped=$((skipped+1))
       continue
     fi
 
@@ -422,7 +443,7 @@ run_tests() {
   call_teardown 'teardown_test_suite'
   if [[ $failures != 0 ]]; then
     log_err "$failures test(s) failed"
-    exit 1
+    [[ $TESTS_RUNNER ]] || exit 1
   fi
 }
 
@@ -451,11 +472,12 @@ load_includes() {
 assert_msg() {
   local msg=$1
   local why=$2
-  echo "Assertion failed: ${msg:+$msg, }$why"
+  _assert_msg="Assertion failed: ${msg:+$msg, }$why"
 }
 
 throw_assert() {
-  throw 'assert' "$(assert_msg "$1" "$2")"
+  assert_msg "$1" "$2"
+  throw 'assert' "$_assert_msg"
 }
 
 assert_success() {
@@ -672,6 +694,9 @@ setup_self_runner() {
 }
 
 setup_tests_runner() {
+  TESTSH=$(readlink -f "$0")
+  TESTSH_DIR=$(dirname "$TESTSH")
+
   trap 'exit_trap' EXIT
   trap 'err_trap' ERR
   push_err_handler 'create_implicit_exception'
@@ -681,13 +706,11 @@ setup_tests_runner() {
 setup_test_script() {
   TEST_SCRIPT=$(readlink -f "$test_script")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-  TESTSH=$(readlink -f "$BASH_SOURCE")
-  TESTSH_DIR=$(dirname "$TESTSH")
   TEST_TMP=$TEST_SCRIPT_DIR/tmp
   rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  trap '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
+  trap "save_vars $TRY_VARS;"'[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
 
   config_defaults
   load_config
@@ -702,6 +725,7 @@ setup_test_script() {
 VERSION=@VERSION@
 TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
 EXCEPTIONS_FILE=$TSH_TMP_PFX-exceptions
+TRY_VARS_FILE=$TSH_TMP_PFX-tryvars
 declare -A PRUNE_PATH_CACHE
 
 exception_is() {
@@ -716,23 +740,32 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   ERRORS=0
   setup_tests_runner
   INDENT='  '
+  declare test_count failures skipped
+  declare test_count_accum=0 failures_accum=0 skipped_accum=0
+  TRY_VARS="ERRORS test_count failures skipped"
   for test_script in "$@"; do
     try:
       setup_test_script
       echo -e "${BLUE}* $test_script:${NC}" >&3
       source "$test_script"
+      test_count=${#testfuncs[@]}
       try:
         run_tests
+        [[ $failures = 0 ]] || ERRORS=$((ERRORS+1))
       catch:
-        exception_is 'exit' || print_exception
-        rethrow
+        print_exception
+        ERRORS=$((ERRORS+1))
       endtry
     catch:
-      # TODO: count tests: passed, failed, skipped
+      print_exception
       ERRORS=$((ERRORS+1))
     endtry
+    test_count_accum=$((test_count_accum+test_count))
+    failures_accum=$((failures_accum+failures))
+    skipped_accum=$((skipped_accum+skipped))
   done
   printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-$ERRORS))" "$ERRORS"
+  printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
   exit "$ERRORS"
 fi
 
