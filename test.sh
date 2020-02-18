@@ -4,7 +4,10 @@
 #
 # See https://github.com/pikatoste/test.sh/
 #
-if [ "$0" = "${BASH_SOURCE}" ]; then
+
+[[ ! $TESTS_RUNNER ]] || return 0
+
+if [ "$0" = "${BASH_SOURCE}" -a $# = 0 ]; then
   echo "This is test.sh version @VERSION@"
   echo "See https://github.com/pikatoste/test.sh"
   exit 0
@@ -20,7 +23,6 @@ alias @setup_fixture:='setup_test_suite()'
 alias @teardown_fixture:='teardown_test_suite()'
 alias @setup:='setup_test()'
 alias @teardown:='teardown_test()'
-alias @run_tests='run_tests'
 declare -A testdescs testskip
 TEST_NUM=1
 
@@ -66,6 +68,7 @@ type_of_exception() {
 
 declare_exception nonzero
 declare_exception implicit nonzero
+declare_exception exit nonzero
 declare_exception assert nonzero
 declare_exception error
 declare_exception test_syntax error
@@ -76,7 +79,7 @@ _try() {
   push_caught_exception
   set +e
   # in case the try block executes exit instead of throw
-  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1' ERR
+  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1 exit' ERR
 }
 
 _try_prolog() {
@@ -188,7 +191,7 @@ create_implicit_exception() {
   read -r errcmd <<<"$BASH_COMMAND" || true
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
-  local pending_exception=('implicit')
+  local pending_exception=("${2:-implicit}")
   [[ ! -f $EXCEPTIONS_FILE ]] || readarray -t pending_exception <"$EXCEPTIONS_FILE"
   local exception=${pending_exception[-1]}
   first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception "$exception" "$errmsg"
@@ -241,6 +244,7 @@ print_exception() {
 }
 
 _eval() {
+  # TODO: pass all args to eval
   if [[ $BASHPID == $$ ]]; then
     trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
   else
@@ -292,7 +296,7 @@ pop_err_handler() {
   ERR_HANDLERS=("${ERR_HANDLERS[@]:1}")
 }
 
-display_last_test_result() {
+display_last_inline_test_result() {
   if [[ $EXIT_CODE == 0 ]]; then
     display_test_passed
   else
@@ -321,20 +325,20 @@ start_test() {
 
 display_test_passed() {
   log_ok "PASSED: ${CURRENT_TEST_NAME}"
-  echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${INDENT}${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_failed() {
   log_err "FAILED: ${CURRENT_TEST_NAME}"
-  echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${INDENT}${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_skipped() {
-  echo -e "${BLUE}* [skipped] $1${NC}" >&3
+  echo -e "${INDENT}${BLUE}* [skipped] $1${NC}" >&3
 }
 
 warn_teardown_failed() {
-  echo -e "${ORANGE}WARN: $1 failed${NC}" >&3
+  echo -e "${INDENT}${ORANGE}WARN: $1 failed${NC}" >&3
 }
 
 do_log() {
@@ -492,20 +496,6 @@ assert_equals() {
   }
 }
 
-VERSION=@VERSION@
-TEST_SCRIPT=$(readlink -f "$0")
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-TESTSH=$(readlink -f "$BASH_SOURCE")
-TESTSH_DIR=$(dirname "$TESTSH")
-TEST_TMP=$TEST_SCRIPT_DIR/tmp
-rm -rf "$TEST_TMP"
-mkdir -p "$TEST_TMP"
-
-FIRST_TEST=
-TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
-EXCEPTIONS_FILE=$TSH_TMP_PFX-stack
-declare -A PRUNE_PATH_CACHE
-
 set_color() {
   if [[ $COLOR = yes ]]; then
     GREEN='\033[0;32m'
@@ -525,7 +515,7 @@ cleanup() {
 }
 
 inline_exit_handler() {
-  [[ ! -v CURRENT_TEST_NAME ]] || display_last_test_result
+  [[ ! -v CURRENT_TEST_NAME ]] || display_last_inline_test_result
   [[ -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test
   [[ -z $setup_test_suite_called ]] || call_teardown teardown_test_suite
 }
@@ -650,20 +640,101 @@ init_prune_path_cache() {
     PRUNE_PATH_CACHE[$path]=${path##$PRUNE_PATH}
   done
   [[ $INITIALIZE_SOURCE_CACHE ]] || return 0
+  # TODO: adapt to test runner
   prune_path "$TEST_SCRIPT"
   prune_path "$BASH_SOURCE"
 }
 
-trap 'exit_trap' EXIT
-trap 'err_trap' ERR
-config_defaults
-load_config
-push_err_handler 'create_implicit_exception'
-setup_io
-push_exit_handler 'cleanup'
-[[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
-init_prune_path_cache
-load_includes
-push_exit_handler '[[ -v MANAGED ]] || inline_exit_handler'
+setup_self_runner() {
+  TEST_SCRIPT=$(readlink -f "$0")
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH=$(readlink -f "$BASH_SOURCE")
+  TESTSH_DIR=$(dirname "$TESTSH")
+  TEST_TMP=$TEST_SCRIPT_DIR/tmp
+  rm -rf "$TEST_TMP"
+  mkdir -p "$TEST_TMP"
 
-[[ ! $DEBUG ]] || set -x
+  trap 'exit_trap' EXIT
+  trap 'err_trap' ERR
+
+  config_defaults
+  load_config
+  push_err_handler 'create_implicit_exception'
+  setup_io
+  push_exit_handler 'cleanup'
+  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+  init_prune_path_cache
+  load_includes
+
+  FIRST_TEST=
+  push_exit_handler '[[ -v MANAGED ]] || inline_exit_handler'
+  [[ ! $DEBUG ]] || set -x
+}
+
+setup_tests_runner() {
+  trap 'exit_trap' EXIT
+  trap 'err_trap' ERR
+  push_err_handler 'create_implicit_exception'
+  config_defaults
+}
+
+setup_test_script() {
+  TEST_SCRIPT=$(readlink -f "$test_script")
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH=$(readlink -f "$BASH_SOURCE")
+  TESTSH_DIR=$(dirname "$TESTSH")
+  TEST_TMP=$TEST_SCRIPT_DIR/tmp
+  rm -rf "$TEST_TMP"
+  mkdir -p "$TEST_TMP"
+
+  trap '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
+
+  config_defaults
+  load_config
+  setup_io
+  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+#  init_prune_path_cache
+  load_includes
+
+  [[ ! $DEBUG ]] || set -x
+}
+
+VERSION=@VERSION@
+TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
+EXCEPTIONS_FILE=$TSH_TMP_PFX-exceptions
+declare -A PRUNE_PATH_CACHE
+
+exception_is() {
+  local exception_type=${EXCEPTION[-1]}
+  local exception_filter=${exception_types[$1]:-$1}
+  [[ $exception_type =~ ^$exception_filter ]]
+}
+
+if [ "$0" = "${BASH_SOURCE}" ]; then
+  alias @run_tests=
+  TESTS_RUNNER=1
+  ERRORS=0
+  setup_tests_runner
+  INDENT='  '
+  for test_script in "$@"; do
+    try:
+      setup_test_script
+      echo -e "${BLUE}* $test_script:${NC}" >&3
+      source "$test_script"
+      try:
+        run_tests
+      catch:
+        exception_is 'exit' || print_exception
+        rethrow
+      endtry
+    catch:
+      # TODO: count tests: passed, failed, skipped
+      ERRORS=$((ERRORS+1))
+    endtry
+  done
+  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-$ERRORS))" "$ERRORS"
+  exit "$ERRORS"
+fi
+
+setup_self_runner
+alias @run_tests='run_tests'
