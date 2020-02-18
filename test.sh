@@ -78,10 +78,7 @@ declare_exception eval_syntax_error error
 _try() {
   push_caught_exception
   set +e
-  # in case the try block executes exit instead of throw
-  # TODO: reports the whole try block as the failed command
-  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1 exit' ERR
-#  trap '' ERR
+  trap - ERR
 }
 
 save_vars() {
@@ -94,11 +91,17 @@ restore_vars() {
   unalias declare
 }
 
+try_exit_trap() {
+  ERR_CODE=$?
+  # in case the try block executes exit instead of throw
+  [ "$ERR_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception "1" "exit"
+  [[ $# = 0 ]] || save_vars "$@"
+}
+
 _try_prolog() {
   set -e
   trap 'err_trap' ERR
-#  trap 'ERR_CODE=$?; [ "$ERR_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1 exit' EXIT
-  [[ ! $TRY_VARS ]] || trap "save_vars $TRY_VARS" EXIT
+  trap "try_exit_trap $TRY_VARS" EXIT
 }
 
 _try_epilog() {
@@ -263,9 +266,9 @@ _eval() {
   if [[ $BASHPID == $$ ]]; then
     trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
   else
-    local trap=${TRY_VARS:+save_vars}
-    trap "${trap:+$trap; }create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap \"${trap:--}\" EXIT;" "$1"
-#    trap "create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap - EXIT;" "$1"
+    # TODO: can't be sure of what the exit trap is: this is wrong for example in a command substitution subshell
+    # TODO: wrong TRY_VARS value, should keep the current trap
+    trap "[[ ! \$TRY_VARS ]] || save_vars $TRY_VARS; create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap \"try_exit_trap $TRY_VARS\" EXIT;" "$1"
   fi
 }
 
@@ -432,12 +435,11 @@ run_tests() {
     catch:
       print_exception
       display_test_failed
-      call_teardown 'teardown_test'
       failures=$(( failures + 1 ))
     success:
       display_test_passed
-      call_teardown 'teardown_test'
     endtry
+    call_teardown 'teardown_test'
   done
 
   call_teardown 'teardown_test_suite'
@@ -710,7 +712,7 @@ setup_test_script() {
   rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  trap "save_vars $TRY_VARS;"'[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
+  trap "try_exit_trap $TRY_VARS;"'[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
 
   config_defaults
   load_config
