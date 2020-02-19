@@ -66,6 +66,12 @@ type_of_exception() {
   done
 }
 
+exception_is() {
+  local exception_type=${EXCEPTION[-1]}
+  local exception_filter=${exception_types[$1]:-$1}
+  [[ $exception_type =~ ^$exception_filter ]]
+}
+
 declare_exception nonzero
 declare_exception implicit nonzero
 declare_exception exit nonzero
@@ -92,16 +98,16 @@ restore_vars() {
 }
 
 try_exit_trap() {
-  ERR_CODE=$?
-  # in case the try block executes exit instead of throw
-  [ "$ERR_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception "1" "exit"
+  # in case the ERR trap is not called from the try block, such as when executing exit
+  [ "$EXIT_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || ERR_CODE=$EXIT_CODE create_implicit_exception "1" "exit"
   [[ $# = 0 ]] || save_vars "$@"
 }
 
 _try_prolog() {
   set -e
   trap 'err_trap' ERR
-  trap "try_exit_trap $TRY_VARS" EXIT
+  trap 'exit_trap' EXIT
+  set_exit_handlers "try_exit_trap $TRY_VARS"
 }
 
 _try_epilog() {
@@ -263,18 +269,14 @@ print_exception() {
 
 _eval() {
   # TODO: pass all args to eval
-  if [[ $BASHPID == $$ ]]; then
-    trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
-  else
-    # TODO: can't be sure of what the exit trap is: this is wrong for example in a command substitution subshell
-    # TODO: wrong TRY_VARS value, should keep the current trap
-    trap "[[ ! \$TRY_VARS ]] || save_vars $TRY_VARS; create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval "trap \"try_exit_trap $TRY_VARS\" EXIT;" "$1"
-  fi
+  # TODO: ensure EXIT trap is set but do not bring in handlers from other subshell
+  push_exit_handler "create_eval_syntax_error_exception $(printf "%q" "$1")"
+  eval 'pop_exit_handler;' "$1"
 }
 
 create_eval_syntax_error_exception() {
   local errmsg="Syntax error in the expression: $1"
-  create_exception 'eval_syntax_error' "$errmsg"
+  first_frame=3 create_exception 'eval_syntax_error' "$errmsg"
 }
 
 unhandled_exception() {
@@ -285,13 +287,14 @@ unhandled_exception() {
 }
 
 exit_trap() {
-  EXIT_CODE=${EXIT_CODE:-$?}
-  [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
-  [[ -z $PIPE ]] || rm -f "$PIPE"
-  rm -f "$TRY_VARS_FILE"
+  EXIT_CODE=$?
   for handler in "${EXIT_HANDLERS[@]}"; do
     eval "$handler"
   done
+}
+
+set_exit_handlers() {
+  EXIT_HANDLERS=("$@")
 }
 
 push_exit_handler() {
@@ -329,10 +332,10 @@ start_test() {
   [[ ! -v MANAGED ]] || return
   # TODO: check pending exceptions after the last inline test
   check_pending_exceptions
-  if [[ -v FIRST_TEST ]]; then
+  if [[ $FIRST_TEST ]]; then
     setup_test_suite_called=1
     call_setup_test_suite
-    unset FIRST_TEST
+    FIRST_TEST=
   else
     display_test_passed
     unset CURRENT_TEST_NAME
@@ -540,7 +543,7 @@ cleanup() {
 
 inline_exit_handler() {
   [[ ! -v CURRENT_TEST_NAME ]] || display_last_inline_test_result
-  [[ -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test
+  [[ -n $teardown_test_called || $FIRST_TEST ]] || call_teardown teardown_test
   [[ -z $setup_test_suite_called ]] || call_teardown teardown_test_suite
 }
 
@@ -669,6 +672,12 @@ init_prune_path_cache() {
   prune_path "$BASH_SOURCE"
 }
 
+main_exit_handler() {
+  [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
+  [[ -z $PIPE ]] || rm -f "$PIPE"
+  rm -f "$TRY_VARS_FILE"
+}
+
 setup_self_runner() {
   TEST_SCRIPT=$(readlink -f "$0")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
@@ -680,18 +689,17 @@ setup_self_runner() {
 
   trap 'exit_trap' EXIT
   trap 'err_trap' ERR
+  set_exit_handlers 'main_exit_handler' '[[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler' 'cleanup'
 
   config_defaults
   load_config
   push_err_handler 'create_implicit_exception'
   setup_io
-  push_exit_handler 'cleanup'
   [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
   init_prune_path_cache
   load_includes
 
-  FIRST_TEST=
-  push_exit_handler '[[ -v MANAGED ]] || inline_exit_handler'
+  FIRST_TEST=1
   [[ ! $DEBUG ]] || set -x
 }
 
@@ -701,6 +709,7 @@ setup_tests_runner() {
 
   trap 'exit_trap' EXIT
   trap 'err_trap' ERR
+  set_exit_handlers 'main_exit_handler'
   push_err_handler 'create_implicit_exception'
   config_defaults
 }
@@ -712,7 +721,7 @@ setup_test_script() {
   rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  trap "try_exit_trap $TRY_VARS;"'[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup' EXIT
+  EXIT_HANDLERS=("${EXIT_HANDLERS[@]}" '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup')
 
   config_defaults
   load_config
@@ -729,12 +738,6 @@ TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
 EXCEPTIONS_FILE=$TSH_TMP_PFX-exceptions
 TRY_VARS_FILE=$TSH_TMP_PFX-tryvars
 declare -A PRUNE_PATH_CACHE
-
-exception_is() {
-  local exception_type=${EXCEPTION[-1]}
-  local exception_filter=${exception_types[$1]:-$1}
-  [[ $exception_type =~ ^$exception_filter ]]
-}
 
 if [ "$0" = "${BASH_SOURCE}" ]; then
   alias @run_tests=
