@@ -48,6 +48,7 @@ alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
 
 declare -A exceptions exception_types
+declare -A EXIT_HANDLERS
 
 declare_exception() {
   local exception=$1 super=$2
@@ -99,15 +100,14 @@ restore_vars() {
 
 try_exit_trap() {
   # in case the ERR trap is not called from the try block, such as when executing exit
-  [ "$EXIT_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || ERR_CODE=$EXIT_CODE create_implicit_exception "1" "exit"
+  [ "$EXIT_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || ERR_CODE=$EXIT_CODE BASH_COMMAND=$EXIT_COMMAND create_implicit_exception "3" "exit"
   [[ $# = 0 ]] || save_vars "$@"
 }
 
 _try_prolog() {
   set -e
   trap 'err_trap' ERR
-  trap 'exit_trap' EXIT
-  set_exit_handlers "try_exit_trap $TRY_VARS"
+  push_exit_handler "try_exit_trap $TRY_VARS"
 }
 
 _try_epilog() {
@@ -193,18 +193,24 @@ create_exception() {
   local first_frame=${first_frame:-2}
 
   # TODO: replace 'chained:' mark with something unambiguous
+  # TODO: replace '---' mark with something unambiguous
+  # TODO: only implicit and pending_exception exceptions should chain, others should throw a
+  #       pending exceptions found while handling exception ...
   if [[ -f $EXCEPTIONS_FILE ]]; then
-    # TODO: only implicit and pending_exception exceptions should chain, others should throw a
-    #       pending exceptions found while handling exception ...
     local chain_reason=${CHAIN_REASON:-Pending exception}
     echo -e "chained:${RED}$chain_reason:${NC}" >>"$EXCEPTIONS_FILE"
   fi
   if [[ -v WITH_CAUSE ]]; then
     { printf "%s\n" "${EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$EXCEPTIONS_FILE"
   fi
-  local exception_type=${exception_types[$exception]:-$exception}
-  # TODO: replace '---' mark with something unambiguous
-  { stack_trace "$first_frame"; echo '---'; echo "$exception_msg"; echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
+  local exception_type=${exception_types[$exception]:-$exception} msg_lines i
+  readarray -t msg_lines <<<"$exception_msg"
+  { stack_trace "$first_frame"
+    echo '---'
+    for ((i=${#msg_lines[@]}-1; i>=0; i--)); do
+      echo "${msg_lines[$i]}"
+    done
+    echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
@@ -212,7 +218,7 @@ create_implicit_exception() {
   local err=$ERR_CODE
   local errcmd=
   # TODO: truncate... do better
-  read -r errcmd <<<"$BASH_COMMAND" || true
+  read -r errcmd <<<"$BASH_COMMAND"
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
   local pending_exception=("${2:-implicit}")
@@ -237,6 +243,7 @@ prune_path() {
 }
 
 stack_trace() {
+  local i
   [[ $STACK_TRACE == no ]] || for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
   do
     prune_path "${BASH_SOURCE[$i+1]}"
@@ -269,7 +276,6 @@ print_exception() {
 
 _eval() {
   # TODO: pass all args to eval
-  # TODO: ensure EXIT trap is set but do not bring in handlers from other subshell
   push_exit_handler "create_eval_syntax_error_exception $(printf "%q" "$1")"
   eval 'pop_exit_handler;' "$1"
 }
@@ -288,21 +294,24 @@ unhandled_exception() {
 
 exit_trap() {
   EXIT_CODE=$?
-  for handler in "${EXIT_HANDLERS[@]}"; do
+  EXIT_COMMAND=$BASH_COMMAND
+  local handler i
+  for ((i=${EXIT_HANDLERS[$BASHPID]}-1; i>=0; i--)); do
+    handler=${EXIT_HANDLERS[$BASHPID-$i]}
     eval "$handler"
   done
 }
 
-set_exit_handlers() {
-  EXIT_HANDLERS=("$@")
-}
-
 push_exit_handler() {
-  EXIT_HANDLERS=("$1" "${EXIT_HANDLERS[@]}")
+  local handler_count=${EXIT_HANDLERS[$BASHPID]}
+  [[ $handler_count ]] || { trap 'exit_trap' EXIT; handler_count=0; }
+  EXIT_HANDLERS[$BASHPID-$handler_count]=$1
+  EXIT_HANDLERS[$BASHPID]=$((handler_count+1))
 }
 
 pop_exit_handler() {
-  EXIT_HANDLERS=("${EXIT_HANDLERS[@]:1}")
+  local handler_count=${EXIT_HANDLERS[$BASHPID]}
+  EXIT_HANDLERS[$BASHPID]=$((handler_count-1))
 }
 
 err_trap() {
@@ -536,7 +545,7 @@ set_color() {
 }
 
 cleanup() {
-  exec 1>&- 2>&-
+  exec 1>&- 2>&- 1>&3 2>&4
   wait
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
@@ -678,6 +687,21 @@ main_exit_handler() {
   rm -f "$TRY_VARS_FILE"
 }
 
+self_runner_exit_handler() {
+  main_exit_handler
+  [[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler
+  cleanup
+}
+
+setup_runner() {
+  config_defaults
+  load_config
+  setup_io
+  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+  init_prune_path_cache
+  load_includes
+}
+
 setup_self_runner() {
   TEST_SCRIPT=$(readlink -f "$0")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
@@ -687,17 +711,11 @@ setup_self_runner() {
   rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  trap 'exit_trap' EXIT
+#  set_exit_handlers 'main_exit_handler' '[[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler' 'cleanup'
+  push_exit_handler 'self_runner_exit_handler'
   trap 'err_trap' ERR
-  set_exit_handlers 'main_exit_handler' '[[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler' 'cleanup'
-
-  config_defaults
-  load_config
   push_err_handler 'create_implicit_exception'
-  setup_io
-  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
-  init_prune_path_cache
-  load_includes
+  setup_runner
 
   FIRST_TEST=1
   [[ ! $DEBUG ]] || set -x
@@ -707,9 +725,8 @@ setup_tests_runner() {
   TESTSH=$(readlink -f "$0")
   TESTSH_DIR=$(dirname "$TESTSH")
 
-  trap 'exit_trap' EXIT
+  push_exit_handler 'main_exit_handler'
   trap 'err_trap' ERR
-  set_exit_handlers 'main_exit_handler'
   push_err_handler 'create_implicit_exception'
   config_defaults
 }
@@ -721,14 +738,8 @@ setup_test_script() {
   rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  EXIT_HANDLERS=("${EXIT_HANDLERS[@]}" '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup')
-
-  config_defaults
-  load_config
-  setup_io
-  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
-#  init_prune_path_cache
-  load_includes
+  push_exit_handler '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup'
+  setup_runner
 
   [[ ! $DEBUG ]] || set -x
 }
