@@ -4,7 +4,10 @@
 #
 # See https://github.com/pikatoste/test.sh/
 #
-if [ "$0" = "${BASH_SOURCE}" ]; then
+
+[[ ! $TESTS_RUNNER ]] || return 0
+
+if [ "$0" = "${BASH_SOURCE}" -a $# = 0 ]; then
   echo "This is test.sh version @VERSION@"
   echo "See https://github.com/pikatoste/test.sh"
   exit 0
@@ -20,7 +23,6 @@ alias @setup_fixture:='setup_test_suite()'
 alias @teardown_fixture:='teardown_test_suite()'
 alias @setup:='setup_test()'
 alias @teardown:='teardown_test()'
-alias @run_tests='run_tests'
 declare -A testdescs testskip
 TEST_NUM=1
 
@@ -46,6 +48,7 @@ alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
 
 declare -A exceptions exception_types
+declare -A EXIT_HANDLERS
 
 declare_exception() {
   local exception=$1 super=$2
@@ -64,8 +67,15 @@ type_of_exception() {
   done
 }
 
+exception_is() {
+  local exception_type=${EXCEPTION[-1]}
+  local exception_filter=${exception_types[$1]:-$1}
+  [[ $exception_type =~ ^$exception_filter ]]
+}
+
 declare_exception nonzero
 declare_exception implicit nonzero
+declare_exception exit nonzero
 declare_exception assert nonzero
 declare_exception error
 declare_exception test_syntax error
@@ -75,13 +85,29 @@ declare_exception eval_syntax_error error
 _try() {
   push_caught_exception
   set +e
-  # in case the try block executes exit instead of throw
-  trap 'ERR_CODE=$?; [ -f "$EXCEPTIONS_FILE" ] || create_implicit_exception 1' ERR
+  trap - ERR
+}
+
+save_vars() {
+  declare -p "$@" >"$TRY_VARS_FILE"
+}
+
+restore_vars() {
+  alias declare='declare -g'
+  eval "$(cat "$TRY_VARS_FILE")"
+  unalias declare
+}
+
+try_exit_trap() {
+  # in case the ERR trap is not called from the try block, such as when executing exit
+  [ "$EXIT_CODE" = 0 ] || [ -f "$EXCEPTIONS_FILE" ] || ERR_CODE=$EXIT_CODE BASH_COMMAND=$EXIT_COMMAND create_implicit_exception "3" "exit"
+  [[ $# = 0 ]] || save_vars "$@"
 }
 
 _try_prolog() {
   set -e
   trap 'err_trap' ERR
+  push_exit_handler "try_exit_trap $TRY_VARS"
 }
 
 _try_epilog() {
@@ -90,6 +116,7 @@ _try_epilog() {
 
 _catch() {
   push_try_exit_code
+  [[ ! $TRY_VARS ]] || restore_vars
   if [[ $TRY_EXIT_CODE != 0 ]]; then
     readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
     local exception_type=${EXCEPTION[-1]} exception_filter
@@ -166,18 +193,24 @@ create_exception() {
   local first_frame=${first_frame:-2}
 
   # TODO: replace 'chained:' mark with something unambiguous
+  # TODO: replace '---' mark with something unambiguous
+  # TODO: only implicit and pending_exception exceptions should chain, others should throw a
+  #       pending exceptions found while handling exception ...
   if [[ -f $EXCEPTIONS_FILE ]]; then
-    # TODO: only implicit and pending_exception exceptions should chain, others should throw a
-    #       pending exceptions found while handling exception ...
     local chain_reason=${CHAIN_REASON:-Pending exception}
     echo -e "chained:${RED}$chain_reason:${NC}" >>"$EXCEPTIONS_FILE"
   fi
   if [[ -v WITH_CAUSE ]]; then
     { printf "%s\n" "${EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$EXCEPTIONS_FILE"
   fi
-  local exception_type=${exception_types[$exception]:-$exception}
-  # TODO: replace '---' mark with something unambiguous
-  { stack_trace "$first_frame"; echo '---'; echo "$exception_msg"; echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
+  local exception_type=${exception_types[$exception]:-$exception} msg_lines i
+  readarray -t msg_lines <<<"$exception_msg"
+  { stack_trace "$first_frame"
+    echo '---'
+    for ((i=${#msg_lines[@]}-1; i>=0; i--)); do
+      echo "${msg_lines[$i]}"
+    done
+    echo "$exception_type"; } >>"$EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
@@ -185,10 +218,10 @@ create_implicit_exception() {
   local err=$ERR_CODE
   local errcmd=
   # TODO: truncate... do better
-  read -r errcmd <<<"$BASH_COMMAND" || true
+  read -r errcmd <<<"$BASH_COMMAND"
   prune_path "${BASH_SOURCE[$frame_idx]}"
   local errmsg="Error in ${FUNCNAME[$frame_idx]}($PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
-  local pending_exception=('implicit')
+  local pending_exception=("${2:-implicit}")
   [[ ! -f $EXCEPTIONS_FILE ]] || readarray -t pending_exception <"$EXCEPTIONS_FILE"
   local exception=${pending_exception[-1]}
   first_frame=$((frame_idx+2)) CHAIN_REASON='Previous exception' create_exception "$exception" "$errmsg"
@@ -210,6 +243,7 @@ prune_path() {
 }
 
 stack_trace() {
+  local i
   [[ $STACK_TRACE == no ]] || for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
   do
     prune_path "${BASH_SOURCE[$i+1]}"
@@ -241,16 +275,14 @@ print_exception() {
 }
 
 _eval() {
-  if [[ $BASHPID == $$ ]]; then
-    trap "EXIT_CODE=$?; create_eval_syntax_error_exception $(printf "%q" "$1"); exit_trap" EXIT; eval 'trap exit_trap EXIT;' "$1"
-  else
-    trap "create_eval_syntax_error_exception $(printf "%q" "$1")" EXIT; eval 'trap - EXIT;' "$1"
-  fi
+  # TODO: pass all args to eval
+  push_exit_handler "create_eval_syntax_error_exception $(printf "%q" "$1")"
+  eval 'pop_exit_handler;' "$1"
 }
 
 create_eval_syntax_error_exception() {
   local errmsg="Syntax error in the expression: $1"
-  create_exception 'eval_syntax_error' "$errmsg"
+  first_frame=3 create_exception 'eval_syntax_error' "$errmsg"
 }
 
 unhandled_exception() {
@@ -261,20 +293,25 @@ unhandled_exception() {
 }
 
 exit_trap() {
-  EXIT_CODE=${EXIT_CODE:-$?}
-  [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
-  [[ -z $PIPE ]] || rm -f "$PIPE"
-  for handler in "${EXIT_HANDLERS[@]}"; do
+  EXIT_CODE=$?
+  EXIT_COMMAND=$BASH_COMMAND
+  local handler i
+  for ((i=${EXIT_HANDLERS[$BASHPID]}-1; i>=0; i--)); do
+    handler=${EXIT_HANDLERS[$BASHPID-$i]}
     eval "$handler"
   done
 }
 
 push_exit_handler() {
-  EXIT_HANDLERS=("$1" "${EXIT_HANDLERS[@]}")
+  local handler_count=${EXIT_HANDLERS[$BASHPID]}
+  [[ $handler_count ]] || { trap 'exit_trap' EXIT; handler_count=0; }
+  EXIT_HANDLERS[$BASHPID-$handler_count]=$1
+  EXIT_HANDLERS[$BASHPID]=$((handler_count+1))
 }
 
 pop_exit_handler() {
-  EXIT_HANDLERS=("${EXIT_HANDLERS[@]:1}")
+  local handler_count=${EXIT_HANDLERS[$BASHPID]}
+  EXIT_HANDLERS[$BASHPID]=$((handler_count-1))
 }
 
 err_trap() {
@@ -292,7 +329,7 @@ pop_err_handler() {
   ERR_HANDLERS=("${ERR_HANDLERS[@]:1}")
 }
 
-display_last_test_result() {
+display_last_inline_test_result() {
   if [[ $EXIT_CODE == 0 ]]; then
     display_test_passed
   else
@@ -304,10 +341,10 @@ start_test() {
   [[ ! -v MANAGED ]] || return
   # TODO: check pending exceptions after the last inline test
   check_pending_exceptions
-  if [[ -v FIRST_TEST ]]; then
+  if [[ $FIRST_TEST ]]; then
     setup_test_suite_called=1
     call_setup_test_suite
-    unset FIRST_TEST
+    FIRST_TEST=
   else
     display_test_passed
     unset CURRENT_TEST_NAME
@@ -321,20 +358,20 @@ start_test() {
 
 display_test_passed() {
   log_ok "PASSED: ${CURRENT_TEST_NAME}"
-  echo -e "${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${INDENT}${GREEN}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_failed() {
   log_err "FAILED: ${CURRENT_TEST_NAME}"
-  echo -e "${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${INDENT}${RED}* ${CURRENT_TEST_NAME}${NC}" >&3
 }
 
 display_test_skipped() {
-  echo -e "${BLUE}* [skipped] $1${NC}" >&3
+  echo -e "${INDENT}${BLUE}* [skipped] $1${NC}" >&3
 }
 
 warn_teardown_failed() {
-  echo -e "${ORANGE}WARN: $1 failed${NC}" >&3
+  echo -e "${INDENT}${ORANGE}WARN: $1 failed${NC}" >&3
 }
 
 do_log() {
@@ -390,12 +427,15 @@ run_test_script() {
 
 run_tests() {
   MANAGED=
-  local failures=0
+  TRY_VARS=
+  failures=0
+  skipped=0
   local test_func
   call_setup_test_suite
   for test_func in "${testfuncs[@]}"; do
     if [[ $failures > 0 && $FAIL_FAST || ${testskip[$test_func]} ]]; then
       display_test_skipped "${testdescs[$test_func]}"
+      skipped=$((skipped+1))
       continue
     fi
 
@@ -407,18 +447,17 @@ run_tests() {
     catch:
       print_exception
       display_test_failed
-      call_teardown 'teardown_test'
       failures=$(( failures + 1 ))
     success:
       display_test_passed
-      call_teardown 'teardown_test'
     endtry
+    call_teardown 'teardown_test'
   done
 
   call_teardown 'teardown_test_suite'
   if [[ $failures != 0 ]]; then
     log_err "$failures test(s) failed"
-    exit 1
+    [[ $TESTS_RUNNER ]] || exit 1
   fi
 }
 
@@ -447,11 +486,12 @@ load_includes() {
 assert_msg() {
   local msg=$1
   local why=$2
-  echo "Assertion failed: ${msg:+$msg, }$why"
+  _assert_msg="Assertion failed: ${msg:+$msg, }$why"
 }
 
 throw_assert() {
-  throw 'assert' "$(assert_msg "$1" "$2")"
+  assert_msg "$1" "$2"
+  throw 'assert' "$_assert_msg"
 }
 
 assert_success() {
@@ -492,20 +532,6 @@ assert_equals() {
   }
 }
 
-VERSION=@VERSION@
-TEST_SCRIPT=$(readlink -f "$0")
-TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
-TESTSH=$(readlink -f "$BASH_SOURCE")
-TESTSH_DIR=$(dirname "$TESTSH")
-TEST_TMP=$TEST_SCRIPT_DIR/tmp
-rm -rf "$TEST_TMP"
-mkdir -p "$TEST_TMP"
-
-FIRST_TEST=
-TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
-EXCEPTIONS_FILE=$TSH_TMP_PFX-stack
-declare -A PRUNE_PATH_CACHE
-
 set_color() {
   if [[ $COLOR = yes ]]; then
     GREEN='\033[0;32m'
@@ -519,14 +545,14 @@ set_color() {
 }
 
 cleanup() {
-  exec 1>&- 2>&-
+  exec 1>&- 2>&- 1>&3 2>&4
   wait
   [[ ! $CLEAN_TEST_TMP ]] || [[ $EXIT_CODE != 0 ]] || rm -rf "$TEST_TMP"
 }
 
 inline_exit_handler() {
-  [[ ! -v CURRENT_TEST_NAME ]] || display_last_test_result
-  [[ -n $teardown_test_called || -v FIRST_TEST ]] || call_teardown teardown_test
+  [[ ! -v CURRENT_TEST_NAME ]] || display_last_inline_test_result
+  [[ -n $teardown_test_called || $FIRST_TEST ]] || call_teardown teardown_test
   [[ -z $setup_test_suite_called ]] || call_teardown teardown_test_suite
 }
 
@@ -650,20 +676,114 @@ init_prune_path_cache() {
     PRUNE_PATH_CACHE[$path]=${path##$PRUNE_PATH}
   done
   [[ $INITIALIZE_SOURCE_CACHE ]] || return 0
+  # TODO: adapt to test runner
   prune_path "$TEST_SCRIPT"
   prune_path "$BASH_SOURCE"
 }
 
-trap 'exit_trap' EXIT
-trap 'err_trap' ERR
-config_defaults
-load_config
-push_err_handler 'create_implicit_exception'
-setup_io
-push_exit_handler 'cleanup'
-[[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
-init_prune_path_cache
-load_includes
-push_exit_handler '[[ -v MANAGED ]] || inline_exit_handler'
+main_exit_handler() {
+  [[ ! -f $EXCEPTIONS_FILE ]] || unhandled_exception
+  [[ -z $PIPE ]] || rm -f "$PIPE"
+  rm -f "$TRY_VARS_FILE"
+}
 
-[[ ! $DEBUG ]] || set -x
+self_runner_exit_handler() {
+  main_exit_handler
+  [[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler
+  cleanup
+}
+
+setup_runner() {
+  config_defaults
+  load_config
+  setup_io
+  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+  init_prune_path_cache
+  load_includes
+}
+
+setup_self_runner() {
+  TEST_SCRIPT=$(readlink -f "$0")
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TESTSH=$(readlink -f "$BASH_SOURCE")
+  TESTSH_DIR=$(dirname "$TESTSH")
+  TEST_TMP=$TEST_SCRIPT_DIR/tmp
+  rm -rf "$TEST_TMP"
+  mkdir -p "$TEST_TMP"
+
+#  set_exit_handlers 'main_exit_handler' '[[ ! -v FIRST_TEST ]] || [[ -v MANAGED ]] || inline_exit_handler' 'cleanup'
+  push_exit_handler 'self_runner_exit_handler'
+  trap 'err_trap' ERR
+  push_err_handler 'create_implicit_exception'
+  setup_runner
+
+  FIRST_TEST=1
+  [[ ! $DEBUG ]] || set -x
+}
+
+setup_tests_runner() {
+  TESTSH=$(readlink -f "$0")
+  TESTSH_DIR=$(dirname "$TESTSH")
+
+  push_exit_handler 'main_exit_handler'
+  trap 'err_trap' ERR
+  push_err_handler 'create_implicit_exception'
+  config_defaults
+}
+
+setup_test_script() {
+  TEST_SCRIPT=$(readlink -f "$test_script")
+  TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
+  TEST_TMP=$TEST_SCRIPT_DIR/tmp
+  rm -rf "$TEST_TMP"
+  mkdir -p "$TEST_TMP"
+
+  push_exit_handler '[[ -z $PIPE ]] || rm -f "$PIPE"; cleanup'
+  setup_runner
+
+  [[ ! $DEBUG ]] || set -x
+}
+
+VERSION=@VERSION@
+TSH_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
+EXCEPTIONS_FILE=$TSH_TMP_PFX-exceptions
+TRY_VARS_FILE=$TSH_TMP_PFX-tryvars
+declare -A PRUNE_PATH_CACHE
+
+if [ "$0" = "${BASH_SOURCE}" ]; then
+  alias @run_tests=
+  TESTS_RUNNER=1
+  ERRORS=0
+  setup_tests_runner
+  INDENT='  '
+  declare test_count failures skipped
+  declare test_count_accum=0 failures_accum=0 skipped_accum=0
+  TRY_VARS="ERRORS test_count failures skipped"
+  for test_script in "$@"; do
+    try:
+      setup_test_script
+      echo -e "${BLUE}* $test_script:${NC}" >&3
+      source "$test_script"
+      test_count=${#testfuncs[@]}
+      try:
+        run_tests
+        [[ $failures = 0 ]] || ERRORS=$((ERRORS+1))
+      catch:
+        print_exception
+        ERRORS=$((ERRORS+1))
+      endtry
+    catch:
+      print_exception
+      ERRORS=$((ERRORS+1))
+    endtry
+    test_count_accum=$((test_count_accum+test_count))
+    failures_accum=$((failures_accum+failures))
+    skipped_accum=$((skipped_accum+skipped))
+  done
+  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-$ERRORS))" "$ERRORS"
+  printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
+  exit "$ERRORS"
+fi
+
+setup_self_runner
+alias @run_tests='run_tests'
