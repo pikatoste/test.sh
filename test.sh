@@ -41,9 +41,9 @@ validate@body() {
 }
 
 alias try:="_try;(_try_prolog;"
-alias catch:="_try_epilog);_catch ''&&{"
-alias catch="_try_epilog);_catch "
-alias success:="}; _success&&{"
+alias catch:=");_catch ''&&{"
+alias catch=");_catch "
+alias success:="}; _success&&{ enable_exceptions;"
 alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
 
@@ -105,33 +105,30 @@ try_exit_trap() {
 }
 
 _try_prolog() {
-  set -e
-  trap 'err_trap' ERR
+  enable_exceptions
   push_exit_handler "try_exit_trap $TRY_VARS"
-}
-
-_try_epilog() {
-  check_pending_exceptions
 }
 
 _catch() {
   push_try_exit_code
   [[ ! $TRY_VARS ]] || restore_vars
-  if [[ $TRY_EXIT_CODE != 0 ]]; then
-    readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
-    local exception_type=${EXCEPTION[-1]} exception_filter
-    for exception_filter in "$@"; do
-      [[ $exception_type =~ ^$exception_filter ]] || continue
-      rm -f "$EXCEPTIONS_FILE"
-      set -e
-      trap 'err_trap' ERR
-      return 0
-    done
-    exit "$TRY_EXIT_CODE"
-  else
-    trap - ERR
-    false
-  fi
+  [[ -f $EXCEPTIONS_FILE ]] || return 1
+  [[ $TRY_EXIT_CODE != 0 ]] ||
+    create_exception 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
+  readarray -t EXCEPTION <"$EXCEPTIONS_FILE"
+  local exception_type=${EXCEPTION[-1]} exception_filter
+  for exception_filter in "$@"; do
+    [[ $exception_type =~ ^$exception_filter ]] || continue
+    rm -f "$EXCEPTIONS_FILE"
+    enable_exceptions
+    return 0
+  done
+  exit "$TRY_EXIT_CODE"
+}
+
+enable_exceptions() {
+  set -e
+  trap 'err_trap' ERR
 }
 
 _success() {
@@ -141,8 +138,7 @@ _success() {
 _endtry() {
   pop_caught_exception
   pop_try_exit_code
-  set -e
-  trap 'err_trap' ERR
+  enable_exceptions
 }
 
 check_pending_exceptions() {
@@ -400,12 +396,9 @@ call_if_exists() {
 
 call_setup_test_suite() {
   declare -f 'setup_test_suite' >/dev/null || return 0
-  try:
-    setup_test_suite
-  catch:
-    echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3
-    rethrow
-  endtry
+  push_err_handler 'echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3'
+  setup_test_suite
+  pop_err_handler
 }
 
 call_teardown() {
@@ -427,7 +420,6 @@ run_test_script() {
 
 run_tests() {
   MANAGED=
-  TRY_VARS=
   failures=0
   skipped=0
   local test_func
@@ -756,17 +748,17 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   ERRORS=0
   setup_tests_runner
   INDENT='  '
-  declare test_count failures skipped
   declare test_count_accum=0 failures_accum=0 skipped_accum=0
   TRY_VARS="ERRORS test_count failures skipped"
   for test_script in "$@"; do
+    declare test_count=0 failures=0 skipped=0
     try:
       setup_test_script
       echo -e "${BLUE}* $test_script:${NC}" >&3
-      source "$test_script"
+      source "$TEST_SCRIPT"
       test_count=${#testfuncs[@]}
       try:
-        run_tests
+        TRY_VARS= run_tests
         [[ $failures = 0 ]] || ERRORS=$((ERRORS+1))
       catch:
         print_exception

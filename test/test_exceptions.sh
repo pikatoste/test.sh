@@ -30,7 +30,8 @@ start_test "Exceptions thrown from a catch block should ignore the current excep
 [test.sh] Error in main(the_test.sh:): 'false' exited with status 1
 EOF
 
-start_test "Try blocks that exit but not throw generate exception"
+start_test "Try blocks that exit but not throw, generate exception"
+
   try:
     exit 1
   catch: print_exception
