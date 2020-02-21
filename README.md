@@ -519,7 +519,7 @@ This is the list of functions and aliases defined by test.sh that you can use in
   Syntax:
 
   ```text
-  _eval [arguments]
+  _eval [arguments]...
   ```
 
   Wrapper for the `eval` builtin. Throws `eval_syntax_error` exception.
