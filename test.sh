@@ -351,7 +351,7 @@ start_test() {
   fi
   _CURRENT_TEST_NAME="$1"
   _teardown_test_called=
-  call_if_exists 'setup_test'
+   ! function_exists 'setup_test' || setup_test
   log "Start test: $_CURRENT_TEST_NAME"
 }
 
@@ -393,20 +393,21 @@ log_err() {
   do_log "${RED}[test.sh]${NC} $*" >&2
 }
 
-call_if_exists() {
-  ! declare -f "$1" >/dev/null || $1
+function_exists() {
+  declare -f "$1" >/dev/null
 }
 
 call_setup_test_suite() {
-  declare -f 'setup_test_suite' >/dev/null || return 0
+  function_exists 'setup_test_suite' || return 0
   push_err_handler 'echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3'
   setup_test_suite
   pop_err_handler
 }
 
 call_teardown() {
+  function_exists "$1" || return 0
   try:
-    call_if_exists "$1"
+    "$1"
   catch:
     print_exception
     warn_teardown_failed "$1"
@@ -437,7 +438,7 @@ run_tests() {
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     try:
       log "Start test: $_CURRENT_TEST_NAME"
-      call_if_exists 'setup_test'
+      ! function_exists 'setup_test' || setup_test
       "$test_func"
     catch:
       print_exception
