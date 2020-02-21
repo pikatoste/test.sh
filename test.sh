@@ -8,6 +8,7 @@
 [[ ! $TESTS_RUNNER ]] || return 0
 
 if [ "$0" = "${BASH_SOURCE}" -a $# = 0 ]; then
+  echo "@BANNER@"
   echo "This is test.sh version @VERSION@"
   echo "See https://github.com/pikatoste/test.sh"
   exit 0
