@@ -27,7 +27,7 @@ declare -A testdescs testskip
 TEST_NUM=1
 
 define_test() {
-  testfunc=test_$(printf "%02d" "$TEST_NUM")
+  printf -v testfunc  "test_%02d" "$TEST_NUM"
   testfuncs[$TEST_NUM]=$testfunc
   testskip[$testfunc]=$SKIP
   testdescs[$testfunc]=${1:-$testfunc}
@@ -94,7 +94,7 @@ save_vars() {
 
 restore_vars() {
   alias declare='declare -g'
-  eval "$(cat "$TRY_VARS_FILE")"
+  source "$TRY_VARS_FILE"
   unalias declare
 }
 
@@ -157,7 +157,7 @@ pop_try_exit_code() {
 }
 
 push_caught_exception() {
-  [[ ! -v EXCEPTION ]] || CAUGHT_EXCEPTIONS=("$(declare -p EXCEPTION)" "${CAUGHT_EXCEPTIONS[@]}")
+  [[ ! -v EXCEPTION ]] || CAUGHT_EXCEPTIONS=("${EXCEPTION[*]@A}" "${CAUGHT_EXCEPTIONS[@]}")
 }
 
 pop_caught_exception() {
@@ -272,7 +272,7 @@ print_exception() {
 
 _eval() {
   # TODO: pass all args to eval
-  push_exit_handler "create_eval_syntax_error_exception $(printf "%q" "$1")"
+  push_exit_handler "create_eval_syntax_error_exception ${1@Q}"
   eval 'pop_exit_handler;' "$1"
 }
 
@@ -668,7 +668,6 @@ init_prune_path_cache() {
     PRUNE_PATH_CACHE[$path]=${path##$PRUNE_PATH}
   done
   [[ $INITIALIZE_SOURCE_CACHE ]] || return 0
-  # TODO: adapt to test runner
   prune_path "$TEST_SCRIPT"
   prune_path "$BASH_SOURCE"
 }
@@ -750,30 +749,35 @@ if [ "$0" = "${BASH_SOURCE}" ]; then
   INDENT='  '
   declare test_count_accum=0 failures_accum=0 skipped_accum=0
   TRY_VARS="ERRORS test_count failures skipped"
-  for test_script in "$@"; do
-    declare test_count=0 failures=0 skipped=0
-    try:
-      setup_test_script
-      echo -e "${BLUE}* $test_script:${NC}" >&3
-      source "$TEST_SCRIPT"
-      test_count=${#testfuncs[@]}
+  { time {
+    for test_script in "$@"; do
+      declare test_count=0 failures=0 skipped=0
       try:
-        TRY_VARS= run_tests
-        [[ $failures = 0 ]] || ERRORS=$((ERRORS+1))
+        setup_test_script
+        echo -e "${BLUE}* $test_script:${NC}" >&3
+        source "$TEST_SCRIPT"
+        test_count=${#testfuncs[@]}
+        try:
+          TRY_VARS= run_tests
+          [[ $failures = 0 ]] || ERRORS=$((ERRORS+1))
+        catch:
+          print_exception
+          ERRORS=$((ERRORS+1))
+        endtry
       catch:
         print_exception
         ERRORS=$((ERRORS+1))
       endtry
-    catch:
-      print_exception
-      ERRORS=$((ERRORS+1))
-    endtry
-    test_count_accum=$((test_count_accum+test_count))
-    failures_accum=$((failures_accum+failures))
-    skipped_accum=$((skipped_accum+skipped))
-  done
+      test_count_accum=$((test_count_accum+test_count))
+      failures_accum=$((failures_accum+failures))
+      skipped_accum=$((skipped_accum+skipped))
+    done
+  } 2>&3
+  } 3>&2 2>"$TRY_VARS_FILE"
+  readarray -t -s 1 -n 1 TIMES <"$TRY_VARS_FILE"
   printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-$ERRORS))" "$ERRORS"
   printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
+  printf "took %s\n" "${TIMES##*[[:space:]]}"
   exit "$ERRORS"
 fi
 
