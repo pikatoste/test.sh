@@ -31,6 +31,15 @@ TESTS ?= \
 
 include Makefile.test
 
-.PHONY: coverage
+.PHONY: coverage performance compat
+
 coverage:
 	cd .. && for test in $(TESTS); do bashcov --skip-uncovered test/$$test; done
+
+performance:
+	performance/test_performance.sh
+	cat performance/testout/test_performance.sh.out | grep real
+
+compat:
+	compat/test_bash_compat_51.sh
+	for test in compat/testout-*; do echo -n "$$test: "; grep real "$$test/main.out"; done

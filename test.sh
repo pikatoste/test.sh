@@ -31,7 +31,7 @@ define_test() {
 
 validate@body() {
   [[ -v _testfunc ]] || throw 'test_syntax' 'Misplaced @body: tag'
-  unset _testfunc _SKIP
+  unset '_testfunc' '_SKIP'
 }
 
 alias try:="_try;(_try_prolog;"
@@ -41,8 +41,11 @@ alias success:="}; _success&&{ enable_exceptions;"
 alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
 
-declare -A _exceptions _exception_types
-declare -A _EXIT_HANDLERS
+_TMP_BASE=${TMPDIR:-/tmp}/tsh-$$
+_EXCEPTIONS_FILE=$_TMP_BASE'-exceptions'
+_TRY_VARS_FILE=$_TMP_BASE'-tryvars'
+declare -A '_exceptions' '_exception_types'
+declare -A '_EXIT_HANDLERS' '_PRUNE_PATH_CACHE'
 
 declare_exception() {
   local exception=$1 super=$2
@@ -113,7 +116,7 @@ _catch() {
   [[ ! $_TRY_VARS ]] || restore_vars
   [[ -f $_EXCEPTIONS_FILE ]] || return 1
   [[ $_TRY_EXIT_CODE != 0 ]] ||
-    create_exception 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
+    create_exception 'pending_exception' "$_pending_exception_msg"
   readarray -t _EXCEPTION <"$_EXCEPTIONS_FILE"
   local exception_type=${_EXCEPTION[-1]} exception_filter
   for exception_filter in "$@"; do
@@ -140,9 +143,11 @@ _endtry() {
   enable_exceptions
 }
 
+_pending_exception_msg='Pending exception, probably a masked error in a command substitution'
+
 check_pending_exceptions() {
   [[ ! -f $_EXCEPTIONS_FILE ]] ||
-    throw 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
+    throw 'pending_exception' "$_pending_exception_msg"
 }
 
 push_try_exit_code() {
@@ -173,7 +178,7 @@ failed() {
 }
 
 throw() {
-  first_frame=$first_frame create_exception "$@"
+  create_exception "$@"
   exit ${exit_code:-1}
 }
 
@@ -193,7 +198,7 @@ create_exception() {
   #       pending exceptions found while handling exception ...
   if [[ -f $_EXCEPTIONS_FILE ]]; then
     local chain_reason=${CHAIN_REASON:-'Pending exception'}
-    echo -e "chained:${RED}$chain_reason:${NC}" >>"$_EXCEPTIONS_FILE"
+    echo -e "chained:${_RED}$chain_reason:${_NC}" >>"$_EXCEPTIONS_FILE"
   fi
   if [[ -v WITH_CAUSE ]]; then
     { printf "%s\n" "${_EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$_EXCEPTIONS_FILE"
@@ -285,7 +290,7 @@ create_eval_syntax_error_exception() {
 }
 
 unhandled_exception() {
-  [[ $_EXIT_CODE != 0 ]] || first_frame=1 create_exception 'pending_exception' 'Pending exception, probably a masked error in a command substitution'
+  [[ $_EXIT_CODE != 0 ]] || first_frame=1 create_exception 'pending_exception' "$_pending_exception_msg"
   handle_exception
   print_exception
   unset '_EXCEPTION'
@@ -352,45 +357,45 @@ start_test() {
   _CURRENT_TEST_NAME="$1"
   _teardown_test_called=
    ! function_exists 'setup_test' || setup_test
-  log "Start test: $_CURRENT_TEST_NAME"
+  log_info "Start test: $_CURRENT_TEST_NAME"
 }
 
 display_test_passed() {
   log_ok "PASSED: ${_CURRENT_TEST_NAME}"
-  echo -e "${_INDENT}${GREEN}* ${_CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${_INDENT}${_GREEN}* ${_CURRENT_TEST_NAME}${_NC}" >&3
 }
 
 display_test_failed() {
   log_err "FAILED: ${_CURRENT_TEST_NAME}"
-  echo -e "${_INDENT}${RED}* ${_CURRENT_TEST_NAME}${NC}" >&3
+  echo -e "${_INDENT}${_RED}* ${_CURRENT_TEST_NAME}${_NC}" >&3
 }
 
 display_test_skipped() {
-  echo -e "${_INDENT}${BLUE}* [skipped] $1${NC}" >&3
+  echo -e "${_INDENT}${_BLUE}* [skipped] $1${_NC}" >&3
 }
 
 warn_teardown_failed() {
-  echo -e "${_INDENT}${ORANGE}WARN: $1 failed${NC}" >&3
+  echo -e "${_INDENT}${_ORANGE}WARN: $1 failed${_NC}" >&3
 }
 
 do_log() {
   echo -e "$*"
 }
 
-log() {
-  do_log "${BLUE}[test.sh]${NC} $*"
+log_info() {
+  do_log "${_BLUE}[test.sh]${_NC} $*"
 }
 
 log_ok() {
-  do_log "${GREEN}[test.sh]${NC} $*"
+  do_log "${_GREEN}[test.sh]${_NC} $*"
 }
 
 log_warn() {
-  do_log "${ORANGE}[test.sh]${NC} $*"
+  do_log "${_ORANGE}[test.sh]${_NC} $*"
 }
 
 log_err() {
-  do_log "${RED}[test.sh]${NC} $*" >&2
+  do_log "${_RED}[test.sh]${_NC} $*" >&2
 }
 
 function_exists() {
@@ -399,7 +404,7 @@ function_exists() {
 
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  push_err_handler 'echo -e "${RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${NC}" >&3'
+  push_err_handler 'echo -e "${_RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${_NC}" >&3'
   setup_test_suite
   pop_err_handler
 }
@@ -409,8 +414,8 @@ call_teardown() {
   try:
     "$1"
   catch:
-    print_exception
     warn_teardown_failed "$1"
+    print_exception
   endtry
 }
 
@@ -437,7 +442,7 @@ run_tests() {
 
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     try:
-      log "Start test: $_CURRENT_TEST_NAME"
+      log_info "Start test: $_CURRENT_TEST_NAME"
       ! function_exists 'setup_test' || setup_test
       "$test_func"
     catch:
@@ -461,7 +466,7 @@ load_includes() {
   load_include_file() {
     local include_file=$1
     source "$include_file"
-    log "Included: $include_file"
+    log_info "Included: $include_file"
     [[ ! $INITIALIZE_SOURCE_CACHE ]] || prune_path "$include_file"
   }
 
@@ -509,8 +514,8 @@ assert_failure() {
   try:
     _eval "$what"
   catch nonzero:
-    log "Expected failure:"
-    print_exception log
+    log_info "Expected failure:"
+    print_exception log_info
   success:
     local why="expected failure but got success in: '$what'"
     throw_assert "$msg" "$why"
@@ -529,14 +534,14 @@ assert_equals() {
 }
 
 set_color() {
-  if [[ $COLOR = yes ]]; then
-    GREEN='\033[0;32m'
-    ORANGE='\033[0;33m'
-    RED='\033[0;31m'
-    BLUE='\033[0;34m'
-    NC='\033[0m' # No Color'
+  if [[ $COLOR = 'yes' ]]; then
+    _GREEN='\033[0;32m'
+    _ORANGE='\033[0;33m'
+    _RED='\033[0;31m'
+    _BLUE='\033[0;34m'
+    _NC='\033[0m' # No Color'
   else
-    unset GREEN ORANGE RED BLUE NC
+    unset _GREEN _ORANGE _RED _BLUE _NC
   fi
 }
 
@@ -547,10 +552,12 @@ cleanup() {
 }
 
 setup_io() {
-  [[ $SUBTEST_LOG_CONFIG != noredir ]] || return 0
-  mkdir -p "$(dirname "$LOG_FILE")"
+  [[ $SUBTEST_LOG_CONFIG != 'noredir' ]] || return 0
+  local log_dir
+  log_dir=$(dirname "$LOG_FILE")
+  [[ -d $log_dir ]] || mkdir -p "$log_dir"
   if [[ $VERBOSE ]]; then
-    _PIPE=$_TMP_PFX-pipe
+    _PIPE=$_TMP_BASE-pipe
     mkfifo "$_PIPE"
     local redir=
     [[ $LOG_MODE = overwrite ]] || redir=-a
@@ -580,7 +587,7 @@ config_defaults() {
   default_LOG_FILE='$LOG_DIR/$LOG_NAME'
   default_LOG_MODE='overwrite'
   default_SUBTEST_LOG_CONFIG='reset'
-  default_INITIALIZE_SOURCE_CACHE=
+  default_INITIALIZE_SOURCE_CACHE=1
   default_CLEAN_TEST_TMP=1
 }
 
@@ -673,7 +680,7 @@ init_prune_path_cache() {
 main_exit_handler() {
   [[ ! -f $_EXCEPTIONS_FILE ]] || unhandled_exception
   [[ -z $_PIPE ]] || rm -f "$_PIPE"
-  rm -f "$_TRY_VARS_FILE"
+  [[ ! -f $_TRY_VARS_FILE ]] || rm -f "$_TRY_VARS_FILE"
 }
 
 inline_exit_handler() {
@@ -692,7 +699,7 @@ setup_self_runner() {
   TEST_SCRIPT=$(readlink -f "$0")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
   TEST_TMP=$TEST_SCRIPT_DIR'/tmp'
-  rm -rf "$TEST_TMP"
+  [[ -d $TEST_TMP ]] || rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
   push_exit_handler 'self_runner_exit_handler'
@@ -701,7 +708,7 @@ setup_self_runner() {
   config_defaults
   load_config
   setup_io
-  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+  [[ -z $CONFIG_FILE ]] || log_info "Configuration: $CONFIG_FILE"
   init_prune_path_cache
   load_includes
 
@@ -721,12 +728,12 @@ setup_test_script() {
   TEST_SCRIPT=$(readlink -f "$test_script")
   TEST_SCRIPT_DIR=$(dirname "$TEST_SCRIPT")
   TEST_TMP=$TEST_SCRIPT_DIR'/tmp'
-  rm -rf "$TEST_TMP"
+  [[ -d $TEST_TMP ]] || rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
   load_config
   setup_io
-  [[ -z $CONFIG_FILE ]] || log "Configuration: $CONFIG_FILE"
+  [[ -z $CONFIG_FILE ]] || log_info "Configuration: $CONFIG_FILE"
   push_exit_handler '[[ -z $_PIPE ]] || rm -f "$_PIPE"; cleanup'
   prune_path "$TEST_SCRIPT"
   load_includes
@@ -737,10 +744,6 @@ setup_test_script() {
 TESTSH=$(readlink -f "$BASH_SOURCE")
 TESTSH_DIR=$(dirname "$TESTSH")
 VERSION='@VERSION@'
-_TMP_PFX=${TMPDIR:-/tmp}/tsh-$$
-_EXCEPTIONS_FILE=$_TMP_PFX'-exceptions'
-_TRY_VARS_FILE=$_TMP_PFX'-tryvars'
-declare -A '_PRUNE_PATH_CACHE'
 
 runner() {
   echo "@BANNER@"
@@ -761,7 +764,7 @@ runner() {
       declare -g '_test_count=0' '_failed_count=0' '_skipped_count=0' '_printed='
       try:
         setup_test_script
-        echo -e "${BLUE}* $test_script:${NC}" >&3
+        echo -e "${_BLUE}* $test_script:${_NC}" >&3
         _printed=1
         source "$TEST_SCRIPT"
         _test_count=${#_testfuncs[@]}
@@ -773,7 +776,7 @@ runner() {
           _script_failures=$((_script_failures+1))
         endtry
       catch:
-        [[ $_printed ]] || echo -e "${BLUE}* $test_script:${NC}"
+        [[ $_printed ]] || echo -e "${_BLUE}* $test_script:${_NC}"
         print_exception
         _script_failures=$((_script_failures+1))
       endtry

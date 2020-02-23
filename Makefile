@@ -11,6 +11,12 @@ test: test_clean prepare_test
 test_clean:
 	rm -rf runtest
 
+performance: prepare_test
+	${MAKE} -C runtest/test performance
+
+compat: prepare_test
+	${MAKE} -C runtest/test compat
+
 VERSION:=$(shell tools/generate-version.sh)
 BUILD_TIMESTAMP=$(shell date +%s)
 
@@ -36,5 +42,5 @@ coverage: test_clean prepare_test
 
 all: build
 
-.PHONY: test, prepare_test, test_clean, clean, build, check, coverage, coverage_clean
+.PHONY: test, prepare_test, test_clean, clean, build, check, coverage, coverage_clean, performance, compat
 .DEFAULT_GOAL := all
