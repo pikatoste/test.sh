@@ -22,7 +22,7 @@ _TEST_NUM=1
 
 define_test() {
   printf -v '_testfunc' 'test_%02d' "$_TEST_NUM"
-  _testfuncs[$_TEST_NUM]=$_testfunc
+  _testfuncs[_TEST_NUM]=$_testfunc
   _testskip[$_testfunc]=$_SKIP
   _testdescs[$_testfunc]=${1:-$_testfunc}
   eval "alias @body:='validate@body; $_testfunc()'"
@@ -192,25 +192,22 @@ create_exception() {
   local exception_msg=$2
   local first_frame=${first_frame:-2}
 
-  # TODO: replace 'chained:' mark with something unambiguous
-  # TODO: replace '---' mark with something unambiguous
   # TODO: only implicit and pending_exception exceptions should chain, others should throw a
   #       pending exceptions found while handling exception ...
   if [[ -f $_EXCEPTIONS_FILE ]]; then
     local chain_reason=${CHAIN_REASON:-'Pending exception'}
-    echo -e "chained:${_RED}$chain_reason:${_NC}" >>"$_EXCEPTIONS_FILE"
+    echo -e "${_RED}$chain_reason:${_NC}" >>"$_EXCEPTIONS_FILE"
   fi
   if [[ -v WITH_CAUSE ]]; then
-    { printf "%s\n" "${_EXCEPTION[@]}"; echo "chained:Caused by:"; } >>"$_EXCEPTIONS_FILE"
+    { printf "%s\n" "${_EXCEPTION[@]}"; echo "Caused by:"; } >>"$_EXCEPTIONS_FILE"
   fi
   local 'exception_type'=${_exception_types[$exception]:-$exception} 'msg_lines' i
   readarray -t 'msg_lines' <<<"$exception_msg"
   { stack_trace "$first_frame"
-    echo '---'
     for ((i=${#msg_lines[@]}-1; i>=0; i--)); do
-      echo "${msg_lines[$i]}"
+      echo "${msg_lines[i]}"
     done
-    echo "$exception_type"; } >>"$_EXCEPTIONS_FILE"
+    printf "%d\n%s\n" "${#msg_lines[@]}" "$exception_type"; } >>"$_EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
@@ -222,8 +219,8 @@ create_implicit_exception() {
   read -r errcmd <<<"$BASH_COMMAND"
   local first_frame=${first_frame:-4}
   local frame_idx=$((first_frame-2))
-  prune_path "${BASH_SOURCE[$frame_idx]}"
-  local errmsg="Error in ${FUNCNAME[$frame_idx]}($_PRUNED_PATH:${BASH_LINENO[$frame_idx-1]}): '${errcmd}' exited with status $err"
+  prune_path "${BASH_SOURCE[frame_idx]}"
+  local errmsg="Error in ${FUNCNAME[frame_idx]}($_PRUNED_PATH:${BASH_LINENO[frame_idx-1]}): '${errcmd}' exited with status $err"
   [[ ! -f $_EXCEPTIONS_FILE ]] || {
     local 'pending_exception'
     readarray -t 'pending_exception' <"$_EXCEPTIONS_FILE"
@@ -248,12 +245,17 @@ prune_path() {
 }
 
 stack_trace() {
-  local i
-  [[ $STACK_TRACE == no ]] || for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
-  do
-    prune_path "${BASH_SOURCE[$i+1]}"
-    echo "${FUNCNAME[$i+1]}($_PRUNED_PATH:${BASH_LINENO[$i]})"
-  done
+  if [[ $STACK_TRACE != 'no' ]]; then
+    local i
+    for ((i=${#FUNCNAME[@]}-2; i>=${1:-0}; i--))
+    do
+      prune_path "${BASH_SOURCE[i+1]}"
+      echo "${FUNCNAME[i+1]}($_PRUNED_PATH:${BASH_LINENO[i]})"
+    done
+    echo "$((${#FUNCNAME[@]}-2-i))"
+  else
+    echo '0'
+  fi
 }
 
 handle_exception() {
@@ -262,21 +264,19 @@ handle_exception() {
 }
 
 print_exception() {
-  local log_function=${1:-'log_err'} i exception_type
+  local log_function=${1:-'log_err'} i 'exception_type' 'msg_count'
   for ((i=${#_EXCEPTION[@]}-1; i>=0; i--)); do
-      exception_type=${_EXCEPTION[$i]}
-      for ((i--; i>=0; i--)); do
-        [[ ${_EXCEPTION[$i]} != '---' ]] || break
-        $log_function "${_EXCEPTION[$i]}"
-      done
-      for ((i--; i>=0; i--)); do
-        if [[ ${_EXCEPTION[$i]} =~ ^'chained:' ]]; then
-          $log_function "${_EXCEPTION[$i]#chained:}"
-          break
-        fi
-        $log_function " at ${_EXCEPTION[$i]}"
-      done
+    exception_type=${_EXCEPTION[i--]}
+    msg_count=$((i-${_EXCEPTION[i]}))
+    for ((i--; i>=msg_count; i--)); do
+      "$log_function" "${_EXCEPTION[i]}"
     done
+    msg_count=$((i-${_EXCEPTION[i]}))
+    for ((i--; i>=msg_count; i--)); do
+      "$log_function" " at ${_EXCEPTION[i]}"
+    done
+    ((i<0)) || "$log_function" "${_EXCEPTION[i]}"
+  done
 }
 
 _eval() {
