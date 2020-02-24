@@ -13,10 +13,10 @@ start_test "#76: assert_equals never evaluates its arguments"
   assert_equals my_func my_func
   [[ ! -f "$OUT" ]]
   echo -n $(assert_equals zzz my_func)
-  rm -f "$EXCEPTIONS_FILE"
+  rm -f "$_EXCEPTIONS_FILE"
   [[ ! -f "$OUT" ]]
   echo -n $(assert_equals my_func zzz)
-  rm -f "$EXCEPTIONS_FILE"
+  rm -f "$_EXCEPTIONS_FILE"
   [[ ! -f "$OUT" ]]
   assert_equals "\""'$(ls|wc -l)' "\""'$(ls|wc -l)'
 
