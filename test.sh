@@ -65,7 +65,7 @@ type_of_exception() {
 }
 
 exception_is() {
-  local exception_type=${_EXCEPTION[-1]}
+  local exception_type=${_exception_types[${_EXCEPTION[-1]}]:-${_EXCEPTION[-1]}}
   local exception_filter=${_exception_types[$1]:-$1}
   [[ $exception_type =~ ^$exception_filter ]]
 }
@@ -118,7 +118,7 @@ _catch() {
   [[ $_TRY_EXIT_CODE != 0 ]] ||
     create_exception 'pending_exception' "$_pending_exception_msg"
   readarray -t _EXCEPTION <"$_EXCEPTIONS_FILE"
-  local exception_type=${_EXCEPTION[-1]} exception_filter
+  local exception_type=${_exception_types[${_EXCEPTION[-1]}]:-${_EXCEPTION[-1]}} exception_filter
   for exception_filter in "$@"; do
     [[ $exception_type =~ ^$exception_filter ]] || continue
     rm -f "$_EXCEPTIONS_FILE"
@@ -165,7 +165,7 @@ push_caught_exception() {
 }
 
 pop_caught_exception() {
-  if [[ ${#_CAUGHT_EXCEPTIONS[@]} > 0 ]]; then
+  if (( ${#_CAUGHT_EXCEPTIONS[@]} > 0 )); then
     eval "$_CAUGHT_EXCEPTIONS"
     _CAUGHT_EXCEPTIONS=("${_CAUGHT_EXCEPTIONS[@]:1}")
   else
@@ -201,13 +201,13 @@ create_exception() {
   if [[ -v WITH_CAUSE ]]; then
     { printf "%s\n" "${_EXCEPTION[@]}"; echo "Caused by:"; } >>"$_EXCEPTIONS_FILE"
   fi
-  local 'exception_type'=${_exception_types[$exception]:-$exception} 'msg_lines' i
+  local 'msg_lines' i
   readarray -t 'msg_lines' <<<"$exception_msg"
   { stack_trace "$first_frame"
     for ((i=${#msg_lines[@]}-1; i>=0; i--)); do
       echo "${msg_lines[i]}"
     done
-    printf "%d\n%s\n" "${#msg_lines[@]}" "$exception_type"; } >>"$_EXCEPTIONS_FILE"
+    printf "%d\n%s\n" "${#msg_lines[@]}" "$exception"; } >>"$_EXCEPTIONS_FILE"
 }
 
 create_implicit_exception() {
@@ -264,10 +264,11 @@ handle_exception() {
 }
 
 print_exception() {
-  local log_function=${1:-'log_err'} i 'exception_type' 'msg_count'
+  local log_function=${1:-'log_err'} i 'exception' 'msg_count'
   for ((i=${#_EXCEPTION[@]}-1; i>=0; i--)); do
-    exception_type=${_EXCEPTION[i--]}
+    exception=${_EXCEPTION[i--]}
     msg_count=$((i-${_EXCEPTION[i]}))
+      "$log_function" "$exception exception: ${_EXCEPTION[--i]}"
     for ((i--; i>=msg_count; i--)); do
       "$log_function" "${_EXCEPTION[i]}"
     done
@@ -492,7 +493,7 @@ assert_msg() {
 
 throw_assert() {
   assert_msg "$1" "$2"
-  throw 'assert' "$_assert_msg"
+  first_frame=3 throw 'assert' "$_assert_msg"
 }
 
 assert_success() {

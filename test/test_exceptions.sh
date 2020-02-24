@@ -27,7 +27,7 @@ start_test "Exceptions thrown from a catch block should ignore the current excep
   STACK_TRACE=no generate_test_fail_check 'try: false
   catch: false
   endtry' <<EOF
-[test.sh] Error in main(the_test.sh:): 'false' exited with status 1
+[test.sh] implicit exception: Error in main(the_test.sh:): 'false' exited with status 1
 EOF
 
 start_test "Try blocks that exit but not throw, generate exception"
