@@ -40,6 +40,7 @@ alias catch=");_catch "
 alias success:="}; _success&&{ enable_exceptions;"
 alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
+alias exit='_EXPLICIT_EXIT=1; exit'
 
 _TMP_BASE=${TMPDIR:-/tmp}/tsh-$$
 _EXCEPTIONS_FILE=$_TMP_BASE'-exceptions'
@@ -72,12 +73,11 @@ exception_is() {
 
 declare_exception 'nonzero'
 declare_exception 'implicit' 'nonzero'
-declare_exception 'exit' 'nonzero'
 declare_exception 'assert' 'nonzero'
 declare_exception 'error'
 declare_exception 'test_syntax' 'error'
 declare_exception 'pending_exception' 'error'
-declare_exception 'eval_syntax_error' 'error'
+declare_exception 'eval_syntax' 'error'
 
 with_vars() {
   _TRY_VARS=$*
@@ -99,23 +99,31 @@ restore_vars() {
   unalias 'declare'
 }
 
-try_exit_trap() {
-  # in case the ERR trap is not called from the try block, such as when executing exit
-  [ "$_EXIT_CODE" = 0 ] || [ -f "$_EXCEPTIONS_FILE" ] || first_frame=5 BASH_COMMAND=$_EXIT_COMMAND create_implicit_exception "$_EXIT_CODE" 'exit'
+check_exit_exception() {
+  # in case the ERR trap is not called but the exit status of a command different from exit is non-zero
+  [[ $_EXIT_CODE = 0 || -f $_EXCEPTIONS_FILE || $_EXPLICIT_EXIT ]] ||
+    first_frame=6 BASH_COMMAND=$_EXIT_COMMAND create_implicit_exception "$_EXIT_CODE"
+}
+
+try_exit_handler() {
+  check_exit_exception
   [[ $# = 0 ]] || save_vars "$@"
 }
 
 _try_prolog() {
   enable_exceptions
   # TODO: glob expansion in _TRY_VARS
-  push_exit_handler "try_exit_trap $_TRY_VARS"
+  push_exit_handler "try_exit_handler $_TRY_VARS"
 }
 
 _catch() {
   push_try_exit_code
   # TODO: _TRY_VARS corruption in try in catch
   [[ ! $_TRY_VARS ]] || restore_vars
-  [[ -f $_EXCEPTIONS_FILE ]] || return 1
+  [[ -f $_EXCEPTIONS_FILE ]] || {
+    [[ $_TRY_EXIT_CODE != 0 ]] || return 1
+    builtin exit "$_TRY_EXIT_CODE"
+  }
   [[ $_TRY_EXIT_CODE != 0 ]] ||
     create_exception 'pending_exception' "$_pending_exception_msg"
   readarray -t _EXCEPTION <"$_EXCEPTIONS_FILE"
@@ -126,7 +134,7 @@ _catch() {
     enable_exceptions
     return 0
   done
-  exit "$_TRY_EXIT_CODE"
+  builtin exit "$_TRY_EXIT_CODE"
 }
 
 enable_exceptions() {
@@ -180,12 +188,12 @@ failed() {
 
 throw() {
   create_exception "$@"
-  exit ${exit_code:-1}
+  builtin exit ${exit_code:-1}
 }
 
 rethrow() {
   printf "%s\n" "${_EXCEPTION[@]}" >"$_EXCEPTIONS_FILE"
-  exit "$_TRY_EXIT_CODE"
+  builtin exit "$_TRY_EXIT_CODE"
 }
 
 create_exception() {
@@ -282,13 +290,13 @@ print_exception() {
 }
 
 _eval() {
-  push_exit_handler "create_eval_syntax_error_exception ${*@Q}"
+  push_exit_handler "create_eval_syntax_exception ${*@Q}"
   eval 'pop_exit_handler;' "$@"
 }
 
-create_eval_syntax_error_exception() {
+create_eval_syntax_exception() {
   local errmsg="Syntax error in the expression: $1"
-  first_frame=3 create_exception 'eval_syntax_error' "$errmsg"
+  first_frame=3 create_exception 'eval_syntax' "$errmsg"
 }
 
 unhandled_exception() {
@@ -741,8 +749,7 @@ setup_self_runner() {
 }
 
 tests_runner_exit_handler() {
-  # in case the ERR trap is not called from the try block, such as when executing exit
-  [ "$_EXIT_CODE" = 0 ] || [ -f "$_EXCEPTIONS_FILE" ] || [[ $_EXIT_COMMAND =~ ^'exit'\ ? ]] || first_frame=5 BASH_COMMAND=$_EXIT_COMMAND create_implicit_exception "$_EXIT_CODE" 'exit'
+  check_exit_exception
   main_exit_handler
 }
 
