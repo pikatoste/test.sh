@@ -63,7 +63,7 @@ start_test "@run_tests should invoke tests and setup methods when there are fail
 rm -rf "$OUTFILE"
 test_02_fail=1
 define_funcs
-assert_failure '@run_tests 3>&1'
+assert_failure 'push_exit_handler "unset _EXPLICIT_EXIT || true"; @run_tests 3>&1'
 unset_funcs
 
 diff - "$OUTFILE" <<EOF

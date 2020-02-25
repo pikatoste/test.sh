@@ -30,12 +30,21 @@ start_test "Exceptions thrown from a catch block should ignore the current excep
 [test.sh] implicit exception: Error in main(the_test.sh:): 'false' exited with status 1
 EOF
 
-start_test "Try blocks that exit but not throw, generate exception"
+start_test "Try blocks that do exit with non-zero with no exit command and no ERR trap, generate exception"
 
   try:
-    exit 1
+    set +e
+    false
   catch: print_exception
   endtry
+
+start_test "Try blocks that exit do not generate exception and propagate exit"
+
+  assert_failure '
+    try:
+      exit 1
+    catch: print_exception
+    endtry' 'Exception caught or zero exit status'
 
 start_test "Nested try/catch blocks do not repeat exceptions if rethrown"
   try:
