@@ -113,6 +113,7 @@ _try_prolog() {
 
 _catch() {
   push_try_exit_code
+  # TODO: _TRY_VARS corruption in try in catch
   [[ ! $_TRY_VARS ]] || restore_vars
   [[ -f $_EXCEPTIONS_FILE ]] || return 1
   [[ $_TRY_EXIT_CODE != 0 ]] ||
@@ -437,7 +438,7 @@ run_tests() {
   for test_func in "${_testfuncs[@]}"; do
     if [[ $_failed_count > 0 && $FAIL_FAST || ${_testskip[$test_func]} ]]; then
       display_test_skipped "${_testdescs[$test_func]}"
-      _skipped_count=$((_skipped_count+1))
+      ((++_skipped_count))
       continue
     fi
 
@@ -449,7 +450,7 @@ run_tests() {
     catch:
       print_exception
       display_test_failed
-      _failed_count=$(( _failed_count + 1 ))
+      ((++_failed_count))
     success:
       display_test_passed
     endtry
@@ -587,27 +588,36 @@ config_defaults() {
   default_LOG_NAME='$(basename "$TEST_SCRIPT").out'
   default_LOG_FILE='$LOG_DIR/$LOG_NAME'
   default_LOG_MODE='overwrite'
+
+  # undocumented
   default_SUBTEST_LOG_CONFIG='reset'
   default_INITIALIZE_SOURCE_CACHE=1
   default_CLEAN_TEST_TMP=1
+  default_ANIMATE=1
+  [ -t 1 ] || default_ANIMATE=
 }
 
 load_config() {
   save_variable() {
     local var=$1
-    [[ ! -v $var ]] || eval "saved_$var=${!var}"
+    [[ ! -v $var ]] || eval "saved_$var=${!var@Q}"
   }
 
   restore_variable() {
     local var=$1
     local saved_var=saved_$var
-    [[ ! -v $saved_var ]] || eval "$var=${!saved_var}"
+    [[ ! -v $saved_var ]] || eval "$var=${!saved_var@Q}"
   }
 
   set_default() {
     local var=$1
     local default_var=default_$var
-    [[ -v $var ]] || eval "$var=${!default_var}"
+    [[ -v $var ]] || eval "$var=\$$default_var"
+  }
+
+  eval_var() {
+    local var=$1
+    eval "$var=${!var}"
   }
 
   load_config_file() {
@@ -626,7 +636,9 @@ load_config() {
     done
   }
 
-  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP"
+  # TODO: distinguish between normal and post-evaluated variables
+  local config_vars="VERBOSE DEBUG INCLUDE_GLOB INCLUDE_PATH FAIL_FAST PRUNE_PATH STACK_TRACE COLOR LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE LOG_MODE SUBTEST_LOG_CONFIG INITIALIZE_SOURCE_CACHE CLEAN_TEST_TMP ANIMATE"
+  local var
 
   # save environment config
   for var in $config_vars; do
@@ -645,6 +657,17 @@ load_config() {
   # set defaults
   for var in $config_vars; do
     set_default "$var"
+  done
+
+  if [[ $_TESTS_RUNNER ]]; then
+    for var in $config_vars; do
+      save_variable "$var"
+    done
+  fi
+
+  # evaluate vars
+  for var in $config_vars; do
+    eval_var "$var"
   done
 
   set_color
@@ -717,11 +740,19 @@ setup_self_runner() {
   [[ ! $DEBUG ]] || set -x
 }
 
+tests_runner_exit_handler() {
+  # in case the ERR trap is not called from the try block, such as when executing exit
+  [ "$_EXIT_CODE" = 0 ] || [ -f "$_EXCEPTIONS_FILE" ] || [[ $_EXIT_COMMAND =~ ^'exit'\ ? ]] || first_frame=5 BASH_COMMAND=$_EXIT_COMMAND create_implicit_exception "$_EXIT_CODE" 'exit'
+  main_exit_handler
+}
+
 setup_tests_runner() {
-  push_exit_handler 'main_exit_handler'
+  push_exit_handler 'tests_runner_exit_handler'
   trap 'err_trap' ERR
   push_err_handler 'create_implicit_exception $_ERR_CODE'
   config_defaults
+  load_config
+  [[ -z $CONFIG_FILE ]] || log_info "Configuration: $CONFIG_FILE"
   prune_path "$BASH_SOURCE"
 }
 
@@ -732,9 +763,11 @@ setup_test_script() {
   [[ -d $TEST_TMP ]] || rm -rf "$TEST_TMP"
   mkdir -p "$TEST_TMP"
 
-  load_config
+  for var in INCLUDE_GLOB INCLUDE_PATH PRUNE_PATH LOG_DIR_NAME LOG_DIR LOG_NAME LOG_FILE; do
+    restore_variable "$var"
+    eval_var "$var"
+  done
   setup_io
-  [[ -z $CONFIG_FILE ]] || log_info "Configuration: $CONFIG_FILE"
   push_exit_handler '[[ -z $_PIPE ]] || rm -f "$_PIPE"; cleanup'
   prune_path "$TEST_SCRIPT"
   load_includes
@@ -771,15 +804,15 @@ runner() {
         _test_count=${#_testfuncs[@]}
         try:
           _TRY_VARS= run_tests
-          [[ $_failed_count = 0 ]] || _script_failures=$((_script_failures+1))
+          [[ $_failed_count = 0 ]] || ((++_script_failures))
         catch:
           print_exception
-          _script_failures=$((_script_failures+1))
+          ((++_script_failures))
         endtry
       catch:
-        [[ $_printed ]] || echo -e "${_BLUE}* $test_script:${_NC}"
+        [[ $_printed ]] || echo -e "${_RED}* $test_script:${_NC}"
         print_exception
-        _script_failures=$((_script_failures+1))
+        ((++_script_failures))
       endtry
       test_count_accum=$((test_count_accum+_test_count))
       failures_accum=$((failures_accum+_failed_count))
@@ -788,7 +821,7 @@ runner() {
   } 2>&3
   } 3>&2 2>"$_TRY_VARS_FILE"
   readarray -t -s 1 -n 1 'TIMES' <"$_TRY_VARS_FILE"
-  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-$_script_failures))" "$_script_failures"
+  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-_script_failures))" "$_script_failures"
   printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
   printf "took %s\n" "${TIMES##*[[:space:]]}"
   exit $((_script_failures % 256))
