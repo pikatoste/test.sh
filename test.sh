@@ -453,15 +453,25 @@ run_test_script() {
   "$test_script" "$@"
 }
 
-busy() {
-  local chars=(- \\ \| /) char
-  while true; do
-    for char in "${chars[@]}"; do
-      tput cup $((_BUSY_LIN-1)) "${#_INDENT}"
-      echo -n "$char"
-      sleep 0.15
+_spinner_chars=(- \\ \| /)
+create_spinner() {
+  ( set +e
+    trap - ERR
+    trap "exit" INT
+    while true; do
+      for char in "${_spinner_chars[@]}"; do
+        tput cup "$1" "$2"
+        echo -n "$char"
+        sleep 0.15
+      done
     done
-  done
+  ) &
+  _spinner_pid=$!
+}
+
+kill_spinner() {
+  kill -INT "$_spinner_pid"
+  wait "$_spinner_pid"
 }
 
 run_tests() {
@@ -479,12 +489,10 @@ run_tests() {
 
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     [ ! -t 3 ] || {
-      tput civis
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
       line_pos
-      _BUSY_LIN=$LINPOS
-      busy &
-      _BUSY_PID=$!
+      local tlinepos=$((LINPOS-1))
+      create_spinner "$tlinepos" "${#_INDENT}"
     } >&3
     try:
       log_info "Start test: $_CURRENT_TEST_NAME"
@@ -493,21 +501,18 @@ run_tests() {
     catch:
       print_exception
       [ ! -t 3 ] || {
-        kill -9 "$_BUSY_PID"
-        wait "$_BUSY_PID" || true
-        tput cup $((_BUSY_LIN-1)) 0
+        kill_spinner
+        tput cup "$tlinepos" 0
       } >&3
       display_test_failed
       ((_failed_count++)) || [ ! -t 3 ] || display_test_script_outcome 1 >&3
     success:
       [ ! -t 3 ] || {
-        kill -9 "$_BUSY_PID"
-        wait "$_BUSY_PID" || true
-        tput cup $((_BUSY_LIN-1)) 0
+        kill_spinner
+        tput cup "$tlinepos" 0
       } >&3
       display_test_passed
     endtry
-    [ ! -t 3 ] || tput cnorm >&3
     call_teardown 'teardown_test'
   done
 
@@ -796,6 +801,7 @@ setup_self_runner() {
 }
 
 tests_runner_exit_handler() {
+  [ ! -t 1 ] || tput cnorm
   check_exit_exception
   main_exit_handler
 }
@@ -850,7 +856,7 @@ runner() {
   { time {
     for test_script in "$@"; do
       declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_lines_out=0'
-      printf "${_BLUE}%${_cols:+.$_cols}s${_NC}\n" "* $test_script:" >&3
+      printf "%${_cols:+.$_cols}s\n" "* $test_script:"
       try:
         setup_test_script
         source "$TEST_SCRIPT"
@@ -913,19 +919,18 @@ print_banner() {
   readarray -t -n "$lins" 'ABANNER' <<<"$BANNER"
   len=${#ABANNER}
   trim=${ABANNER//?/?}
-  tput civis
   LINPOS=
   for ((i=len-1; i>=0; i--)); do
     [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]} - 1)) 0
     trim=${trim:1}
     printf "%.${_cols}s\n" "${ABANNER[@]#$trim}"
-    line_pos
+    [[ $LINPOS ]] || line_pos
     sleep 0.005
   done
-  tput cnorm
 }
 
 setup_tty() {
+  tput civis
   _cols=$(tput cols)
   trap '_cols=$(tput cols)' WINCH
 }
