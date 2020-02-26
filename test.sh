@@ -40,7 +40,7 @@ alias catch=");_catch "
 alias success:="}; _success&&{ enable_exceptions;"
 alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
-alias exit='_EXPLICIT_EXIT=1; exit'
+alias exit='_exit'
 
 _TMP_BASE=${TMPDIR:-/tmp}/tsh-$$
 _EXCEPTIONS_FILE=$_TMP_BASE'-exceptions'
@@ -98,6 +98,16 @@ restore_vars() {
   alias 'declare=declare -g'
   source "$_TRY_VARS_FILE"
   unalias 'declare'
+}
+
+_exit() {
+  _EXPLICIT_EXIT=1
+  builtin exit $1
+}
+
+_exit() {
+  _EXPLICIT_EXIT=1
+  builtin exit $1
 }
 
 check_exit_exception() {
