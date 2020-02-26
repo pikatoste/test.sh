@@ -869,13 +869,16 @@ runner() {
       endtry
       [ ! -t 1 ] || {
         line_pos
-        tput cup $((LINPOS - _lines_out - 2)) 0
-        if (( _script_error == 0 )); then
-          printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-        else
-          printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+        _lines_out=$((LINPOS - _lines_out - 2))
+        if (( $_lines_out >= 0 )); then
+          tput cup "$_lines_out" 0
+          if (( _script_error == 0 )); then
+            printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+          else
+            printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+          fi
+          tput cup $((LINPOS-1)) 0
         fi
-        tput cup $((LINPOS-1)) 0
       }
       script_failures_accum=$((script_failures_accum+_script_error))
       test_count_accum=$((test_count_accum+_test_count))
@@ -902,14 +905,15 @@ print_banner() {
 
   [[ -t 1 ]] || { echo "$BANNER"; return 0; }
 
-  local ABANNER i len cols trim
-  readarray -t ABANNER <<<"$BANNER"
+  local ABANNER i len lins trim
+  lins=$(tput lines)
+  readarray -t -n "$lins" 'ABANNER' <<<"$BANNER"
   len=${#ABANNER}
   trim=${ABANNER//?/?}
   tput civis
   LINPOS=
   for ((i=len-1; i>=0; i--)); do
-    [[ $LINPOS ]] && tput cup $((LINPOS - 8)) 0
+    [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]})) 0
     trim=${trim:1}
     printf "%.${_cols}s\n" "${ABANNER[@]#$trim}"
     line_pos
