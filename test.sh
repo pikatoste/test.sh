@@ -40,11 +40,12 @@ alias catch=");_catch "
 alias success:="}; _success&&{ enable_exceptions;"
 alias endtry="};_endtry"
 alias with_cause:='WITH_CAUSE= '
-alias exit='_EXPLICIT_EXIT=1; exit'
+alias exit='_exit'
 
 _TMP_BASE=${TMPDIR:-/tmp}/tsh-$$
 _EXCEPTIONS_FILE=$_TMP_BASE'-exceptions'
 _TRY_VARS_FILE=$_TMP_BASE'-tryvars'
+_ERR_FILE=$_TMP_BASE'-err'
 declare -A '_exceptions' '_exception_types'
 declare -A '_EXIT_HANDLERS' '_PRUNE_PATH_CACHE'
 
@@ -97,6 +98,16 @@ restore_vars() {
   alias 'declare=declare -g'
   source "$_TRY_VARS_FILE"
   unalias 'declare'
+}
+
+_exit() {
+  _EXPLICIT_EXIT=1
+  builtin exit $1
+}
+
+_exit() {
+  _EXPLICIT_EXIT=1
+  builtin exit $1
 }
 
 check_exit_exception() {
@@ -291,11 +302,12 @@ print_exception() {
 
 _eval() {
   push_exit_handler "create_eval_syntax_exception ${*@Q}"
-  eval 'pop_exit_handler;' "$@"
+  { eval '{ pop_exit_handler;' "$@" '; } 2>&5' ; } 5>&2 2>"$_ERR_FILE"
 }
 
 create_eval_syntax_exception() {
-  local errmsg="Syntax error in the expression: $1"
+  local errmsg
+  printf -v errmsg "Syntax error in the expression: %s\n%s" "$*" "$(cat "$_ERR_FILE")"
   first_frame=3 create_exception 'eval_syntax' "$errmsg"
 }
 
@@ -713,6 +725,7 @@ main_exit_handler() {
   [[ ! -f $_EXCEPTIONS_FILE ]] || unhandled_exception
   [[ -z $_PIPE ]] || rm -f "$_PIPE"
   [[ ! -f $_TRY_VARS_FILE ]] || rm -f "$_TRY_VARS_FILE"
+  [[ ! -f $_ERR_FILE ]] || rm -f "$_ERR_FILE"
 }
 
 inline_exit_handler() {
