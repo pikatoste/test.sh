@@ -851,7 +851,7 @@ runner() {
   _TESTS_RUNNER=1
   setup_tests_runner
   _INDENT='  '
-  declare 'script_failures_accum=0' '_test_count_accum=0' 'failures_accum=0' 'skipped_accum=0' 'TIMES' 'test_script'
+  declare 'script_failures_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' 'skipped_accum=0' 'TIMES' 'test_script'
   _TRY_VARS='_script_error _test_count _failed_count _skipped_count _lines_out'
   { time {
     for test_script in "$@"; do
@@ -886,7 +886,7 @@ runner() {
   printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-script_failures_accum))" "$script_failures_accum"
   printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
   printf "took %s\n" "${TIMES##*[[:space:]]}"
-  exit $((_script_failures % 256))
+  exit $((script_failures_accum % 256))
 }
 
 display_test_script_outcome() {
@@ -916,7 +916,7 @@ print_banner() {
 
   local ABANNER i len lins trim
   lins=$(tput lines)
-  readarray -t -n "$lins" 'ABANNER' <<<"$BANNER"
+  readarray -t -n "$((lins-1))" 'ABANNER' <<<"$BANNER"
   len=${#ABANNER}
   trim=${ABANNER//?/?}
   LINPOS=
