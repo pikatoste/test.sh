@@ -8,7 +8,16 @@ OUT="$LOG_DIR"/do_$(basename "$LOG_FILE")
   for i in no full; do
     STACK_TRACE=$i load_config
   done
-  assert_failure 'STACK_TRACE=pepe load_config'
+  try:
+    STACK_TRACE=pepe load_config
+  catch:
+    if exception_is 'configuration'; then
+      log_ok "Expected exception:"
+      print_exception 'log_ok'
+    else
+      rethrow
+    fi
+  endtry
 }
 
 @test: "When STACK_TRACE=no no stack traces should be produced"

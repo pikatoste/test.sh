@@ -732,7 +732,7 @@ load_config() {
   set_color
 
   # validate config
-  validate_values() {
+  validate_value() {
     local var=$1
     local val=${!var}
     shift
@@ -740,14 +740,14 @@ load_config() {
       [[ $i != "$val" ]] || return 0
     done
     local allowed_values="$*"
-    log_err "Configuration: invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }" && false
+    throw 'configuration' "invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }"
   }
 
   # TODO: change to: no, yes... mmm what about the other booleans... not clear
-  validate_values STACK_TRACE no full
-  validate_values COLOR no yes
-  validate_values LOG_MODE overwrite append
-  validate_values SUBTEST_LOG_CONFIG reset noreset noredir
+  validate_value STACK_TRACE no full
+  validate_value COLOR no yes
+  validate_value LOG_MODE overwrite append
+  validate_value SUBTEST_LOG_CONFIG reset noreset noredir
 }
 
 init_prune_path_cache() {
