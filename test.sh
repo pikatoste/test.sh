@@ -488,7 +488,7 @@ run_tests() {
     fi
 
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
-    [ ! -t 3 ] || {
+    [[ ! $ANIMATE ]] || {
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
       line_pos
       local tlinepos=$((LINPOS-1))
@@ -500,14 +500,14 @@ run_tests() {
       "$test_func"
     catch:
       print_exception
-      [ ! -t 3 ] || {
+      [[ ! $ANIMATE ]] || {
         kill_spinner
         tput cup "$tlinepos" 0
       } >&3
       display_test_failed
-      ((_failed_count++)) || [ ! -t 3 ] || display_test_script_outcome 1 >&3
+      ((_failed_count++)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
     success:
-      [ ! -t 3 ] || {
+      [[ ! $ANIMATE ]] || {
         kill_spinner
         tput cup "$tlinepos" 0
       } >&3
@@ -652,8 +652,6 @@ config_defaults() {
   default_SUBTEST_LOG_CONFIG='reset'
   default_INITIALIZE_SOURCE_CACHE=1
   default_CLEAN_TEST_TMP=1
-  default_ANIMATE=1
-  [ -t 1 ] || default_ANIMATE=
 }
 
 load_config() {
@@ -801,7 +799,7 @@ setup_self_runner() {
 }
 
 tests_runner_exit_handler() {
-  [ ! -t 1 ] || tput cnorm
+  [[ ! $ANIMATE ]] || tput cnorm
   check_exit_exception
   main_exit_handler
 }
@@ -840,7 +838,7 @@ TESTSH_DIR=$(dirname "$TESTSH")
 VERSION='@VERSION@'
 
 runner() {
-  [ ! -t 1 ] || setup_tty
+  setup_tty
   print_banner
   echo "This is test.sh version @VERSION@"
   echo "Build date: $(date -d @@BUILD_TIMESTAMP@)"
@@ -873,7 +871,7 @@ runner() {
         print_exception log_lines
         _script_error=1
       endtry
-      [ ! -t 1 ] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
+      [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
       script_failures_accum=$((script_failures_accum+_script_error))
       test_count_accum=$((test_count_accum+_test_count))
       # TODO: count errors and failures separately
@@ -912,7 +910,7 @@ log_lines() {
 print_banner() {
   local BANNER="@BANNER@"
 
-  [[ -t 1 ]] || { echo "$BANNER"; return 0; }
+  [[ $ANIMATE ]] || { echo "$BANNER"; return 0; }
 
   local ABANNER i len lins trim
   lins=$(tput lines)
@@ -930,6 +928,11 @@ print_banner() {
 }
 
 setup_tty() {
+  default_ANIMATE=1
+  [ -t 1 ] || default_ANIMATE=
+  [[ -v 'ANIMATE' ]] || ANIMATE=$default_ANIMATE
+
+  [[ $ANIMATE ]] || return 0
   tput civis
   _cols=$(tput cols)
   trap '_cols=$(tput cols)' WINCH
