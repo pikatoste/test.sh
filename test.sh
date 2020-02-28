@@ -458,10 +458,11 @@ create_spinner() {
   ( set +e
     trap - ERR
     trap "exit" INT
+    tput cup "$1" "$2"
     while true; do
       for char in "${_spinner_chars[@]}"; do
-        tput cup "$1" "$2"
         echo -n "$char"
+        tput cub 1
         sleep 0.15
       done
     done
@@ -502,14 +503,14 @@ run_tests() {
       print_exception
       [[ ! $ANIMATE ]] || {
         kill_spinner
-        tput cup "$tlinepos" 0
+        echo -ne "\r"
       } >&3
       display_test_failed
       ((_failed_count++)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
     success:
       [[ ! $ANIMATE ]] || {
         kill_spinner
-        tput cup "$tlinepos" 0
+        echo -ne "\r"
       } >&3
       display_test_passed
     endtry
@@ -856,7 +857,7 @@ runner() {
   _TRY_VARS='_script_error _test_count _failed_count _skipped_count _lines_out'
   { time {
     for test_script in "$@"; do
-      declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_lines_out=0'
+      declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_lines_out=1'
       printf "%${_cols:+.$_cols}s\n" "* $test_script:"
       try:
         setup_test_script
@@ -893,15 +894,15 @@ runner() {
 display_test_script_outcome() {
   local outcome=$1 line
   line_pos
-  line=$((LINPOS - _lines_out - 1))
-  if (( $_lines_out >= 0 )); then
+  line=$((LINPOS - _lines_out))
+  if (( $line >= 0 )); then
     tput cup "$line" 0
     if (( outcome == 0 )); then
       printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
     else
       printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
     fi
-    tput cup $((LINPOS)) 0
+    tput cup "$LINPOS" 0
   fi
 }
 
