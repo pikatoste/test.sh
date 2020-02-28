@@ -384,20 +384,24 @@ start_test() {
 
 display_test_passed() {
   log_ok "PASSED: ${_CURRENT_TEST_NAME}"
-  echo -e "${_INDENT}${_GREEN}* ${_CURRENT_TEST_NAME}${_NC}" >&3
+  printf "${_GREEN}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
+  ((++_lines_out))
 }
 
 display_test_failed() {
   log_err "FAILED: ${_CURRENT_TEST_NAME}"
-  echo -e "${_INDENT}${_RED}* ${_CURRENT_TEST_NAME}${_NC}" >&3
+  printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
+  ((++_lines_out))
 }
 
 display_test_skipped() {
-  echo -e "${_INDENT}${_BLUE}* [skipped] $1${_NC}" >&3
+  printf "${_BLUE}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* [skipped] $1" >&3
+  ((++_lines_out))
 }
 
 warn_teardown_failed() {
-  echo -e "${_INDENT}${_ORANGE}WARN: $1 failed${_NC}" >&3
+  printf "${_ORANGE}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}WARN: $1 failed" >&3
+  ((++_lines_out))
 }
 
 do_log() {
@@ -426,7 +430,7 @@ function_exists() {
 
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  push_err_handler 'echo -e "${_RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${_NC}" >&3'
+  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
   pop_err_handler
 }
@@ -449,6 +453,28 @@ run_test_script() {
   "$test_script" "$@"
 }
 
+_spinner_chars=(- \\ \| /)
+create_spinner() {
+  ( set +e
+    trap - ERR
+    trap "exit" INT
+    tput cup "$1" "$2"
+    while true; do
+      for char in "${_spinner_chars[@]}"; do
+        echo -n "$char"
+        tput cub 1
+        sleep 0.15
+      done
+    done
+  ) &
+  _spinner_pid=$!
+}
+
+kill_spinner() {
+  kill -INT "$_spinner_pid"
+  wait "$_spinner_pid"
+}
+
 run_tests() {
   _MANAGED=
   _failed_count=0
@@ -463,15 +489,29 @@ run_tests() {
     fi
 
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
+    [[ ! $ANIMATE ]] || {
+      printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
+      line_pos
+      local tlinepos=$((LINPOS))
+      create_spinner "$tlinepos" "${#_INDENT}"
+    } >&3
     try:
       log_info "Start test: $_CURRENT_TEST_NAME"
       ! function_exists 'setup_test' || setup_test
       "$test_func"
     catch:
       print_exception
+      [[ ! $ANIMATE ]] || {
+        kill_spinner
+        echo -ne "\r"
+      } >&3
       display_test_failed
-      ((++_failed_count))
+      ((_failed_count++)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
     success:
+      [[ ! $ANIMATE ]] || {
+        kill_spinner
+        echo -ne "\r"
+      } >&3
       display_test_passed
     endtry
     call_teardown 'teardown_test'
@@ -613,8 +653,6 @@ config_defaults() {
   default_SUBTEST_LOG_CONFIG='reset'
   default_INITIALIZE_SOURCE_CACHE=1
   default_CLEAN_TEST_TMP=1
-  default_ANIMATE=1
-  [ -t 1 ] || default_ANIMATE=
 }
 
 load_config() {
@@ -693,7 +731,7 @@ load_config() {
   set_color
 
   # validate config
-  validate_values() {
+  validate_value() {
     local var=$1
     local val=${!var}
     shift
@@ -701,14 +739,14 @@ load_config() {
       [[ $i != "$val" ]] || return 0
     done
     local allowed_values="$*"
-    log_err "Configuration: invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }" && false
+    throw 'configuration' "invalid value of variable $var: '$val', allowed values: ${allowed_values// /, }"
   }
 
   # TODO: change to: no, yes... mmm what about the other booleans... not clear
-  validate_values STACK_TRACE no full
-  validate_values COLOR no yes
-  validate_values LOG_MODE overwrite append
-  validate_values SUBTEST_LOG_CONFIG reset noreset noredir
+  validate_value STACK_TRACE no full
+  validate_value COLOR no yes
+  validate_value LOG_MODE overwrite append
+  validate_value SUBTEST_LOG_CONFIG reset noreset noredir
 }
 
 init_prune_path_cache() {
@@ -762,6 +800,10 @@ setup_self_runner() {
 }
 
 tests_runner_exit_handler() {
+  [[ ! $ANIMATE ]] || {
+    tput cnorm
+    stty echo
+  }
   check_exit_exception
   main_exit_handler
 }
@@ -772,7 +814,7 @@ setup_tests_runner() {
   push_err_handler 'create_implicit_exception $_ERR_CODE'
   config_defaults
   load_config
-  [[ -z $CONFIG_FILE ]] || log_info "Configuration: $CONFIG_FILE"
+  [[ -z $CONFIG_FILE ]] || echo "Configuration: $CONFIG_FILE"
   prune_path "$BASH_SOURCE"
 }
 
@@ -800,7 +842,8 @@ TESTSH_DIR=$(dirname "$TESTSH")
 VERSION='@VERSION@'
 
 runner() {
-  echo "@BANNER@"
+  setup_tty
+  print_banner
   echo "This is test.sh version @VERSION@"
   echo "Build date: $(date -d @@BUILD_TIMESTAMP@)"
   echo "See https://github.com/pikatoste/test.sh"
@@ -810,41 +853,140 @@ runner() {
   _TESTS_RUNNER=1
   setup_tests_runner
   _INDENT='  '
-  declare -g '_script_failures=0'
-  declare 'test_count_accum=0' 'failures_accum=0' 'skipped_accum=0' 'TIMES' 'test_script'
-  _TRY_VARS='_script_failures _test_count _failed_count _skipped_count _printed'
+  declare 'script_failures_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' 'skipped_accum=0' 'TIMES' 'test_script'
+  _TRY_VARS='_script_error _test_count _failed_count _skipped_count _lines_out'
   { time {
     for test_script in "$@"; do
-      declare -g '_test_count=0' '_failed_count=0' '_skipped_count=0' '_printed='
+      declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_lines_out=1'
+      printf "%${_cols:+.$_cols}s\n" "* $test_script:"
       try:
         setup_test_script
-        echo -e "${_BLUE}* $test_script:${_NC}" >&3
-        _printed=1
         source "$TEST_SCRIPT"
         _test_count=${#_testfuncs[@]}
         try:
           _TRY_VARS= run_tests
-          [[ $_failed_count = 0 ]] || ((++_script_failures))
+          [[ $_failed_count = 0 ]] || _script_error=1
         catch:
           print_exception
-          ((++_script_failures))
+          _skipped_count=$((_test_count-_failed_count-_skipped_count))
+          _script_error=1
         endtry
       catch:
-        [[ $_printed ]] || echo -e "${_RED}* $test_script:${_NC}"
-        print_exception
-        ((++_script_failures))
+        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome 1
+        print_exception log_lines
+        _script_error=1
+      success:
+        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
       endtry
+      script_failures_accum=$((script_failures_accum+_script_error))
       test_count_accum=$((test_count_accum+_test_count))
+      # TODO: count errors and failures separately
       failures_accum=$((failures_accum+_failed_count))
       skipped_accum=$((skipped_accum+_skipped_count))
     done
   } 2>&3
   } 3>&2 2>"$_TRY_VARS_FILE"
   readarray -t -s 1 -n 1 'TIMES' <"$_TRY_VARS_FILE"
-  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-_script_failures))" "$_script_failures"
+  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-script_failures_accum))" "$script_failures_accum"
   printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
   printf "took %s\n" "${TIMES##*[[:space:]]}"
-  exit $((_script_failures % 256))
+  exit $((script_failures_accum % 256))
+}
+
+display_test_script_outcome() {
+  local outcome=$1 line
+  line_pos
+  line=$((LINPOS - _lines_out))
+  if (( $line >= 0 )); then
+    tput cup "$line" 0
+    if (( outcome == 0 )); then
+      printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+    else
+      printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+    fi
+    tput cup "$LINPOS" 0
+  fi
+}
+
+log_lines() {
+  log_err "$@"
+  ((++_lines_out))
+}
+
+print_banner() {
+  local BANNER="@BANNER@"
+
+  [[ $ANIMATE ]] || { echo "$BANNER"; return 0; }
+
+  local ABANNER i len trim real_time
+  readarray -n "$_lines" 'ABANNER' <<<"$BANNER"
+  ABANNER[-1]=$(echo -n "${ABANNER[-1]}")
+  len=${#ABANNER}
+  trim=${ABANNER//?/?}
+
+  # calibrate delay
+  alias delay='sleep 0.000'
+  { line_pos; readarray -t -s 1 -n 1 'real_time' < <(
+    { LANG=C
+      time {
+        [[ $LINPOS ]] && tput cup $((LINPOS)) 0
+        trim=${trim:((${#trim}/2))}
+        printf "%.${_cols}s" "${ABANNER[@]#$trim}" >/dev/null
+        [[ $LINPOS ]] || line_pos
+        eval delay
+      } 1>&3 2>&4
+    } 4>&2 2>&1 )
+  } 3>&1
+  [[ $real_time =~ .*m(.*)s ]]
+  local ms=$((10#${BASH_REMATCH[1]/./}))
+  local step=15
+  if ((ms >= 2*step)); then
+    alias delay=
+  else
+    ((ms > step)) && ms=$step
+    ms=$((step-ms))
+    local s='0.000'
+    alias delay="sleep ${s:0:((${#s}-${#ms}))}$ms"
+  fi
+
+  # animate
+  LINPOS=
+  for ((i=len-1; i>=0; i--)); do
+    [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]} + 1)) 0
+    trim=${trim:1}
+    printf "%.${_cols}s" "${ABANNER[@]#$trim}"
+    [[ $LINPOS ]] || line_pos
+    eval delay
+  done
+  echo
+  readarray -s "${#ABANNER[@]}" 'ABANNER' <<<"$BANNER"
+  printf "%.${_cols}s" "${ABANNER[@]}"
+  unalias delay
+}
+
+setup_tty() {
+  default_ANIMATE=1
+  [ -t 1 ] || default_ANIMATE=
+  [[ -v 'ANIMATE' ]] || ANIMATE=$default_ANIMATE
+
+  [[ $ANIMATE ]] || return 0
+
+  stty -echo
+  tput civis
+  _cols=$(tput cols)
+  _lines=$(tput lines)
+  trap '_cols=$(tput cols); _lines=$(tput lines)' WINCH
+}
+
+cursor_pos() {
+  echo -en "\E[6n"
+  read -sdR CURPOS
+  CURPOS=${CURPOS#*[}
+}
+
+line_pos() {
+  cursor_pos
+  LINPOS=$((${CURPOS%;*}-1))
 }
 
 if [ "$0" = "${BASH_SOURCE}" ]; then
