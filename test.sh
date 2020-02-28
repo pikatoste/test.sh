@@ -491,7 +491,7 @@ run_tests() {
     [[ ! $ANIMATE ]] || {
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
       line_pos
-      local tlinepos=$((LINPOS-1))
+      local tlinepos=$((LINPOS))
       create_spinner "$tlinepos" "${#_INDENT}"
     } >&3
     try:
@@ -799,7 +799,10 @@ setup_self_runner() {
 }
 
 tests_runner_exit_handler() {
-  [[ ! $ANIMATE ]] || tput cnorm
+  [[ ! $ANIMATE ]] || {
+    tput cnorm
+    stty echo
+  }
   check_exit_exception
   main_exit_handler
 }
@@ -890,7 +893,7 @@ runner() {
 display_test_script_outcome() {
   local outcome=$1 line
   line_pos
-  line=$((LINPOS - _lines_out - 2))
+  line=$((LINPOS - _lines_out - 1))
   if (( $_lines_out >= 0 )); then
     tput cup "$line" 0
     if (( outcome == 0 )); then
@@ -898,7 +901,7 @@ display_test_script_outcome() {
     else
       printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
     fi
-    tput cup $((LINPOS-1)) 0
+    tput cup $((LINPOS)) 0
   fi
 }
 
@@ -912,19 +915,50 @@ print_banner() {
 
   [[ $ANIMATE ]] || { echo "$BANNER"; return 0; }
 
-  local ABANNER i len lins trim
-  lins=$(tput lines)
-  readarray -t -n "$((lins-1))" 'ABANNER' <<<"$BANNER"
+  local ABANNER i len trim real_time
+  readarray -n "$_lines" 'ABANNER' <<<"$BANNER"
+  ABANNER[-1]=$(echo -n "${ABANNER[-1]}")
   len=${#ABANNER}
   trim=${ABANNER//?/?}
+
+  # calibrate delay
+  alias delay='sleep 0.000'
+  { line_pos; readarray -t -s 1 -n 1 'real_time' < <(
+    { LANG=C
+      time {
+        [[ $LINPOS ]] && tput cup $((LINPOS)) 0
+        trim=${trim:((${#trim}/2))}
+        printf "%.${_cols}s" "${ABANNER[@]#$trim}" >/dev/null
+        [[ $LINPOS ]] || line_pos
+        eval delay
+      } 1>&3 2>&4
+    } 4>&2 2>&1 )
+  } 3>&1
+  [[ $real_time =~ .*m(.*)s ]]
+  local ms=$((10#${BASH_REMATCH[1]/./}))
+  local step=15
+  if ((ms >= 2*step)); then
+    alias delay=
+  else
+    ((ms > step)) && ms=$step
+    ms=$((step-ms))
+    local s='0.000'
+    alias delay="sleep ${s:0:((${#s}-${#ms}))}$ms"
+  fi
+
+  # animate
   LINPOS=
   for ((i=len-1; i>=0; i--)); do
-    [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]} - 1)) 0
+    [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]} + 1)) 0
     trim=${trim:1}
-    printf "%.${_cols}s\n" "${ABANNER[@]#$trim}"
+    printf "%.${_cols}s" "${ABANNER[@]#$trim}"
     [[ $LINPOS ]] || line_pos
-    sleep 0.005
+    eval delay
   done
+  echo
+  readarray -s "${#ABANNER[@]}" 'ABANNER' <<<"$BANNER"
+  printf "%.${_cols}s" "${ABANNER[@]}"
+  unalias delay
 }
 
 setup_tty() {
@@ -933,9 +967,12 @@ setup_tty() {
   [[ -v 'ANIMATE' ]] || ANIMATE=$default_ANIMATE
 
   [[ $ANIMATE ]] || return 0
+
+  stty -echo
   tput civis
   _cols=$(tput cols)
-  trap '_cols=$(tput cols)' WINCH
+  _lines=$(tput lines)
+  trap '_cols=$(tput cols); _lines=$(tput lines)' WINCH
 }
 
 cursor_pos() {
@@ -946,7 +983,7 @@ cursor_pos() {
 
 line_pos() {
   cursor_pos
-  LINPOS=${CURPOS%;*}
+  LINPOS=$((${CURPOS%;*}-1))
 }
 
 if [ "$0" = "${BASH_SOURCE}" ]; then
