@@ -430,7 +430,7 @@ function_exists() {
 
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  push_err_handler 'echo -e "${_RED}[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information${_NC}" >&3; ((++_lines_out))'
+  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
   pop_err_handler
 }
@@ -872,10 +872,12 @@ runner() {
           _script_error=1
         endtry
       catch:
+        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome 1
         print_exception log_lines
         _script_error=1
+      success:
+        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
       endtry
-      [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
       script_failures_accum=$((script_failures_accum+_script_error))
       test_count_accum=$((test_count_accum+_test_count))
       # TODO: count errors and failures separately
