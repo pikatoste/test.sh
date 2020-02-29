@@ -1,6 +1,10 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
+setup_test() {
+  true
+}
+
 teardown_test_suite() {
   assert_failure "[[ a = a ]]"
 }

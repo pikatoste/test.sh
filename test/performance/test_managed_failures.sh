@@ -5,6 +5,10 @@ source "$(dirname "$(readlink -f "$0")")"/../../test.sh
   assert_failure "[[ a = a ]]"
 }
 
+@setup: {
+  true
+}
+
 @teardown: {
   assert_failure "[[ b = b ]]"
 }

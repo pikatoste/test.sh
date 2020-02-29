@@ -6,4 +6,3 @@ OUT=$TEST_TMP/out
 "$TESTSH" >"$OUT"
 assert_success 'grep test.sh\ version "$OUT"'
 assert_success 'grep See\ https://github.com/pikatoste/test.sh "$OUT"'
-rm -f "$OUT"

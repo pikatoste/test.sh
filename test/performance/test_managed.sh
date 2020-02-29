@@ -1,6 +1,10 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../../test.sh
 
+@setup: {
+  true
+}
+
 @test: "Performance managed test 1"
 @body: {
   assert_success "[[ a = a ]]"
