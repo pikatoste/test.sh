@@ -873,9 +873,9 @@ runner() {
       printf "%${_cols:+.$_cols}s\n" "* $test_script:"
       try:
         setup_test_script
-        source "$TEST_SCRIPT"
-        _test_count=${#_testfuncs[@]}
         try:
+          source "$TEST_SCRIPT"
+          _test_count=${#_testfuncs[@]}
           _TRY_VARS= run_tests
         catch:
           print_exception
