@@ -461,7 +461,6 @@ create_spinner() {
   ( set +e
     trap - ERR
     trap "exit" INT
-    tput cup "$1" "$2"
     while true; do
       for char in "${_spinner_chars[@]}"; do
         echo -n "$char"
@@ -502,8 +501,11 @@ run_tests() {
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     [[ ! $ANIMATE ]] || {
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
-      line_pos
-      create_spinner "$LINPOS" "${#_INDENT}"
+      tput -S <<EOF
+cub $_cols
+cuf ${#_INDENT}
+EOF
+      create_spinner
     } >&3
     _setup_passed=1
     try:
@@ -865,7 +867,8 @@ runner() {
   _TESTS_RUNNER=1
   _INDENT='  '
   setup_tests_runner
-  declare 'script_failures_accum=0' 'script_errors_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' 'skipped_accum=0' 'script_failed' 'real_time' 'test_script'
+  declare 'script_failures_accum=0' 'script_errors_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' \
+    'skipped_accum=0' 'script_failed' 'real_time' 'test_script'
   _TRY_VARS='_script_error _test_count _failed_count _skipped_count _error_count _lines_out'
   { time {
     for test_script in "$@"; do
@@ -909,17 +912,15 @@ runner() {
 }
 
 display_test_script_outcome() {
-  local outcome=$1 line
-  line_pos
-  line=$((LINPOS - _lines_out))
-  if (( $line >= 0 )); then
-    tput cup "$line" 0
-    if (( outcome == 0 )); then
-      printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-    else
-      printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-    fi
-    tput cup "$LINPOS" 0
+  local outcome=$1 color
+  if (( _lines_out < _lines )); then
+    tput -S <<EOF
+sc
+cuu $_lines_out
+EOF
+    (( outcome == 0 )) && color=$_GREEN || color=$_RED
+    printf "${color}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+    tput rc
   fi
 }
 
