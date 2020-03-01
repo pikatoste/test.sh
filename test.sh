@@ -240,7 +240,7 @@ create_implicit_exception() {
   local first_frame=${first_frame:-4}
   local frame_idx=$((first_frame-2))
   prune_path "${BASH_SOURCE[frame_idx]}"
-  local errmsg="Error in ${FUNCNAME[frame_idx]}($_PRUNED_PATH:${BASH_LINENO[frame_idx-1]}): '${errcmd}' exited with status $err"
+  local errmsg="Error in ${FUNCNAME[frame_idx]}($_PRUNED_PATH:${BASH_LINENO[frame_idx-1]}): '${errcmd}' exited with status ${err}${_USE_ERR_FILE:+ and stderr:$(echo;cat "$_ERR_FILE")}"
   [[ ! -f $_EXCEPTIONS_FILE ]] || {
     local 'pending_exception'
     readarray -t 'pending_exception' <"$_EXCEPTIONS_FILE"
@@ -298,6 +298,17 @@ print_exception() {
     done
     ((i<0)) || "$log_function" "${_EXCEPTION[i]}"
   done
+}
+
+xerr() {
+  _USE_ERR_FILE=1
+  eval "$@" 2>"$_ERR_FILE"
+  _USE_ERR_FILE=
+  [[ ! $_XERR_PRINT ]] || {
+    local err
+    readarray err <"$_ERR_FILE"
+    printf "%s" "${err[@]}" >&2
+  }
 }
 
 _eval() {
@@ -647,7 +658,7 @@ setup_io() {
   [[ $SUBTEST_LOG_CONFIG != 'noredir' ]] || return 0
   local log_dir
   log_dir=$(dirname "$LOG_FILE")
-  [[ -d $log_dir ]] || mkdir -p "$log_dir"
+  [[ -d $log_dir ]] || xerr mkdir -p "$log_dir"
   if [[ $VERBOSE ]]; then
     _PIPE=$_TMP_BASE-pipe
     mkfifo "$_PIPE"
@@ -659,7 +670,9 @@ setup_io() {
     _PIPE=
     local redir=\>
     [[ $LOG_MODE = overwrite ]] || redir=\>$redir
-    eval exec 3\>\&1 4\>\&2 $redir"$LOG_FILE" 2\>\&1
+    exec 3>&1 4>&2
+    xerr exec $redir"$LOG_FILE"
+    exec 2>&1
   fi
 }
 
@@ -734,8 +747,10 @@ load_config() {
   done
 
   # load config file if present
-  [ -z "$CONFIG_FILE" ] || load_config_file "$CONFIG_FILE"
-  [ -n "$CONFIG_FILE" ] || IFS=':' try_config_path
+  [ -z "$CONFIG_FILE" ] && IFS=':' try_config_path || {
+    [[ -f $CONFIG_FILE ]] || throw 'configuration' "Configuration file not fond: $CONFIG_FILE"
+    load_config_file "$CONFIG_FILE"
+  }
 
   # prioritize environment config
   for var in $config_vars; do
@@ -777,6 +792,7 @@ load_config() {
   validate_value COLOR no yes
   validate_value LOG_MODE overwrite append
   validate_value SUBTEST_LOG_CONFIG reset noreset noredir
+  [[ ! $VERBOSE ]] || ANIMATE=
 }
 
 init_prune_path_cache() {
@@ -838,7 +854,7 @@ tests_runner_exit_handler() {
   main_exit_handler
 }
 
-setup_tests_runner() {
+setup_runner() {
   push_exit_handler 'tests_runner_exit_handler'
   trap 'err_trap' ERR
   push_err_handler 'create_implicit_exception $_ERR_CODE'
@@ -882,7 +898,9 @@ runner() {
   alias '@run_tests='
   _TESTS_RUNNER=1
   _INDENT='  '
-  setup_tests_runner
+  save_ANIMATE=$ANIMATE
+  setup_runner
+  [[ $save_ANIMATE == $ANIMATE ]] || { stty echo; tput cnorm; }
   declare 'script_failures_accum=0' 'script_errors_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' \
     'skipped_accum=0' 'script_failed' 'real_time' 'test_script'
   _TRY_VARS='_script_error _test_count _failed_count _skipped_count _error_count _lines_out'
@@ -893,7 +911,7 @@ runner() {
       try:
         setup_test_script
         try:
-          source "$TEST_SCRIPT"
+          _XERR_PRINT=1 xerr source "$TEST_SCRIPT"
           _test_count=${#_testfuncs[@]}
           _TRY_VARS= run_tests
         catch:
