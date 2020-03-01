@@ -374,7 +374,7 @@ start_test() {
     display_test_passed
     unset _CURRENT_TEST_NAME
     _teardown_test_called=1
-    call_teardown 'teardown_test'
+    call_teardown_if_exists 'teardown_test'
   fi
   _CURRENT_TEST_NAME="$1"
   _teardown_test_called=
@@ -425,18 +425,37 @@ log_err() {
 }
 
 function_exists() {
-  declare -f "$1" >/dev/null
+  declare -F "$1" >/dev/null
+}
+
+setup_test_suite_kill_spinner() {
+  [[ ! $ANIMATE ]] || {
+    kill_spinner
+    echo -e '\r*'
+  } >&3
 }
 
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
+  [[ ! $ANIMATE ]] || {
+    tput -S <<EOF
+cub $_cols
+cuu1
+EOF
+    create_spinner
+  } >&3
+  # TODO: if exit but not err, the spinner is not filled; better with try/catch
+  push_err_handler 'setup_test_suite_kill_spinner; printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
+  setup_test_suite_kill_spinner
   pop_err_handler
 }
 
+call_teardown_if_exists() {
+  ! function_exists "$1" || call_teardown "$1"
+}
+
 call_teardown() {
-  function_exists "$1" || return 0
   try:
     "$1"
   catch:
@@ -458,7 +477,6 @@ create_spinner() {
   ( set +e
     trap - ERR
     trap "exit" INT
-    tput cup "$1" "$2"
     while true; do
       for char in "${_spinner_chars[@]}"; do
         echo -n "$char"
@@ -478,9 +496,17 @@ kill_spinner() {
 run_tests() {
   _MANAGED=
   _failed_count=0
+  _error_count=0
   _skipped_count=0
-  local test_func
+  local 'test_func' 'setupf' 'teardownf'
   call_setup_test_suite
+  ! function_exists 'setup_test' || {
+    _TRY_VARS='_setup_passed'
+    setupf=1
+  }
+  ! function_exists 'teardown_test' || {
+    teardownf=1
+  }
   for test_func in "${_testfuncs[@]}"; do
     if [[ $_failed_count > 0 && $FAIL_FAST || ${_testskip[$test_func]} ]]; then
       display_test_skipped "${_testdescs[$test_func]}"
@@ -491,13 +517,16 @@ run_tests() {
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     [[ ! $ANIMATE ]] || {
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
-      line_pos
-      local tlinepos=$((LINPOS))
-      create_spinner "$tlinepos" "${#_INDENT}"
+      tput -S <<EOF
+cub $_cols
+cuf ${#_INDENT}
+EOF
+      create_spinner
     } >&3
+    _setup_passed=1
     try:
       log_info "Start test: $_CURRENT_TEST_NAME"
-      ! function_exists 'setup_test' || setup_test
+      [[ ! $setupf ]] || { _TRY_VARS=; _setup_passed=0; setup_test; _setup_passed=1; }
       "$test_func"
     catch:
       print_exception
@@ -506,19 +535,20 @@ run_tests() {
         echo -ne "\r"
       } >&3
       display_test_failed
-      ((_failed_count++)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
+      (( _setup_passed )) && ((++_failed_count)) || ((++_error_count))
+      ((_failed_count+_error_count != 1)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
     success:
       [[ ! $ANIMATE ]] || {
         kill_spinner
-        echo -ne "\r"
+        echo -ne '\r'
       } >&3
       display_test_passed
     endtry
-    call_teardown 'teardown_test'
+    [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
   done
 
-  call_teardown 'teardown_test_suite'
-  if [[ $_failed_count != 0 ]]; then
+  _TRY_VARS= call_teardown_if_exists 'teardown_test_suite'
+  if (( _failed_count+_error_count > 0 )); then
     log_err "$_failed_count test(s) failed"
     [[ $_TESTS_RUNNER ]] || exit 1
   fi
@@ -768,8 +798,8 @@ main_exit_handler() {
 
 inline_exit_handler() {
   [[ ! -v _CURRENT_TEST_NAME ]] || display_last_inline_test_result
-  [[ -n $_teardown_test_called ]] || call_teardown 'teardown_test'
-  [[ -z $_setup_test_suite_called ]] || call_teardown 'teardown_test_suite'
+  [[ -n $_teardown_test_called ]] || call_teardown_if_exists 'teardown_test'
+  [[ -z $_setup_test_suite_called ]] || call_teardown_if_exists 'teardown_test_suite'
 }
 
 self_runner_exit_handler() {
@@ -851,60 +881,62 @@ runner() {
 
   alias '@run_tests='
   _TESTS_RUNNER=1
-  setup_tests_runner
   _INDENT='  '
-  declare 'script_failures_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' 'skipped_accum=0' 'TIMES' 'test_script'
-  _TRY_VARS='_script_error _test_count _failed_count _skipped_count _lines_out'
+  setup_tests_runner
+  declare 'script_failures_accum=0' 'script_errors_accum=0' 'test_count_accum=0' 'failures_accum=0' 'errors_accum=0' \
+    'skipped_accum=0' 'script_failed' 'real_time' 'test_script'
+  _TRY_VARS='_script_error _test_count _failed_count _skipped_count _error_count _lines_out'
   { time {
     for test_script in "$@"; do
-      declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_lines_out=1'
+      declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_error_count=0' '_lines_out=1'
       printf "%${_cols:+.$_cols}s\n" "* $test_script:"
       try:
         setup_test_script
-        source "$TEST_SCRIPT"
-        _test_count=${#_testfuncs[@]}
         try:
+          source "$TEST_SCRIPT"
+          _test_count=${#_testfuncs[@]}
           _TRY_VARS= run_tests
-          [[ $_failed_count = 0 ]] || _script_error=1
         catch:
           print_exception
-          _skipped_count=$((_test_count-_failed_count-_skipped_count))
+          _error_count=$((_test_count-_failed_count-_skipped_count))
           _script_error=1
         endtry
       catch:
-        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome 1
+        [[ ! $ANIMATE ]] || display_test_script_outcome 1
         print_exception log_lines
         _script_error=1
+        script_failed=1
       success:
-        [[ ! $ANIMATE ]] || (( _failed_count > 0 )) || display_test_script_outcome "$_script_error"
+        script_failed=$(( _failed_count+_error_count+_script_error > 0 ))
+        [[ ! $ANIMATE ]] || (( _script_error == 0 && (_failed_count+_error_count > 0) )) || display_test_script_outcome "$script_failed"
       endtry
-      script_failures_accum=$((script_failures_accum+_script_error))
-      test_count_accum=$((test_count_accum+_test_count))
-      # TODO: count errors and failures separately
-      failures_accum=$((failures_accum+_failed_count))
-      skipped_accum=$((skipped_accum+_skipped_count))
+      let script_failures_accum+='_script_error==0 && script_failed' \
+          script_errors_accum+=_script_error \
+          test_count_accum+=_test_count \
+          failures_accum+=_failed_count \
+          skipped_accum+=_skipped_count \
+          errors_accum+=_error_count \
+          1
     done
   } 2>&3
   } 3>&2 2>"$_TRY_VARS_FILE"
-  readarray -t -s 1 -n 1 'TIMES' <"$_TRY_VARS_FILE"
-  printf "%d test scripts: %d passed, %d failed\n" "$#" "$(($#-script_failures_accum))" "$script_failures_accum"
-  printf "%d tests: %d passed, %d failed, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-skipped_accum))" "$failures_accum" "$skipped_accum"
-  printf "took %s\n" "${TIMES##*[[:space:]]}"
-  exit $((script_failures_accum % 256))
+  readarray -t -s 1 -n 1 'real_time' <"$_TRY_VARS_FILE"
+  printf "%d test scripts: %d passed, %d failed, %d errors\n" "$#" "$(($#-script_failures_accum-script_errors_accum))" "$script_failures_accum" "$script_errors_accum"
+  printf "%d tests: %d passed, %d failed, %d errors, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-errors_accum-skipped_accum))" "$failures_accum" "$errors_accum" "$skipped_accum"
+  printf "took %s\n" "${real_time##*[[:space:]]}"
+  exit $(( (script_failures_accum+script_errors_accum) % 256))
 }
 
 display_test_script_outcome() {
-  local outcome=$1 line
-  line_pos
-  line=$((LINPOS - _lines_out))
-  if (( $line >= 0 )); then
-    tput cup "$line" 0
-    if (( outcome == 0 )); then
-      printf "${_GREEN}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-    else
-      printf "${_RED}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-    fi
-    tput cup "$LINPOS" 0
+  local outcome=$1 color
+  if (( _lines_out < _lines )); then
+    tput -S <<EOF
+sc
+cuu $_lines_out
+EOF
+    (( outcome == 0 )) && color=$_GREEN || color=$_RED
+    printf "${color}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
+    tput rc
   fi
 }
 

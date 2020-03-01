@@ -4,6 +4,10 @@
   assert_failure "[[ a = a ]]"
 }
 
+@setup: {
+  true
+}
+
 @teardown: {
   assert_failure "[[ b = b ]]"
 }
