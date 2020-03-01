@@ -428,10 +428,26 @@ function_exists() {
   declare -F "$1" >/dev/null
 }
 
+setup_test_suite_kill_spinner() {
+  [[ ! $ANIMATE ]] || {
+    kill_spinner
+    echo -e '\r*'
+  } >&3
+}
+
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
+  [[ ! $ANIMATE ]] || {
+    tput -S <<EOF
+cub $_cols
+cuu1
+EOF
+    create_spinner
+  } >&3
+  # TODO: if exit but not err, the spinner is not filled; better with try/catch
+  push_err_handler 'setup_test_suite_kill_spinner; printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
+  setup_test_suite_kill_spinner
   pop_err_handler
 }
 
@@ -524,7 +540,7 @@ EOF
     success:
       [[ ! $ANIMATE ]] || {
         kill_spinner
-        echo -ne "\r"
+        echo -ne '\r'
       } >&3
       display_test_passed
     endtry
