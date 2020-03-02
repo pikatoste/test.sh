@@ -13,17 +13,23 @@ shopt -s inherit_errexit expand_aliases
 alias @test:='define_test'
 alias @body:='validate@body'
 alias @skip='_SKIP=1 '
+alias @timeout='_set_timeout '
 alias @setup_fixture:='setup_test_suite()'
 alias @teardown_fixture:='teardown_test_suite()'
 alias @setup:='setup_test()'
 alias @teardown:='teardown_test()'
-declare -A '_testdescs' '_testskip'
+declare -A '_testdescs' '_testskip' '_testtimeout'
 _TEST_NUM=1
+
+_set_timeout() {
+  _TIMEOUT=$1
+}
 
 define_test() {
   printf -v '_testfunc' 'test_%02d' "$_TEST_NUM"
   _testfuncs[_TEST_NUM]=$_testfunc
   _testskip[$_testfunc]=$_SKIP
+  _testtimeout[$_testfunc]=$_TIMEOUT
   _testdescs[$_testfunc]=${1:-$_testfunc}
   eval "alias @body:='validate@body; $_testfunc()'"
   ((_TEST_NUM++))
@@ -31,7 +37,7 @@ define_test() {
 
 validate@body() {
   [[ -v _testfunc ]] || throw 'test_syntax' 'Misplaced @body: tag'
-  unset '_testfunc' '_SKIP'
+  unset '_testfunc' '_SKIP' '_TIMEOUT'
 }
 
 alias try:="_try;(_try_prolog;"
@@ -79,6 +85,7 @@ declare_exception 'error'
 declare_exception 'test_syntax' 'error'
 declare_exception 'pending_exception' 'error'
 declare_exception 'eval_syntax' 'error'
+declare_exception 'timeout' 'error'
 
 with_vars() {
   _TRY_VARS=$*
@@ -86,8 +93,7 @@ with_vars() {
 
 _try() {
   push_caught_exception
-  set +e
-  trap - ERR
+  disable_exceptions
 }
 
 save_vars() {
@@ -135,8 +141,11 @@ _catch() {
     [[ $_TRY_EXIT_CODE != 0 ]] || return 1
     builtin exit "$_TRY_EXIT_CODE"
   }
-  [[ $_TRY_EXIT_CODE != 0 ]] ||
+  [[ $_TRY_EXIT_CODE != 0 ]] || {
+    _TRY_EXIT_CODE=1
+    _TRY_EXIT_CODES[0]=1
     create_exception 'pending_exception' "$_pending_exception_msg"
+  }
   readarray -t _EXCEPTION <"$_EXCEPTIONS_FILE"
   local exception_type=${_exception_types[${_EXCEPTION[-1]}]:-${_EXCEPTION[-1]}} exception_filter
   for exception_filter in "$@"; do
@@ -146,6 +155,11 @@ _catch() {
     return 0
   done
   builtin exit "$_TRY_EXIT_CODE"
+}
+
+disable_exceptions() {
+  set +e
+  trap - ERR
 }
 
 enable_exceptions() {
@@ -323,7 +337,10 @@ create_eval_syntax_exception() {
 }
 
 unhandled_exception() {
-  [[ $_EXIT_CODE != 0 ]] || first_frame=1 create_exception 'pending_exception' "$_pending_exception_msg"
+  [[ $_EXIT_CODE != 0 ]] || {
+    _EXIT_CODE=1
+    first_frame=1 create_exception 'pending_exception' "$_pending_exception_msg"
+  }
   handle_exception
   print_exception
   unset '_EXCEPTION'
@@ -337,6 +354,7 @@ exit_trap() {
     handler=${_EXIT_HANDLERS[$BASHPID-$i]}
     eval "$handler"
   done
+  exit "$_EXIT_CODE"
 }
 
 push_exit_handler() {
@@ -485,8 +503,7 @@ run_test_script() {
 
 _spinner_chars=(- \\ \| /)
 create_spinner() {
-  ( set +e
-    trap - ERR
+  ( disable_exceptions
     trap "exit" INT
     while true; do
       for char in "${_spinner_chars[@]}"; do
@@ -502,6 +519,27 @@ create_spinner() {
 kill_spinner() {
   kill -INT "$_spinner_pid"
   wait "$_spinner_pid"
+}
+
+start_timeout() {
+  local timeout=${_testtimeout[$1]}
+  [[ $timeout ]] || { _timeout_pid=; return 0; }
+  local pid=$BASHPID
+  _timeout=$timeout
+  trap 'alarm_trap' ALRM
+  ( disable_exceptions; sleep "$timeout" && kill -ALRM "$pid" && pkill -INT -P "$pid" ) &
+  _timeout_pid=$!
+  push_exit_handler 'stop_timeout'
+}
+
+stop_timeout() {
+#  [[ ! $_timeout_pid ]] || {
+    pkill -INT -P "$_timeout_pid" || true
+#  }
+}
+
+alarm_trap() {
+  throw 'timeout' "Test timed out after $_timeout seconds"
 }
 
 run_tests() {
@@ -537,6 +575,7 @@ EOF
     _setup_passed=1
     try:
       log_info "Start test: $_CURRENT_TEST_NAME"
+      start_timeout "$test_func"
       [[ ! $setupf ]] || { _TRY_VARS=; _setup_passed=0; setup_test; _setup_passed=1; }
       "$test_func"
     catch:
@@ -942,7 +981,7 @@ runner() {
   printf "%d test scripts: %d passed, %d failed, %d errors\n" "$#" "$(($#-script_failures_accum-script_errors_accum))" "$script_failures_accum" "$script_errors_accum"
   printf "%d tests: %d passed, %d failed, %d errors, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-errors_accum-skipped_accum))" "$failures_accum" "$errors_accum" "$skipped_accum"
   printf "took %s\n" "${real_time##*[[:space:]]}"
-  exit $(( (script_failures_accum+script_errors_accum) % 256))
+  exit $(( (script_failures_accum+script_errors_accum) > 0 ))
 }
 
 display_test_script_outcome() {
