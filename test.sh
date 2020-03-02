@@ -141,8 +141,11 @@ _catch() {
     [[ $_TRY_EXIT_CODE != 0 ]] || return 1
     builtin exit "$_TRY_EXIT_CODE"
   }
-  [[ $_TRY_EXIT_CODE != 0 ]] ||
+  [[ $_TRY_EXIT_CODE != 0 ]] || {
+    _TRY_EXIT_CODE=1
+    _TRY_EXIT_CODES[0]=1
     create_exception 'pending_exception' "$_pending_exception_msg"
+  }
   readarray -t _EXCEPTION <"$_EXCEPTIONS_FILE"
   local exception_type=${_exception_types[${_EXCEPTION[-1]}]:-${_EXCEPTION[-1]}} exception_filter
   for exception_filter in "$@"; do
@@ -334,7 +337,10 @@ create_eval_syntax_exception() {
 }
 
 unhandled_exception() {
-  [[ $_EXIT_CODE != 0 ]] || first_frame=1 create_exception 'pending_exception' "$_pending_exception_msg"
+  [[ $_EXIT_CODE != 0 ]] || {
+    _EXIT_CODE=1
+    first_frame=1 create_exception 'pending_exception' "$_pending_exception_msg"
+  }
   handle_exception
   print_exception
   unset '_EXCEPTION'
@@ -348,6 +354,7 @@ exit_trap() {
     handler=${_EXIT_HANDLERS[$BASHPID-$i]}
     eval "$handler"
   done
+  exit "$_EXIT_CODE"
 }
 
 push_exit_handler() {
@@ -974,7 +981,7 @@ runner() {
   printf "%d test scripts: %d passed, %d failed, %d errors\n" "$#" "$(($#-script_failures_accum-script_errors_accum))" "$script_failures_accum" "$script_errors_accum"
   printf "%d tests: %d passed, %d failed, %d errors, %d skipped\n" "$test_count_accum" "$((test_count_accum-failures_accum-errors_accum-skipped_accum))" "$failures_accum" "$errors_accum" "$skipped_accum"
   printf "took %s\n" "${real_time##*[[:space:]]}"
-  exit $(( (script_failures_accum+script_errors_accum) % 256))
+  exit $(( (script_failures_accum+script_errors_accum) > 0 ))
 }
 
 display_test_script_outcome() {
