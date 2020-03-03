@@ -457,26 +457,11 @@ function_exists() {
   declare -F "$1" >/dev/null
 }
 
-setup_test_suite_kill_spinner() {
-  [[ ! $ANIMATE ]] || {
-    kill_spinner
-    echo -e '\r*'
-  } >&3
-}
-
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
-  [[ ! $ANIMATE ]] || {
-    tput -S <<EOF
-cub $_cols
-cuu1
-EOF
-    create_spinner
-  } >&3
-  # TODO: if exit but not err, the spinner is not filled; better with try/catch
-  push_err_handler 'setup_test_suite_kill_spinner; printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
+  # TODO: if exit but not err, the message is not printed, should use try/catch
+  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
-  setup_test_suite_kill_spinner
   pop_err_handler
 }
 
@@ -502,13 +487,35 @@ run_test_script() {
 }
 
 _spinner_chars=(- \\ \| /)
-create_spinner() {
+create_spinners() {
+  [[ ! $_spinner_pid ]] || kill_spinner
+  _spinner_kill=
   ( disable_exceptions
-    trap "exit" INT
+    trap 'spinner_int_trap' INT
+    local linesup linesupcmd linesfcmd i
     while true; do
+      [[ ! $_spinner_kill ]] || exit
       for char in "${_spinner_chars[@]}"; do
-        echo -n "$char"
-        tput cub 1
+        [[ ! $_spinner_kill ]] || exit
+        for ((i=0; i<${#_spinners[@]}; i++)); do
+          set ${_spinners[i]}
+          eval "linesup=$1"
+          (( $linesup < _lines )) || continue
+          linesupcmd=
+          linesfcmd=
+          (( $linesup > 0 )) && linesupcmd="cuu $linesup"
+          (( $2 > 0 )) && linesfcmd="cuf $2"
+          tput -S <<EOF
+sc
+cub $_cols
+$linesfcmd
+$linesupcmd
+EOF
+          echo -n "$char"
+          # TODO: avoid this tput
+          tput rc
+          [[ ! $_spinner_kill ]] || exit
+        done
         sleep 0.15
       done
     done
@@ -516,9 +523,19 @@ create_spinner() {
   _spinner_pid=$!
 }
 
+spinner_int_trap() {
+  _spinner_kill=1
+}
+
+declare -a _spinners
+add_spinner() {
+  _spinners+=("$1 $2")
+}
+
 kill_spinner() {
   kill -INT "$_spinner_pid"
   wait "$_spinner_pid"
+  _spinner_pid=
 }
 
 start_timeout() {
@@ -533,9 +550,7 @@ start_timeout() {
 }
 
 stop_timeout() {
-#  [[ ! $_timeout_pid ]] || {
-    pkill -INT -P "$_timeout_pid" || true
-#  }
+  pkill -INT -P "$_timeout_pid" || true
 }
 
 alarm_trap() {
@@ -548,6 +563,10 @@ run_tests() {
   _error_count=0
   _skipped_count=0
   local 'test_func' 'setupf' 'teardownf'
+  [[ ! $ANIMATE ]] || {
+    add_spinner '$_lines_out' 0
+    create_spinners
+  } >&3
   call_setup_test_suite
   ! function_exists 'setup_test' || {
     _TRY_VARS='_setup_passed'
@@ -566,11 +585,8 @@ run_tests() {
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     [[ ! $ANIMATE ]] || {
       printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
-      tput -S <<EOF
-cub $_cols
-cuf ${#_INDENT}
-EOF
-      create_spinner
+      add_spinner 0 ${#_INDENT}
+      create_spinners
     } >&3
     _setup_passed=1
     try:
@@ -580,20 +596,24 @@ EOF
       "$test_func"
     catch:
       print_exception
-      [[ ! $ANIMATE ]] || {
-        kill_spinner
-        echo -ne "\r"
-      } >&3
+    endtry
+    [[ ! $ANIMATE ]] || {
+      kill_spinner
+      _spinners=("${_spinners[@]:0:${#_spinners[@]}-1}")
+      (( _lines_out != _lines-1 )) || {
+        tput cuu "$_lines_out"
+        failed || ((_failed_count+_error_count > 0)) && echo -ne "\r${_RED}*${_NC}" || echo -ne '\r*'
+        tput cud "$_lines_out"
+      }
+      echo -ne "\r"
+    } >&3
+    if failed; then
       display_test_failed
       (( _setup_passed )) && ((++_failed_count)) || ((++_error_count))
       ((_failed_count+_error_count != 1)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
-    success:
-      [[ ! $ANIMATE ]] || {
-        kill_spinner
-        echo -ne '\r'
-      } >&3
+    else
       display_test_passed
-    endtry
+    fi
     [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
   done
 
@@ -835,7 +855,7 @@ load_config() {
 }
 
 init_prune_path_cache() {
-  local path
+  local pa  th
   [[ ! -v _SUBTEST ]] || for path in "${!_PRUNE_PATH_CACHE[@]}"; do
     _PRUNE_PATH_CACHE[$path]=${path##$PRUNE_PATH}
   done
@@ -965,7 +985,8 @@ runner() {
         script_failed=1
       success:
         script_failed=$(( _failed_count+_error_count+_script_error > 0 ))
-        [[ ! $ANIMATE ]] || (( _script_error == 0 && (_failed_count+_error_count > 0) )) || display_test_script_outcome "$script_failed"
+#        [[ ! $ANIMATE ]] || (( _script_error == 0 && (_failed_count+_error_count > 0) )) || display_test_script_outcome "$script_failed"
+        [[ ! $ANIMATE ]] || display_test_script_outcome "$script_failed"
       endtry
       let script_failures_accum+='_script_error==0 && script_failed' \
           script_errors_accum+=_script_error \
