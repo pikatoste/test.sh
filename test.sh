@@ -473,7 +473,7 @@ call_teardown() {
   try:
     "$1"
   catch:
-    warn_teardown_failed "$1"
+    [[ $ANIMATE ]] || warn_teardown_failed "$1"
     print_exception
   endtry
 }
@@ -492,7 +492,7 @@ create_spinners() {
   _spinner_kill=
   ( disable_exceptions
     trap 'spinner_int_trap' INT
-    local linesup linesupcmd linesfcmd i
+    local linesup linesupcmd colsfcmd char i
     while true; do
       [[ ! $_spinner_kill ]] || exit
       for char in "${_spinner_chars[@]}"; do
@@ -502,13 +502,13 @@ create_spinners() {
           eval "linesup=$1"
           (( $linesup < _lines )) || continue
           linesupcmd=
-          linesfcmd=
-          (( $linesup > 0 )) && linesupcmd="cuu $linesup"
-          (( $2 > 0 )) && linesfcmd="cuf $2"
+          colsfcmd=
+          (( linesup > 0 )) && linesupcmd="cuu $linesup"
+          (( $2 > 0 )) && colsfcmd="cuf $2"
           tput -S <<EOF
 sc
 cub $_cols
-$linesfcmd
+$colsfcmd
 $linesupcmd
 EOF
           echo -n "$char"
@@ -516,7 +516,7 @@ EOF
           tput rc
           [[ ! $_spinner_kill ]] || exit
         done
-        sleep 0.15
+        sleep 0.1
       done
     done
   ) &
@@ -533,9 +533,10 @@ add_spinner() {
 }
 
 kill_spinner() {
-  kill -INT "$_spinner_pid"
-  wait "$_spinner_pid"
-  _spinner_pid=
+  [[ ! $_spinner_pid ]] || {
+    kill -INT "$_spinner_pid" && wait "$_spinner_pid" || true
+    _spinner_pid=
+  }
 }
 
 start_timeout() {
@@ -584,9 +585,9 @@ run_tests() {
 
     _CURRENT_TEST_NAME=${_testdescs[$test_func]}
     [[ ! $ANIMATE ]] || {
-      printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
-      add_spinner 0 ${#_INDENT}
+      add_spinner 0 "${#_INDENT}"
       create_spinners
+      printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
     } >&3
     _setup_passed=1
     try:
@@ -596,6 +597,9 @@ run_tests() {
       "$test_func"
     catch:
       print_exception
+      [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
+    success:
+      [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
     endtry
     [[ ! $ANIMATE ]] || {
       kill_spinner
@@ -605,19 +609,21 @@ run_tests() {
         failed || ((_failed_count+_error_count > 0)) && echo -ne "\r${_RED}*${_NC}" || echo -ne '\r*'
         tput cud "$_lines_out"
       }
-      echo -ne "\r"
+      echo -ne '\r'
     } >&3
     if failed; then
       display_test_failed
       (( _setup_passed )) && ((++_failed_count)) || ((++_error_count))
-      ((_failed_count+_error_count != 1)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 >&3
+      ((_failed_count+_error_count != 1)) || [[ ! $ANIMATE ]] || display_test_script_outcome 1 1 >&3
     else
       display_test_passed
     fi
-    [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
   done
-
-  _TRY_VARS= call_teardown_if_exists 'teardown_test_suite'
+  ! function_exists 'teardown_test_suite' || {
+    [[ ! $ANIMATE ]] || create_spinners >&3
+    _TRY_VARS= call_teardown 'teardown_test_suite'
+    [[ ! $ANIMATE ]] || kill_spinner
+  }
   if (( _failed_count+_error_count > 0 )); then
     log_err "$_failed_count test(s) failed"
     [[ $_TESTS_RUNNER ]] || exit 1
