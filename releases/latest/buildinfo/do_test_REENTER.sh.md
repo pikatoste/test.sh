@@ -1,8 +1,8 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-9f8e143
+version: 0.1.0-SNAPSHOT-34caf27
 ---
-# Output of test_test_functions.sh
+# Output of do_test_REENTER.sh
 
 <html>
 <head>
@@ -301,32 +301,17 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f2">[test.sh]</span> PASSED: test_02
-<span class="f2">* test_02</span>
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f1">[test.sh]</span> implicit exception: Error in test_02(runtest/test/test_test_functions.sh:40): '[ -z &quot;$test_02_fail&quot; ]' exited with status 1
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
-<span class="f1">[test.sh]</span>  at _eval(runtest/test.sh:350)
-<span class="f1">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f1">[test.sh]</span> FAILED: test_02
-<span class="f1">* test_02</span>
-<span class="f1">[test.sh]</span> 1 test(s) failed
-<span class="f4">[test.sh]</span> Expected failure:
-<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:1): 'eval '{ pop_exit_handler;' &quot;$@&quot; '; } 2&gt;&amp;5'' exited with status 1
-<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f4">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are failures
+[test.sh] Error in test_01(environment:0): 'false' exited with status 1
+[test.sh]  at with_exit_handler(runtest/test.sh:217)
+[test.sh]  at run_test(runtest/test.sh:228)
+[test.sh]  at source(runtest/test.sh:431)
+[test.sh]  at main(runtest/test/do_test_REENTER.sh:4)
+[test.sh]  at subshell(runtest/test.sh:304)
+[test.sh]  at run_tests(runtest/test.sh:253)
+[test.sh]  at main(runtest/test/do_test_REENTER.sh:10)
+[test.sh] FAILED: test_01
+[test.sh] Error in run_tests(runtest/test.sh:239): '[[ $failures == 0 ]]' exited with status 1
+[test.sh]  at main(runtest/test/do_test_REENTER.sh:10)
 </pre>
 </body>
 </html>

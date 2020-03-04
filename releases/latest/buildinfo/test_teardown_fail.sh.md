@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_teardown_fail.sh
 
@@ -302,43 +302,14 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: Failing teardown functions should not break the test
-<span class="f1">[test.sh]</span> Error in teardown_test(runtest/test/test_teardown_fail.sh:6): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
-<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:13)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:206)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:17)
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(runtest/test/test_teardown_fail.sh:2): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
-<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:13)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:246)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:17)
-<span class="f1">[test.sh]</span> Error in teardown_test(runtest/test/test_teardown_fail.sh:6): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
-<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:13)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
-<span class="f1">[test.sh]</span>  at exit_trap(runtest/test.sh:45)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:1)
-<span class="f1">[test.sh]</span> Error in teardown_test_suite(runtest/test/test_teardown_fail.sh:2): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
-<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:13)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
-<span class="f1">[test.sh]</span>  at exit_trap(runtest/test.sh:45)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_teardown_fail.sh:1)
+<span class="f3">WARN: teardown_test failed</span>
+<span class="f2">* test_01</span>
+<span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f2">[test.sh]</span> PASSED: Failing teardown functions should not break the test
+<span class="f4">[test.sh]</span> Start test: Teardown functions should execute in errexit context
+<span class="f2">[test.sh]</span> PASSED: Teardown functions should execute in errexit context
+<span class="f4">[test.sh]</span> Start test: Teardown functions should print a warning in the main output when they fail
+<span class="f2">[test.sh]</span> PASSED: Teardown functions should print a warning in the main output when they fail
 </pre>
 </body>
 </html>

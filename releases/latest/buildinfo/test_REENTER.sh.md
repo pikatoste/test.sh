@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-34caf27
 ---
 # Output of test_REENTER.sh
 
@@ -302,6 +302,12 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: Subshells should not resource files when REENTER is false
+<span class="f2">[test.sh]</span> PASSED: test_01
+<span class="f2">* test_01</span>
+<span class="f2">[test.sh]</span> PASSED: Subshells should not resource files when REENTER is false
+<span class="f4">[test.sh]</span> Start test: Errors in subshells when REENTER is false should generate stack traces
+* test_01
+[test.sh] Error in test_01(environment:0): 'false' exited with status 1
 </pre>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-34caf27
 ---
 # Output of test_SUBSHELL.sh
 
@@ -301,18 +301,31 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f4">[test.sh]</span> Start test: SUBSHELL should default to 'always' when FAIL_FAST is false
 <span class="f4">[test.sh]</span> Start test: SUBSHELL should accept only valid values
+<span class="f1">[test.sh]</span> Configuration: invalid value of variable SUBSHELL: 'pepe', allowed values: never, teardown, always
+<span class="f2">[test.sh]</span> PASSED: SUBSHELL should accept only valid values
 <span class="f4">[test.sh]</span> Start test: When SUBSHELL=never teardown functions should be called
-<span class="f4">[test.sh]</span> Start test: When SUBSHELL=never a failure in teardown_test should terminate the test with failure
+<span class="f2">* test_01</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=never teardown functions should be called
+<span class="f4">[test.sh]</span> Start test: When SUBSHELL=never a failure in teardown_test should not terminate the test with failure
+<span class="f2">* test_01</span>
 <span class="f3">WARN: teardown_test failed</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=never a failure in teardown_test should not terminate the test with failure
 <span class="f4">[test.sh]</span> Start test: When SUBSHELL=never a failure in teardown_test_suite should terminate the test with failure
+<span class="f2">* test_01</span>
 <span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=never a failure in teardown_test_suite should terminate the test with failure
 <span class="f4">[test.sh]</span> Start test: When SUBSHELL=teardown teardown functions should be called
+<span class="f2">* test_01</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=teardown teardown functions should be called
 <span class="f4">[test.sh]</span> Start test: When SUBSHELL=teardown a failure in teardown_test should not terminate the test with failure
+<span class="f2">* test_01</span>
 <span class="f3">WARN: teardown_test failed</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=teardown a failure in teardown_test should not terminate the test with failure
 <span class="f4">[test.sh]</span> Start test: When SUBSHELL=teardown a failure in teardown_test_suite should not terminate the test with failure
+<span class="f2">* test_01</span>
 <span class="f3">WARN: teardown_test_suite failed</span>
+<span class="f2">[test.sh]</span> PASSED: When SUBSHELL=teardown a failure in teardown_test_suite should not terminate the test with failure
 </pre>
 </body>
 </html>

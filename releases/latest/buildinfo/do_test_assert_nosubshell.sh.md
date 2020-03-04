@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of do_test_assert_nosubshell.sh
 
@@ -302,15 +302,27 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
-<span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
-<span class="f1">[test.sh]</span> Assertion failed: nok: expected success but got failure in: 'false'
-<span class="f1">[test.sh]</span> Error in expect_true(runtest/test.sh:346): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at assert(runtest/test.sh:363)
-<span class="f1">[test.sh]</span>  at assert_true(runtest/test.sh:369)
-<span class="f1">[test.sh]</span>  at test_02_fail(runtest/test/do_test_assert_nosubshell.sh:13)
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): 'false' exited with status 1
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at test_01(runtest/test/do_test_assert_nosubshell.sh:9)
+<span class="f4">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f4">[test.sh]</span>  at main(runtest/test/do_test_assert_nosubshell.sh:24)
+<span class="f2">[test.sh]</span> PASSED: Assertions should not fail when the assertion succeeds
+<span class="f4">[test.sh]</span> Start test: assert_success should fail when the assertion is false
+<span class="f1">[test.sh]</span> assert exception: Assertion failed: nok, expected success but got failure in: 'false'
+<span class="f1">[test.sh]</span>  at assert_success(runtest/test.sh:693)
+<span class="f1">[test.sh]</span>  at test_02(runtest/test/do_test_assert_nosubshell.sh:15)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
 <span class="f1">[test.sh]</span>  at main(runtest/test/do_test_assert_nosubshell.sh:24)
+<span class="f1">[test.sh]</span> Caused by:
+<span class="f1">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at assert_success(runtest/test.sh:690)
+<span class="f1">[test.sh]</span>  at test_02(runtest/test/do_test_assert_nosubshell.sh:15)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_assert_nosubshell.sh:24)
+<span class="f1">[test.sh]</span> FAILED: assert_success should fail when the assertion is false
+<span class="f1">[test.sh]</span> 1 test(s) failed
 </pre>
 </body>
 </html>

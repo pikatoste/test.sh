@@ -2,7 +2,7 @@
 layout: release
 version: 0.1.0-SNAPSHOT-9f8e143
 ---
-# Output of test_test_functions.sh
+# Output of test_config_STACK_TRACE.sh
 
 <html>
 <head>
@@ -301,32 +301,37 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f2">[test.sh]</span> PASSED: test_02
-<span class="f2">* test_02</span>
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f1">[test.sh]</span> implicit exception: Error in test_02(runtest/test/test_test_functions.sh:40): '[ -z &quot;$test_02_fail&quot; ]' exited with status 1
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
-<span class="f1">[test.sh]</span>  at _eval(runtest/test.sh:350)
-<span class="f1">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f1">[test.sh]</span> FAILED: test_02
-<span class="f1">* test_02</span>
-<span class="f1">[test.sh]</span> 1 test(s) failed
+<span class="f4">[test.sh]</span> Start test: STACK_TRACE should accept only valid values
+<span class="f2">[test.sh]</span> Expected exception:
+<span class="f2">[test.sh]</span> configuration exception: invalid value of variable STACK_TRACE: 'pepe', allowed values: no, full
+<span class="f2">[test.sh]</span>  at validate_value(runtest/test.sh:871)
+<span class="f2">[test.sh]</span>  at load_config(runtest/test.sh:875)
+<span class="f2">[test.sh]</span>  at test_01(runtest/test/test_config_STACK_TRACE.sh:12)
+<span class="f2">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f2">[test.sh]</span>  at main(runtest/test/test_config_STACK_TRACE.sh:47)
+<span class="f2">[test.sh]</span> PASSED: STACK_TRACE should accept only valid values
+<span class="f4">[test.sh]</span> Start test: When STACK_TRACE=no no stack traces should be produced
+<span class="f1">* test_01</span>
 <span class="f4">[test.sh]</span> Expected failure:
-<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:1): 'eval '{ pop_exit_handler;' &quot;$@&quot; '; } 2&gt;&amp;5'' exited with status 1
+<span class="f4">[test.sh]</span> implicit exception: Error in run_test_script(runtest/test.sh:506): '&quot;$test_script&quot; &quot;$@&quot;' exited with status 1
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): 'grep '[test.sh].*  at ' &quot;/home/runner/work/test.sh/test.sh/runtest/test/testout/do_test_config_STACK_TRACE.sh.out&quot;' exited with status 1
 <span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f4">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are failures
+<span class="f4">[test.sh]</span>  at test_02(runtest/test/test_config_STACK_TRACE.sh:26)
+<span class="f4">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_config_STACK_TRACE.sh:47)
+<span class="f2">[test.sh]</span> PASSED: When STACK_TRACE=no no stack traces should be produced
+<span class="f4">[test.sh]</span> Start test: When STACK_TRACE=full the stack traces should contain the complete call stack
+<span class="f1">* test_01</span>
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in run_test_script(runtest/test.sh:506): '&quot;$test_script&quot; &quot;$@&quot;' exited with status 1
+<span class="f4">[test.sh]</span>  at _eval(runtest/test.sh:350)
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at test_05(runtest/test/test_config_STACK_TRACE.sh:43)
+<span class="f4">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_config_STACK_TRACE.sh:47)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
+<span class="f2">[test.sh]</span> PASSED: When STACK_TRACE=full the stack traces should contain the complete call stack
 </pre>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Main test output
 
@@ -308,12 +308,11 @@ cp -a test runtest
 make -C runtest/test PRUNE_PATH=$PWD/
 make[1]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
 make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
-  [test_script.sh] This is test.sh version 0.1.0-SNAPSHOT-76f350a
-  [test_script.sh] See https://github.com/pikatoste/test.sh
- PASSED: test_script.sh
-  [test_config.sh] <span class="f2">* The configuration file should be loaded from the default location
-</span>  [test_config.sh] <span class="f2">* The configuration file should be loaded from CONFIG_FILE</span>
-  [test_config.sh] <span class="f2">* The configuration file should be loaded from CONFIG_DIR</span>
+  [test_script.sh] <span class="f2">* When executed, test.sh should output the version and github project
+</span> PASSED: test_script.sh
+  [test_config.sh] <span class="f2">* The configuration file should be loaded from the default location</span>
+  [test_config.sh] <span class="f2">* The configuration file should be loaded from CONFIG_FILE</span>
+  [test_config.sh] <span class="f2">* The configuration file should be loaded from CONFIG_PATH</span>
   [test_config.sh] <span class="f2">* Configuration variables in the environment should be respected</span>
   [test_config.sh] <span class="f2">* Configuration variables in the environment should override the configuration file
 </span>  [test_config.sh] <span class="f2">* Empty variables should be respected over defaults</span>
@@ -324,59 +323,108 @@ make[2]: Entering directory '/home/runner/work/test.sh/test.sh/runtest/test'
 </span>  [test_includes.sh] <span class="f2">* Files should be included from the configured INCLUDE_PATH</span>
   [test_includes.sh] <span class="f2">* Included files should not be reported when reincluded</span>
  PASSED: test_includes.sh
-  [test_test_functions.sh] <span class="f2">* run_tests shoud invoke tests and setup methods when there are no failures</span>
-  [test_test_functions.sh] <span class="f2">* run_tests shoud invoke tests and setup methods when there are failures</span>
+  [test_test_functions.sh] <span class="f2">* @run_tests should invoke tests and setup methods when there are no failures</span>
+  [test_test_functions.sh] <span class="f2">* @run_tests should invoke tests and setup methods when there are failures</span>
  PASSED: test_test_functions.sh
-  [test_FAIL_FAST.sh] <span class="f2">* Any command that fails in the body of a test function should make the test to fail</span>
-  [test_FAIL_FAST.sh] <span class="f2">* When FAIL_FAST is true the first test failure should interrupt the script</span>
-  [test_FAIL_FAST.sh] <span class="f2">* When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
-</span> PASSED: test_FAIL_FAST.sh
+  [test_config_FAIL_FAST.sh] <span class="f2">* When FAIL_FAST is true the first test failure should interrupt the script</span>
+  [test_config_FAIL_FAST.sh] <span class="f2">* When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
+</span> PASSED: test_config_FAIL_FAST.sh
   [test_log.sh] <span class="f2">* The log file should contain test stdout and stderr</span>
+  [test_log.sh] <span class="f2">* Start test events should be logged</span>
+  [test_log.sh] <span class="f2">* Test passed events should be logged</span>
+  [test_log.sh] <span class="f2">* Test failed events should be logged</span>
  PASSED: test_log.sh
   [test_assert.sh] <span class="f2">* Assertions should not fail when the assertion succeeds</span>
-  [test_assert.sh] <span class="f2">* assert_true should fail when the assertion is false</span>
-  [test_assert.sh] <span class="f2">* assert_false shoud fail when the assertion is true</span>
+  [test_assert.sh] <span class="f2">* assert_success should fail when the assertion is false</span>
+  [test_assert.sh] <span class="f2">* assert_failure should fail when the assertion is true</span>
+  [test_assert.sh] <span class="f2">* assert_equals should fail when the arguments are not equal</span>
   [test_assert.sh] <span class="f2">* Failed assertions should interrupt the test when FAIL_FAST is true</span>
- PASSED: test_assert.sh
-  [test_ignored.sh] <span class="f1">* test_01</span>
-  [test_ignored.sh] <span class="f4">* [skipped] test_02</span>
- PASSED: test_ignored.sh
- PASSED: test_REENTER.sh
-  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test failed</span>
-  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test_suite failed</span>
+  [test_assert.sh] <span class="f2">* #89: assert_failure should execute the expression in errexit context</span>
+  [test_assert.sh] <span class="f2">* #98: non-zero exit code in the expression of assert_failure prints the failure but does not print an assertion failure
+</span> PASSED: test_assert.sh
+  [test_ignored.sh] <span class="f2">* In managed mode and FAIL_FAST true when a test fails the remaining tests should be displayed as skipped in the main output
+</span> PASSED: test_ignored.sh
   [test_teardown_fail.sh] <span class="f2">* Failing teardown functions should not break the test</span>
-  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test failed</span>
-  [test_teardown_fail.sh] <span class="f3">WARN: teardown_test_suite failed</span>
+  [test_teardown_fail.sh] <span class="f2">* Teardown functions should execute in errexit context</span>
+  [test_teardown_fail.sh] <span class="f2">* Teardown functions should print a warning in the main output when they fail</span>
  PASSED: test_teardown_fail.sh
   [test_inline.sh] <span class="f2">* Inline test failures should display the failed test in the main output</span>
   [test_inline.sh] <span class="f2">* Inline tests should invoke setup and teardown functions</span>
+  [test_inline.sh] <span class="f2">* teardown_test_suite should not get called if setup_test_suite has not been called</span>
+  [test_inline.sh] <span class="f2">* teardown_test should not get called if no test has started</span>
  PASSED: test_inline.sh
-  [test_SUBSHELL.sh] <span class="f2">* SUBSHELL should default to 'always' when FAIL_FAST is false</span>
-  [test_SUBSHELL.sh] <span class="f2">* SUBSHELL should accept only valid values</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=never teardown functions should be called</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=never a failure in teardown_test should terminate the test with failure</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=never a failure in teardown_test_suite should terminate the test with failure</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=teardown teardown functions should be called</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=teardown a failure in teardown_test should not terminate the test with failure</span>
-  [test_SUBSHELL.sh] <span class="f2">* When SUBSHELL=teardown a failure in teardown_test_suite should not terminate the test with failure
-</span> PASSED: test_SUBSHELL.sh
-  [test_STACK_TRACE.sh] <span class="f2">* STACK_TRACE should accept only valid values</span>
-  [test_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=no no stack traces should be produced</span>
-  [test_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=pruned the stack traces should be truncated before the first test.sh frame</span>
-  [test_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=compact the stack traces should not contain frames in test.sh</span>
-  [test_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=full the stack traces should contain the complete call stack</span>
- PASSED: test_STACK_TRACE.sh
-  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when there are no subshells
-</span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when there are subshells</span>
-  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test
-</span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test_suite
-</span>  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in assert</span>
+  [test_teardown.sh] <span class="f2">* Teardown functions should be called</span>
+  [test_teardown.sh] <span class="f2">* A failure in teardown_test should not terminate the test with failure</span>
+  [test_teardown.sh] <span class="f2">* A failure in teardown_test_suite should not terminate the test with failure</span>
+ PASSED: test_teardown.sh
+  [test_config_STACK_TRACE.sh] <span class="f2">* STACK_TRACE should accept only valid values</span>
+  [test_config_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=no no stack traces should be produced</span>
+  [test_config_STACK_TRACE.sh] <span class="f4">* [skipped] When STACK_TRACE=pruned the stack traces should be truncated before the first test.sh frame</span>
+  [test_config_STACK_TRACE.sh] <span class="f4">* [skipped] When STACK_TRACE=compact the stack traces should not contain frames in test.sh</span>
+  [test_config_STACK_TRACE.sh] <span class="f2">* When STACK_TRACE=full the stack traces should contain the complete call stack</span>
+ PASSED: test_config_STACK_TRACE.sh
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code</span>
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test</span>
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in teardown_test_suite</span>
+  [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in assert</span>
   [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in setup_test_suite</span>
   [test_error_reporting.sh] <span class="f2">* The error message should identify the source, line, command and exit code when triggered in setup_test</span>
-  [test_error_reporting.sh] <span class="f2">* Errors in test and teardown functions should be reported</span>
+  [test_error_reporting.sh] <span class="f2">* Teardown semantics should be enforced when both teardown_test and teardown_test_suite fail</span>
+  [test_error_reporting.sh] <span class="f2">* Teardown semantics should be enforced when the test, teardown_test and teardown_test_suite fail</span>
  PASSED: test_error_reporting.sh
+  [test_setup_error.sh] <span class="f2">* When setup_test_suite fails, an error message should be displayed in the main output</span>
+  [test_setup_error.sh] <span class="f2">* When setup_test fails a failed test error message should be displayed in the main output</span>
+ PASSED: test_setup_error.sh
+  [test_regression_33.sh] <span class="f2">* Regression #33: when an include file is matched by more than one glob in INCLUDE_PATH, it is included only once</span>
+ PASSED: test_regression_33.sh
+  [test_regression_30.sh] <span class="f2">* Regression #30: run_test_script() stalls when the there's an error in the function</span>
+ PASSED: test_regression_30.sh
+  [test_regression_31.sh] <span class="f2">* Regression #31: double error reporting</span>
+ PASSED: test_regression_31.sh
+  [test_validate_value_56.sh] <span class="f2">* validate_value() should print a comma-separated list of allowes values (#56)</span>
+ PASSED: test_validate_value_56.sh
+  [test_config_LOG_vars_50.sh] <span class="f2">* LOG_DIR_NANME</span>
+  [test_config_LOG_vars_50.sh] <span class="f2">* LOG_DIR</span>
+  [test_config_LOG_vars_50.sh] <span class="f2">* LOG_NAME</span>
+  [test_config_LOG_vars_50.sh] <span class="f2">* LOG_FILE</span>
+  [test_config_LOG_vars_50.sh] <span class="f2">* LOG_MODE</span>
+ PASSED: test_config_LOG_vars_50.sh
+  [test_run_test_script_63.sh] <span class="f2">* #63: run_test_script() interprets relative paths from the current script</span>
+ PASSED: test_run_test_script_63.sh
+  [test_assert_escaping_62.sh] <span class="f2">* #62: The expression passed to assert_success should reach the evaluation point unchanged</span>
+ PASSED: test_assert_escaping_62.sh
+  [test_assert_71.sh] <span class="f2">* #71: Assertion failures should not disable further error reporting</span>
+ PASSED: test_assert_71.sh
+  [test_tmpdir_74.sh] <span class="f2">* #74: Use TMPDIR for temporary files</span>
+ PASSED: test_tmpdir_74.sh
+  [test_assert_76.sh] <span class="f2">* #76: assert_equals never evaluates its arguments</span>
+  [test_assert_76.sh] <span class="f2">* #76: failures in assertion functions don't reevaluate the expression</span>
+ PASSED: test_assert_76.sh
+  [test_prune_path_cache.sh] <span class="f2">* #93: prune_path should put in the cache missing paths</span>
+  [test_prune_path_cache.sh] <span class="f2">* #93: prune_path should retrieve cached paths from the cache</span>
+  [test_prune_path_cache.sh] <span class="f2">* #93: init_prune_path_cache reprocesses the preinitialized cache in subtests</span>
+ PASSED: test_prune_path_cache.sh
+  [test_eval_syntax_error.sh] <span class="f2">* #98: eval syntax errors in the expression of assert_success are reported as such and not as an assertion failure
+</span>  [test_eval_syntax_error.sh] <span class="f2">* #98: eval syntax errors in the expression of assert_failure are reported as such and not as an assertion failure
+</span>  [test_eval_syntax_error.sh] <span class="f2">* #98: eval syntax errors in try/catch nonzero are not caught</span>
+ PASSED: test_eval_syntax_error.sh
+  [test_exceptions.sh] <span class="f2">* Exceptions should be caugh in the catch block</span>
+  [test_exceptions.sh] <span class="f2">* Exceptions in the catch block should not overwrite the current exception or _TRY_EXIT_CODE</span>
+  [test_exceptions.sh] <span class="f2">* Exceptions thrown from a catch block should ignore the current exception</span>
+  [test_exceptions.sh] <span class="f2">* Try blocks that do exit with non-zero with no exit command and no ERR trap, generate exception</span>
+  [test_exceptions.sh] <span class="f2">* Try blocks that exit do not generate exception and propagate exit</span>
+  [test_exceptions.sh] <span class="f2">* Nested try/catch blocks do not repeat exceptions if rethrown</span>
+  [test_exceptions.sh] <span class="f2">* Nested try/catch blocks do not repeat exceptions if uncaught</span>
+  [test_exceptions.sh] <span class="f2">* Pending exceptions are not lost</span>
+  [test_exceptions.sh] <span class="f2">* Exceptions in a subshell environment duplicate the exception (undesired feature)</span>
+  [test_exceptions.sh] <span class="f2">* The catch block can select multiple exceptions</span>
+  [test_exceptions.sh] <span class="f2">* The catch block does not catch non selected exceptions</span>
+  [test_exceptions.sh] <span class="f2">* Implicit exceptions propagate the type of the existing pending exception</span>
+ PASSED: test_exceptions.sh
+  [test_xxx_tmpfiles_74.sh] <span class="f2">* #74: Ensure temporary files are cleaned after running all tests</span>
+ PASSED: test_xxx_tmpfiles_74.sh
 ---------------------------------
-All 14 tests passed
+All 28 tests passed
 ---------------------------------
 make[2]: Leaving directory '/home/runner/work/test.sh/test.sh/runtest/test'
 make[1]: Leaving directory '/home/runner/work/test.sh/test.sh/runtest/test'
@@ -386,22 +434,45 @@ make[1]: Leaving directory '/home/runner/work/test.sh/test.sh/runtest/test'
 
 # Detailed logs
 
-* [do_test_STACK_TRACE.sh](do_test_STACK_TRACE.sh.html)
-* [do_test_SUBSHELL.sh](do_test_SUBSHELL.sh.html)
+* [do_test_assert_71.sh](do_test_assert_71.sh.html)
 * [do_test_assert_nosubshell.sh](do_test_assert_nosubshell.sh.html)
+* [do_test_config_STACK_TRACE.sh](do_test_config_STACK_TRACE.sh.html)
 * [do_test_error_reporting.sh](do_test_error_reporting.sh.html)
+* [do_test_ignored.sh](do_test_ignored.sh.html)
+* [do_test_includes.sh](do_test_includes.sh.html)
 * [do_test_inline.sh](do_test_inline.sh.html)
 * [do_test_log.sh](do_test_log.sh.html)
-* [test_FAIL_FAST.sh](test_FAIL_FAST.sh.html)
-* [test_REENTER.sh](test_REENTER.sh.html)
-* [test_STACK_TRACE.sh](test_STACK_TRACE.sh.html)
-* [test_SUBSHELL.sh](test_SUBSHELL.sh.html)
+* [do_test_run_test_script_63.sh](do_test_run_test_script_63.sh.html)
+* [do_test_teardown.sh](do_test_teardown.sh.html)
+* [do_test_teardown_fail.sh](do_test_teardown_fail.sh.html)
+* [do_test_tmpdir_74.sh](do_test_tmpdir_74.sh.html)
+* [do_test_validate_value.sh](do_test_validate_value.sh.html)
+* [test-regression-33.sh](test-regression-33.sh.html)
 * [test_assert.sh](test_assert.sh.html)
+* [test_assert_71.sh](test_assert_71.sh.html)
+* [test_assert_76.sh](test_assert_76.sh.html)
+* [test_assert_escaping_62.sh](test_assert_escaping_62.sh.html)
 * [test_config.sh](test_config.sh.html)
+* [test_config_FAIL_FAST.sh](test_config_FAIL_FAST.sh.html)
+* [test_config_LOG_vars_50.sh](test_config_LOG_vars_50.sh.html)
+* [test_config_STACK_TRACE.sh](test_config_STACK_TRACE.sh.html)
 * [test_error_reporting.sh](test_error_reporting.sh.html)
+* [test_eval_syntax_error.sh](test_eval_syntax_error.sh.html)
+* [test_exceptions.sh](test_exceptions.sh.html)
 * [test_ignored.sh](test_ignored.sh.html)
 * [test_includes.sh](test_includes.sh.html)
 * [test_inline.sh](test_inline.sh.html)
 * [test_log.sh](test_log.sh.html)
+* [test_prune_path_cache.sh](test_prune_path_cache.sh.html)
+* [test_regression_30.sh](test_regression_30.sh.html)
+* [test_regression_31.sh](test_regression_31.sh.html)
+* [test_regression_33.sh](test_regression_33.sh.html)
+* [test_run_test_script_63.sh](test_run_test_script_63.sh.html)
+* [test_script.sh](test_script.sh.html)
+* [test_setup_error.sh](test_setup_error.sh.html)
+* [test_teardown.sh](test_teardown.sh.html)
 * [test_teardown_fail.sh](test_teardown_fail.sh.html)
 * [test_test_functions.sh](test_test_functions.sh.html)
+* [test_tmpdir_74.sh](test_tmpdir_74.sh.html)
+* [test_validate_value_56.sh](test_validate_value_56.sh.html)
+* [test_xxx_tmpfiles_74.sh](test_xxx_tmpfiles_74.sh.html)

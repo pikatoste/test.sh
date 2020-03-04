@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_inline.sh
 
@@ -302,11 +302,15 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: Inline test failures should display the failed test in the main output
-<span class="f2">* do_test_inline ok</span>
-<span class="f1">* do_test_inline fail</span>
+<span class="f2">[test.sh]</span> PASSED: Inline test failures should display the failed test in the main output
 <span class="f4">[test.sh]</span> Start test: Inline tests should invoke setup and teardown functions
 <span class="f2">* do_test_inline ok</span>
 <span class="f1">* do_test_inline fail</span>
+<span class="f2">[test.sh]</span> PASSED: Inline tests should invoke setup and teardown functions
+<span class="f4">[test.sh]</span> Start test: teardown_test_suite should not get called if setup_test_suite has not been called
+<span class="f2">[test.sh]</span> PASSED: teardown_test_suite should not get called if setup_test_suite has not been called
+<span class="f4">[test.sh]</span> Start test: teardown_test should not get called if no test has started
+<span class="f2">[test.sh]</span> PASSED: teardown_test should not get called if no test has started
 </pre>
 </body>
 </html>

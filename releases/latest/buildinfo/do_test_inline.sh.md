@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of do_test_inline.sh
 
@@ -301,9 +301,7 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f4">[test.sh]</span> Start test: do_test_inline ok
-<span class="f4">[test.sh]</span> Start test: do_test_inline fail
-<span class="f1">[test.sh]</span> Error in main(runtest/test/do_test_inline.sh:22): 'false' exited with status 1
+<span class="f1">[test.sh]</span> implicit exception: Error in main(runtest/test/do_test_inline.sh:20): 'false' exited with status 1
 </pre>
 </body>
 </html>

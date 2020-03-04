@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-7983286
 ---
 # Output of test_FAIL_FAST.sh
 
@@ -302,33 +302,31 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: Any command that fails in the body of a test function should make the test to fail
-<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:18)
+<span class="f4">[test.sh]</span> Start test: 
+<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:395)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:19)
+<span class="f1">[test.sh]</span> 1 test(s) failed
+<span class="f1">[test.sh]</span> Error in main(runtest/test/test_FAIL_FAST.sh:21): '( set -e; trap 'err_trap' ERR; trap '[ $? -ne 0 ] || check_pending_exceptions' EXIT; run_tests &quot;test_fail&quot; 3&gt;&amp;1 )' exited with status 1
+<span class="f2">[test.sh]</span> PASSED: Any command that fails in the body of a test function should make the test to fail
 <span class="f4">[test.sh]</span> Start test: When FAIL_FAST is true the first test failure should interrupt the script
-<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:231)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:23)
+<span class="f4">[test.sh]</span> Start test: 
+<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:395)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:28)
+<span class="f4">* [skipped] </span>
+<span class="f1">[test.sh]</span> 1 test(s) failed
+<span class="f1">[test.sh]</span> Error in main(runtest/test/test_FAIL_FAST.sh:30): '( set -e; trap 'err_trap' ERR; trap '[ $? -ne 0 ] || check_pending_exceptions' EXIT; FAIL_FAST=1 run_tests &quot;test_fail&quot; &quot;test_ok&quot; 3&gt;&amp;1 )' exited with status 1
+<span class="f2">[test.sh]</span> PASSED: When FAIL_FAST is true the first test failure should interrupt the script
 <span class="f4">[test.sh]</span> Start test: When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
-<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:10): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:14)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:29)
-<span class="f1">[test.sh]</span> test_fail FAILED
+<span class="f4">[test.sh]</span> Start test: 
+<span class="f1">[test.sh]</span> Error in test_fail(runtest/test/test_FAIL_FAST.sh:12): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:395)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_FAIL_FAST.sh:38)
+<span class="f4">[test.sh]</span> Start test: 
+<span class="f1">[test.sh]</span> 1 test(s) failed
+<span class="f1">[test.sh]</span> Error in main(runtest/test/test_FAIL_FAST.sh:40): '( set -e; trap 'err_trap' ERR; trap '[ $? -ne 0 ] || check_pending_exceptions' EXIT; FAIL_FAST= run_tests &quot;test_fail&quot; &quot;test_ok&quot; 3&gt;&amp;1 )' exited with status 1
+<span class="f2">[test.sh]</span> PASSED: When FAIL_FAST is false failures should not interrupt the script but signal failure at the end
 </pre>
 </body>
 </html>

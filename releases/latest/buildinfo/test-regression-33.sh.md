@@ -2,7 +2,7 @@
 layout: release
 version: 0.1.0-SNAPSHOT-9f8e143
 ---
-# Output of test_test_functions.sh
+# Output of test-regression-33.sh
 
 <html>
 <head>
@@ -301,32 +301,8 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f2">[test.sh]</span> PASSED: test_02
-<span class="f2">* test_02</span>
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are no failures
-<span class="f4">[test.sh]</span> Start test: @run_tests should invoke tests and setup methods when there are failures
-<span class="f4">[test.sh]</span> Start test: test_01
-<span class="f2">[test.sh]</span> PASSED: test_01
-<span class="f2">* test_01</span>
-<span class="f4">[test.sh]</span> Start test: test_02
-<span class="f1">[test.sh]</span> implicit exception: Error in test_02(runtest/test/test_test_functions.sh:40): '[ -z &quot;$test_02_fail&quot; ]' exited with status 1
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:616)
-<span class="f1">[test.sh]</span>  at _eval(runtest/test.sh:350)
-<span class="f1">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f1">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f1">[test.sh]</span> FAILED: test_02
-<span class="f1">* test_02</span>
-<span class="f1">[test.sh]</span> 1 test(s) failed
-<span class="f4">[test.sh]</span> Expected failure:
-<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:1): 'eval '{ pop_exit_handler;' &quot;$@&quot; '; } 2&gt;&amp;5'' exited with status 1
-<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
-<span class="f4">[test.sh]</span>  at main(runtest/test/test_test_functions.sh:66)
-<span class="f2">[test.sh]</span> PASSED: @run_tests should invoke tests and setup methods when there are failures
+regression #33
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/include-regression-33.sh
 </pre>
 </body>
 </html>

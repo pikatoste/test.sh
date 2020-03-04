@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_includes.sh
 
@@ -306,17 +306,22 @@ span { display: inline-block; }
 <span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/include_test.sh
 included!
 included!
+<span class="f2">[test.sh]</span> PASSED: Files should be included from the default locations
 <span class="f4">[test.sh]</span> Start test: Files should be included from the default directories with the configured INCLUDE_GLOB
 <span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/__include_test.sh
 <span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/__include_test.sh
 included!
 included!
+<span class="f2">[test.sh]</span> PASSED: Files should be included from the default directories with the configured INCLUDE_GLOB
 <span class="f4">[test.sh]</span> Start test: Files should be included from the configured INCLUDE_PATH
-<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test1.sh
-<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/_include_test2.sh
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/files/_include_test1.sh
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/files/_include_test2.sh
 included!
 included!
+<span class="f2">[test.sh]</span> PASSED: Files should be included from the configured INCLUDE_PATH
 <span class="f4">[test.sh]</span> Start test: Included files should not be reported when reincluded
+<span class="f2">* test_01</span>
+<span class="f2">[test.sh]</span> PASSED: Included files should not be reported when reincluded
 </pre>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 <!-- BADGE-START -->
 <!-- BADGE-END -->
@@ -9,7 +9,9 @@ version: 0.1.0-SNAPSHOT-76f350a
 
 test.sh is a bash library for writing tests as shell scripts.
 
-Only GNU bash is supported. test.sh has been developed and tested with bash version 4.4.20.
+Requires GNU bash version \>= 4.4.
+It has been tested succesfully on versions up to 5.0.11.
+The development environment is Ubuntu 18.04 with bash version 4.4.20.
 
 ## Installation
 
@@ -24,9 +26,12 @@ From sources:
     make
     ```
 
-2. Copy `build/test.sh` to your project or put or to a central location, such as /opt/test.sh/test.sh.
+2. Copy `build/test.sh` to your project or to a central location, such as /opt/test.sh/test.sh.
 
 ## Usage
+
+test.sh is a bash library designed to be sourced in test scripts; if executed, it prints a message with
+the version number and a link to this repository.
 
 A test script looks like this:
 
@@ -34,101 +39,319 @@ A test script looks like this:
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/test.sh
 
-start_test "This is a passing test"
-assert_true true
-
-start_test "This is a failing test"
-assert_true false
-```
-
-This test script contains two tests, one that passes and one that fails.
-It is written in *inline* mode; you can also choose *managed* mode, and the test becomes:
-
-```bash
-#!/bin/bash
-test_01() {
-  start_test "This is a passing test"
-  assert_true true
+@test: "This is a passing test"
+@body: {
+  assert_success true
 }
 
-test_02() {
-  start_test "This is a failing test"
-  assert_true false
+@test: "This is a failing test"
+@body: {
+  assert_success false
 }
 
-source "$(dirname "$(readlink -f "$0")")"/test.sh
-
-run_tests
+@run_tests
 ```
 
-In _managed_ mode you write each test in a separate function and then invoke `run_tests` to run your tests. This mode
-supports running all tests despite failures.
+This test script contains two tests: one that passes and one that fails.
+Tests are defined with a pair of `@test:` and `@body:` tags and executed with `@run_tests`.
 
-In _inline_ mode tests are delimited by calls to `start_test` and you don't invoke `run_tests`. In this mode,
-the first failed test terminates the script.
-
-You should not mix inline and managed mode in the same test script.
-
-The output of a test script is a colorized summary with the result of each test. Both tests above produce the
-same output:
+The output of a test script is a colorized summary with the result of each test. The test script above prints:
 
 <pre><font color="#4E9A06">* This is a passing test</font>
 <font color="#CC0000">* This is a failing test</font>
 </pre>
 
+This report is printed to the standard output of the test script, referred in this document as the 'main output'.
 The standard output and error of the test script are redirected to a log file.
 This file is named after the test script with the
 suffix '.out' appended and is located in directory 'testout' relative to the test script. For example, if your
 test script is `test/test_something.sh`, the output will be logged to `test/testout/test_something.sh.out`.
 Lines in the log file coming from test.sh, i.e. not from the test script or the commands it executes,
 are prefixed with the string '[testsh]', which is colorized to show the
-category of the message: blue for info, orange for warnings and red for errors.
+category of the message: blue for info, orange for warnings and red for errors. test.sh logs the following events:
+* The start of each test
+* The outcome of each test, either success or failure
+* Any errors, basically non-zero exit status from any command. Errors are handled as exceptions; they log an error
+message and a stack trace
 
-Test failures will cause a stack trace to be logged. The log output of the managed sample test is:
+The log output of the test example above is:
 
 <pre><font color="#3465A4">[test.sh]</font> Start test: This is a passing test
+<font color="#4E9A06">[test.sh]</font> PASSED: This is a passing test
 <font color="#3465A4">[test.sh]</font> Start test: This is a failing test
 <font color="#CC0000">[test.sh]</font> Assertion failed: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:347): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at assert(test.sh:364)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:370)
-<font color="#CC0000">[test.sh]</font>  at test_02(mymanagedtest.sh:9)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:231)
-<font color="#CC0000">[test.sh]</font>  at main(mymanagedtest.sh:14)
+<font color="#CC0000">[test.sh]</font>  at throw_assert(test.sh:474)
+<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:485)
+<font color="#CC0000">[test.sh]</font>  at test_02(myfirsttest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:426)
+<font color="#CC0000">[test.sh]</font>  at main(myfirsttest.sh:14)
+<font color="#CC0000">[test.sh]</font> Caused by:
+<font color="#CC0000">[test.sh]</font> Error in _eval(test.sh:267): &apos;false&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:482)
+<font color="#CC0000">[test.sh]</font>  at test_02(myfirsttest.sh:11)
+<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:426)
+<font color="#CC0000">[test.sh]</font>  at main(myfirsttest.sh:14)
+<font color="#CC0000">[test.sh]</font> FAILED: This is a failing test
+<font color="#CC0000">[test.sh]</font> 1 test(s) failed
 </pre>
 
 Currently test.sh does not deal with running test scripts; for this purpose you can use
 [Makefile.test](https://github.com/box/Makefile.test).
 
+### Anatomy of a test script
+
+You should start the script with a bash shebang: remember, test.sh is a bash-only library.
+
+Next comes the line that sources test.sh. The position doesn't really matter.
+
+The remaining code is the test script itself, which is just normal bash code.
+
+Each test is defined with the pair of tags `@test:` and `@body:`. The `@test:` tag is followed by a string with a
+short description of the test. This string is what gets displayed in the main output and is also referenced by
+test start/pass/fail logged events. The body of the test is defined with a `@body:` tag, which must me preceded
+by a `@test:` tag. The body is normal shell code. You can define as much tests as you want. Each test defines a
+bash function `test_n` where _n_ is the test number, starting at 1: the first test defines a function `test_1`,
+the second test `test_2` and so on. This function is what you'll see in error stack traces.
+
+Finally, you execute the tests with `@run_tests`. Tests are executed in the order of definition. Only tests
+defined before `@run_tests` are executed. The `@test:` tag can be optionally preceded by a `@skip` tag;
+such tests are not executed, they are reported as skipped.
+
+All these tags are just bash commands; you can mix any bash code in between, for example to define functions
+used by the tests. In fact, you don't need to define any tests, something you might do if interested only
+in the error handling features of test.sh.
+
+### setup/teardown
+
+test.sh supports setup/teardown semantics with four more tags.
+Each one of these tags is followed by a function body definition just as the `@body:` tag. At most one instance
+of these tags should be present in a test script.
+
+The following semantics apply to the setup & teardown functions:
+
+* `@setup_fixture:`: If present, it will be called once before any test and `setup_test` functions. Failure in this
+function will fail the test immediately, i.e. no tests will be executed.
+A failure in this function is reported in the main output and the error is logged in the log output.
+* `@teardown_fixture:`: if present, it will be called once after all tests and `teardown_test` functions. A failure
+in this function will be reported as a warning in the main output and an error will be logged, but will not make
+the test script to fail.
+* `@setup:`: if present, it will be called before every test. A failure in this function will fail the
+test but will not prevent other tests from executing (if FAIL_FAST is false). Because the test fails, the script
+will fail also.
+* `@teardown:`: if present, it will be called after every test. A failure in this function will be reported
+as a warning in the main output and an error will be logged, but will not make the test to fail.
+
+### Error handling
+
+Error handling is where test.sh excels: errors are processed and reported in an exception-like fashion. Every command
+that returns non-zero is considered an error, and as such throws an exception; these are _implicit exceptions_, as
+if each command was followed by 'if command failed then throw exception'. Therefore, the test script is run in
+the so-called "implicit assertion" mode. There are also normal, explicit exceptions: those that are thrown
+with the `throw` function. Code can be wrapped in try/catch constructs, which is what test.sh does to run tests
+and call teardown functions. Al this is implemented with a combination of shell options and ERR/EXIT traps.
+
+The exact set of options set by test.sh are:
+
+```bash
+set -o errexit -o pipefail -o errtrace
+shopt -s inherit_errexit expand_aliases
+```
+
+These options are active right after sourcing test.sh. `expand_aliases` is not related to error handling; aliases
+are used to implement the test definition and try/catch syntax.
+
+Any uncaught exception in the body of a test interrupts the test and makes it fail. A failure of an individual test
+will cause the script to return failure.
+An uncaught exception in the main body of the test script terminates the script with failure.
+For example:
+
+```bash
+#!/bin/bash
+VERBOSE=1 source ./test.sh
+false
+```
+
+prints:
+
+<pre><font color="#CC0000">[test.sh]</font> Error in main(myimpliciterror.sh:3): &apos;false&apos; exited with status 1
+</pre>
+
+and the exit code is 1.
+
+#### Exceptions
+test.sh uses internally a try/catch construct to implement test and teardown semantics.
+This construct is also available to the test script. The syntax of the try/catch construct is:
+
+```text
+try:
+  [commands...]
+catch: | catch exception[, exception...]:
+  commands...
+[success:
+  commands...]
+endtry
+```
+
+* `try:`, `catch:`, `success:` and `endtry` must be at the beginning of a line.
+* `try:`, `catch:`, and `endtry`  are all required, `success:` is optional.
+* The body of the `catch:` and `success:` blocks must contain at least one command.
+* The `catch:` clause can optionally specify a comma-separated list of exceptions. No spaces are allowed
+before a comma, which must be followed by at least one space. The last exception must end with a colon.
+
+For example:
+
+```bash
+#!/bin/bash
+VERBOSE=1 source ./test.sh
+
+try:
+  false
+catch:
+  print_exception
+endtry
+```
+
+The try block is executed in a subshell: changes to variables in the try block are local to the subshell and are
+not visible outside the try block. catch and success blocks are not executed in a subshell.
+try/catch constructs can be nested.
+
+Exceptions are thrown implicitly when the exit code of a command is non-zero, or explicitly with the
+`throw <exception> <message>` function. \<exception\> is the exception type. Exceptions can inherit from
+other exceptions. Inheritance is defined with function `declare_exception <exception> <super>`, where \<super\>
+is the exception supertype of \<exception\>. Non-declared exceptions do not have a supertype. Only declared
+exceptions can be specified in the list of caught exceptions in the catch clause. `catch:` catches all exceptions.
+Exceptions listed in the catch clause are tried in order; each specified exception matches itself and all its subtypes.
+
+The `throw` function in a catch block can be optionally preceded by `with_cause:` to chain the current exception
+to the thrown exception with the link message 'Caused by:'. Pending exceptions are always linked to the thrown
+exception with the link message 'Pending exception:'. Exceptions can be thrown from anywhere in the script: a try
+block, a catch block, a success block or outside a try/catch construct.
+
+These functions are only available in a catch block:
+* `print_exception` prints the current exception: the exception message, a stack trace and all chained exceptions
+* `rethrow` rethrows the current exception
+
+The `failed` function returns 0 if an exception was caught in the catch block of the
+last try/catch construct and false otherwise. Note that if an exception escapes the try block an is not caught
+a call to `failed` after the try/catch construct will not get executed.
+
+test.sh defines a hierarchy of exceptions. Some of them are abstract, i.e. they are never thrown as such but
+are the supertype of concrete exceptions. The list of predefined exceptions is:
+* nonzero: abstract. Represents a command failure.
+* implicit (nonzero): concrete. Type of implicit exceptions when there are no pending exceptions.
+* assert (nonzero): concrete. Thrown from assert functions when the assertion fails.
+* error: abstract. Represents runtime errors.
+* test_syntax (error): concrete. A misplaced `@body:` tag.
+* pending_exception (error): concrete. Pending exceptions detected.
+* eval_syntax_error (error): concrete. A syntax error in the command of `assert_success` or `assert_failure`.
+
+#### Pending exceptions
+test.sh relies on errexit to propagate thrown exceptions across subshell environments, but there are situations
+when this propagation is interrupted. The exception remains, though, and test.sh checks at certain
+points whether there are pending exceptions and throws 'pending_exception' exception. Pending exceptions
+are created when thrown from a command substitution that is part of the arguments of another command or construct
+that returns its own exit code. Multiple pending exceptions can accumulate until they are detected, as demonstrated
+by this script:
+
+```bash
+#!/bin/bash
+VERBOSE=1 source ./test.sh
+echo -n $(false) $(throw error Error!)
+echo still here...
+```
+
+which prints:
+
+<pre>still here...
+<font color="#CC0000">[test.sh]</font> Pending exception, probably a masked error in a command substitution
+<font color="#CC0000">[test.sh]</font>  at unhandled_exception(test.sh:275)
+<font color="#CC0000">[test.sh]</font>  at exit_trap(test.sh:283)
+<font color="#CC0000">[test.sh]</font>  at main(mypendingexception.sh:1)
+<font color="#CC0000">[test.sh]</font> <font color="#CC0000">Pending exception:</font>
+<font color="#CC0000">[test.sh]</font> Error!
+<font color="#CC0000">[test.sh]</font>  at main(mypendingexception.sh:3)
+<font color="#CC0000">[test.sh]</font> <font color="#CC0000">Pending exception:</font>
+<font color="#CC0000">[test.sh]</font> Error in main(mypendingexception.sh:3): &apos;false&apos; exited with status 1
+</pre>
+
+This pending_exception was thrown from the EXIT trap, as shown by the stack trace. The other points where test.sh
+checks for pending exceptions are:
+
+* At the start of each assert function. This is intended to trap pending exceptions early when using command
+substitutions in arguments to assert functions, such as `assert_equals "" "$(false)"`.
+* At the end of each try block, before the catch block. Each test is executed in a try block, so pending exceptions
+generated during a test will not pass the test undetected.
+
+#### Repeated exceptions
+The ERR trap that creates an implicit exception is inherited by subshells. Each nested subshell will create an
+implicit exception, resulting in repeated exceptions for the same original exception thrown from an inner subshell.
+For example, the command `(false)` creates two exceptions:
+
+<pre><font color="#CC0000">[test.sh]</font> Error in main(doubleexception.sh:3): &apos;( false )&apos; exited with status 1
+<font color="#CC0000">[test.sh]</font> <font color="#CC0000">Previous exception:</font>
+<font color="#CC0000">[test.sh]</font> Error in main(doubleexception.sh:3): &apos;false&apos; exited with status 1
+</pre>
+
+There's no way to distinguish a pending exception from a current exception at implicit exception creation, so
+an existing exception is chained to the current exception with the ambiguous link message "Previous exception:".
+
+Subshells introduced by try blocks do not repeat exceptions even when nested.
+
+The type of an implicit exception is the type of the pending exception or `implicit` if there are no pending exceptions.
+
+#### Ignored errexit context
+
+There are some pitfalls with `-o errexit` to be aware of. Bash ignores this setting in the following situations:
+
+* In the condition of an `if`, `while` or `until`.
+* Commands separated by `||` or `&&` except the last command. The final result of the expression will do trigger
+exit of non-zero.
+* In negated commands, i.e. preceded by '!'.
+
+In all of the above situations the commands are executed in _ignored errexit context_; if the command is a function,
+the exit code of commands in the function body is ignored and the exit code of the function is the exit code of the
+las command evaluated in the function body. This means that if you have a validation function
+such as:
+
+```bash
+validate() {
+  # check 1
+  [[ $A = a ]]
+  # check 2
+  [[ $B = b ]]
+}
+```
+
+then, expressions of the form `if validate; then ... fi`, `while validate; do ... done`, `validate || echo "error"`,
+`! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
+of the negated expression will not trigger exit even if it evaluates to false.
+
+The ERR trap shares with errexit the conditions under which it is ignored, i.e. ignored errexit context is also
+ignored ERR trap context. No implicit exceptions are thrown in ignored ERR trap context.
+
+### Assertions
+
+There are three assert
+functions: `assert_success`, `assert_failure` and `assert_equals`. See the description of these functions in the
+[Function reference](#function-reference).
+
+`assert_success` and `assert_failure` accept an expression which is evaluated with `eval` in errexit context, i.e.
+implicit exceptions are thrown as usual. There are quoting issues to be aware of:
+
+* If the expression is surrounded by double quotes, parameter expansion will occur at call point. If single quotes
+are used, then parameter expansion will occur at the evaluation point.
+* Double quotes inside the expression have to be escaped if the expression is surrounded by double quotes.
+
+If the evaluated expression contains syntax errors, an `eval_syntax_error` exception is thrown; this
+exception is not considered for the assertion result and the assertion neither succeeds nor fails because the
+expression could not be evaluated. It is considered a runtime error.
+
 ### Sourcing test.sh
 
-There are specific requirements on the position in a test script of the source command that loads test.sh,
-depending on the setting of configuration variables SUBSHELL and REENTER:
-
-* If SUBSHELL is set to 'never' and the `subshell` function is not called explicitly, there are no specific requirements.
-
-* Otherwise, if REENTER is true, the source command should be after function definitions and before code at the
-main level. Any code before test.sh is sourced will be reexecuted in each subshell invocation.
-You should organize your script as follows: _function definitions_, _source test.sh_,
-_main code_.
-
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
-  is true, subshells restart the test script to redefine functions in the current subshell.
-  This redefinition is only accomplished if these functions
-  are defined before sourcing test.sh. You probably don't want to reexecute the test script main code
-  when reentered from a subshell, and that's why the main test script code is _after_ sourcing test.sh (when test.sh is
-  sourced as a result of a subshell invocation, the source command never returns).
-
-* Otherwise, the source command should be at the beginning of the test script, before function definitions and any code
-that affects these functions.
-
-  Under this configuration some code could be executed in a subshell (see [Subshells](#subshells)). When REENTER
-  is false, subshells simply execute the requested code. All variables and functions are available in the subshell
-  because test.sh does `set -o allexport`, but this setting only affects code _after_ test.sh is sourced. Variables
-  and functions defined before test.sh is are not available in the subshell
-  unless explicitly exported, for example with `set -o allexport` at the beginning of the test
-  script.
+There are no specific requirements on the position in a test script of the source command that loads test.sh.
+Just be aware that you can set configuration variables directly in the test script before sourcing test.sh, and
+that configuration variables set this way will have precedence over the inherited environment and the configuration
+file.
 
 The aspect of the source command itself depends on the location of test.sh and whether you restrict the directory
 where test scripts can be run from.
@@ -154,188 +377,6 @@ can be launched, specify a path relative to the chosen directory. For example:
   source ./test.sh
   ```
 
-### Implicit assertion
-
-test.sh sets `-o errexit`, so any command that does not return success will be considered as
-a failure. In inline mode, the first failure terminates the script; in managed mode this behaviour
-depends on the configuration variable FAIL_FAST. In either case, a failure of an individual test
-will cause the script to return failure.
-
-There are some pitfalls with `-o errexit` to be aware of. Bash ignores this setting in the following situations:
-
-* In the condition of an `if`, `while` or `until`.
-* In expressions using `||` or `&&` except the last command.
-* In negated commands, i.e. preceded by '!'.
-
-In all of the above situations, expressions that evaluate to false will not trigger exit. Moreover, as any command
-executed as part of the expression runs in _ignored errexit context_, if the command is a function then the
-result of all commands in the function but the last are ignored. This means that if you have a validation function
-such as:
-
-```bash
-validate() {
-  # check 1
-  [[ $A = a ]]
-  # check 2
-  [[ $B = b ]]
-}
-```
-
-then, expressions of the form `if validate; then ... fi`, `while validate; do ... done`, `validate || echo "error"`,
-`! validate` will not behave as expected as all checks but the last will be ignored. In the last case, the result
-of the negated expression will not trigger exit even if it evaluates to false.
-
-### setup/teardown
-
-The following semantics apply to the setup & teardown functions:
-
-* `setup_test_suite`: if present, it will be called once before any test and `setup_test` functions. Failure in this
-function will fail the test immediatelly, i.e. no tests will be executed.
-
-  A failure in this function is reported in the main output and the error is logged in the log output.
-
-* `teardown_test_suite`: if present, it will be called once after all tests and `teardown_test` functions. A failure
-in this function will be reported as a warning in the main output and an error will be logged, but will not make
-the test script to fail.
-
-* `setup_test`: if present, it will be called before every test. A failure in this function will fail the
-test but will not prevent other tests from executing (if FAIL_FAST is false). Because the test fails, the script
-will fail also.
-
-  In managed mode, the test failure reported in the main output is the name of the test function instead of
-  the test description set with `start_test`.
-
-* `teardown_test`: if present, it will be called after every test. A failure in this function will be reported
-as a warning in the main output and an error will be logged, but will not make the test to fail.
-
-These semantics break in corner cases when SUBSHELL is set to 'never':
-* A failure in `teardown_test` or `teardown_test_suite` will make the test script to fail.
-* In inline mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked for a failed test or
-the last test even if it succeeds.
-* In managed mode, `teardown_test_suite` will not be called if `teardown_test` fails when invoked
-for a failed test.
-
-### Subshells
-
-If allowed by the SUBSHELL configuration option, test.sh will execute in a subshell (i.e. `bash -c`)
-code whose exit status must be monitored but not terminate the script on failure.
-This includes test functions in managed mode, teardown functions and assert functions.
-
-When code is executed in a subshell it cannot affect the environment of the caller. For example, variables set in
-a test function evaluated in a subshell will not be seen from other test functions or the main script.
-
-Subshells inherit the environment of the caller, which includes variables, functions and the shell
-options, but the source file and line numbers of functions inherited from the environment are lost
-in the subshell,
-affecting the quality of stack traces. The REENTER configuration option overcomes this limitation.
-
-### Stack traces
-
-Errors logged contain a message with the function, source file and line number where the error occurred, optionally
-followed by a stack trace depending on the STACK_TRACE configuration setting. Source file paths in the error message
-and individual frames in the stack trace can be pruned with configuration option PRUNE_PATH.
-
-Errors are logged for each individual test, setup and teardown functions, and the main script if in managed mode. This means
-that the same log file can contain more than one error.
-
-If you use `return` with a value other than 0 inside a function to trigger failure, the stack trace will attribute
-the return statement to the calling function instead of the function to which the return belongs.
-For this reason, using return to indicate failure is discouraged.
-
-Stack traces include frames in test.sh, and they can be quite a large number if SUBSHELL is set to 'always'.
-For example, this test script (the line `set -o allexport` makes the script support also REENTER false):
-
-```bash
-#!/bin/bash
-set -o allexport
-test_01() {
-  assert_true false "this is a test killer"
-}
-
-SUBSHELL=${SUBSHELL:-always}
-STACK_TRACE=full
-PRUNE_PATH="*/"
-source "$(dirname "$(readlink -f "$0")")"/test.sh
-
-run_tests
-```
-
-will log this output:
-
-<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in source(test.sh:381): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
-<font color="#CC0000">[test.sh]</font>  at expect_true(test.sh:348)
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:361)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
-<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
-<font color="#CC0000">[test.sh]</font>  at source(test.sh:381)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:10)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:278)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-<font color="#CC0000">[test.sh]</font> test_01 FAILED
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-</pre>
-
-Because the error was triggered from `assert_true` --which is an internal test.sh function-- the error
-message points to test.sh and not mytest.sh. This is a good reason to activate stack traces.
-Note that there's a second error, this one is triggered in managed mode, SUBSHELL=always and FAIL_FAST false when the script
-(not the test) fails. This second error also benefits from the stack trace.
-
-In contrast, if you run `SUBSHELL=teardown ./mytest.sh` the stack trace is more compact:
-
-<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
-<font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
-<font color="#CC0000">[test.sh]</font>  at test_01(mytest.sh:4)
-<font color="#CC0000">[test.sh]</font>  at run_test(test.sh:201)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:231)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-</pre>
-
-When REENTER is false, stack traces involving subshells are different.
-For example, the log output of the previous script executed as `REENTER= ./mytest.sh` is:
-
-<pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-<font color="#CC0000">[test.sh]</font> Error in (:0): &apos;false&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at subshell(environment:10)
-<font color="#CC0000">[test.sh]</font>  at expect_true(environment:0)
-<font color="#CC0000">[test.sh]</font>  at assert(environment:7)
-<font color="#CC0000">[test.sh]</font>  at assert_true(environment:0)
-<font color="#CC0000">[test.sh]</font>  at test_01(environment:0)
-<font color="#CC0000">[test.sh]</font>  at run_test(environment:19)
-<font color="#CC0000">[test.sh]</font>  at subshell(test.sh:279)
-<font color="#CC0000">[test.sh]</font>  at run_tests(test.sh:229)
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-<font color="#CC0000">[test.sh]</font> test_01 FAILED
-<font color="#CC0000">[test.sh]</font> Error in run_tests(test.sh:220): &apos;[[ $failures == 0 ]]&apos; exited with status 1
-<font color="#CC0000">[test.sh]</font>  at main(mytest.sh:12)
-</pre>
-
-The differences are:
-
-* The error message shows no source file and 0 as the line number; this happens when the subshell evaluates a
-simple expression.
-* The subshell invocation sequence is simpler.
-* All frames following the first subshell invocation show 'environment' as the source file and a line number
-relative to the definition of the function in the environment, wich might be different from the definition
-in the source file. For example, blank lines are removed from definitions of functions in the environment.
-
-### Assertions
-
-Explicit assertions were originally conceived as an aid in locating the origin of failures. The error reporting
-facilities currently implemented have alleviated this need and as a result assertions have not received much
-attention.
-
-Currently there are only two assert
-functions, `assert_true` and `assert_false`. See the description of these functions in the
-[Function reference](#function-reference).
-
 ### Predefined variables
 
 test.sh defines these variables, which are available to the test script after test.sh is sourced:
@@ -343,10 +384,11 @@ test.sh defines these variables, which are available to the test script after te
 * VERSION: the version of test.sh.
 * TESTSH: full path of the sourced test.sh.
 * TESTSH_DIR: the directory of test.sh.
+* TEST_SCRIPT: full path of the test script.
 * TEST_SCRIPT_DIR: the directory of the test script.
 * CONFIG_FILE: the location of the effective configuration file.
-* TESTOUT_FILE: the log file.
-* TESTOUT_DIR: the directory of the log file.
+
+Configuration variables are set to the effective value.
 
 ### Configuration
 
@@ -359,14 +401,21 @@ The configuration file is sourced, so it can contain any shell code. Normally yo
 put only variable assignments in the configuration file.
 
 If the variable CONFIG_FILE is defined, the configuration file will be loaded from that location.
-Otherwise a file named 'test.sh.config' will be searched in these locations (see section [Predefined variables](#predefined-variables)'):
+Otherwise a file named 'test.sh.config' will be searched in these locations (see section
+[Predefined variables](#predefined-variables)'):
 
 * $TEST_SCRIPT_DIR
 * $TESTSH_DIR
+* Working directory
 
 Boolean variables are considered true when not empty and false otherwise (undefined or empty).
 
-Available configuration variables:
+The configuration is read before any configuration variable takes effect. This means that
+errors during configuration processing are displayed in the main output because the redirection
+to LOG_FILE has not been done yet.
+For the same reason, no color is applied: the COLOR configuration has not been yet processed.
+
+Temporary files are created in TMPDIR if set, otherwise in `/tmp`.
 
 * VERBOSE
 
@@ -377,7 +426,7 @@ Available configuration variables:
 
 * DEBUG
 
-  Boolean. Default 0.
+  Boolean. Default false.
 
   If true, activate 'set -x'.
 
@@ -399,54 +448,16 @@ Available configuration variables:
   Boolean. Default true. Only used in managed mode.
 
   If true, failure of a test function will interrupt the script and the remaining test functions will
-  be skipped.
+  be skipped. Each skipped test is displayed in the main output as `[skipped] <test function>`.
 
-  If false, all test functions will be executed. Requires SUBSHELL=always.
-
-* SUBSHELL
-
-  Values: never, teardown or always. Default: always when FAIL_FAST is false; teardown when FAIL_FAST is true.
-
-  * never: never start subshells. Incompatible with FAIL_FAST false. Breaks teardown semantics
-    (see [setup/teardown](#setupteardown)): any failure in a teardown function will terminate the script with
-    failure. In this mode, `teardown_test_suite` will not get called when both a test and `teardown_test` fail.
-
-  * teardown: only start subshells to execute `teardown_test` and `teardown_test_suite` functions.
-    Incompatible with FAIL_FAST false.
-    Enforces teardown semantics (see [setup/teardown](#setupteardown)):`teardown_test` and `teardown_test_suite`
-    are always called in this mode and failures in these functions don't fail the test nor interrupt the script.
-
-  * always: start a subshell to execute test functions, teardown functions and assert expressions. Required when
-    FAIL_FAST is false. Enforces teardown semantics (see [setup/teardown](#setupteardown)):
-    `teardown_test` and `teardown_test_suite` are always called in this mode and failures in
-    these functions don't fail the test nor interrupt the script.
-
-  See [Subshells](#subshells).
-
-* REENTER
-
-  Boolean. Default true.
-
-  If true, when test.sh starts a subshell it will reexecute he test script and source again other involved scripts:
-  test.sh and included files. This redefines functions in the subshell's context and allows
-  stack traces to correctly refer to source files and line numbers.
-
-  If false, subshells will reexecute the test script nor source again involved scripts. Functions defined in the calling shell are
-  available to the subshell because they are exported in the environment, but the source file and line number of
-  these functions is lost; stack traces with frames referencing these functions will
-  show 'environment' as the source file and a line number relative to that function's definition
-  _in the environment_, which might be different from the original function's definition in the source file.
-  For example, blank lines are not present in the function definition in the environment.
-  See [Stack traces](#stack-traces).
-
-  The value of this variable affects the structure of test scripts (see [Sourcing test.sh](#sourcing-testsh)).
+  If false, all test functions will be executed.
 
 * STACK_TRACE
 
   Values: no or full. Default: full.
 
-  * no: do not output stack traces.
-  * full: include all frames.
+  * no: do not log stack traces.
+  * full: log stack traces.
 
 
 * PRUNE_PATH
@@ -454,173 +465,203 @@ Available configuration variables:
   Default: ${PWD}/
 
   A pattern that is matched at the beginning of each source file path in error reports, i.e. the error message and
-  stack trace frames. The longest match is removed from the path. If there's no match the path not modified.
+  stack trace frames. The longest match is removed from the path. If there's no match the path is not modified.
 
-  For example, to strip all directories and leave only file names you would set `PRUNE_PATH="*/"`.
+  For example, to strip all directories and leave only file names you would set: `PRUNE_PATH="*/"`.
 
-* TEST_MATCH
+* COLOR
 
-  Default: ^test_
+  Values: yes, no. Default: yes.
 
-  A regular expression that is matched against function names to discover test functions in managed mode.
-  It is evaluated by grep.
+  * yes: output ANSI color escape sequences in both main and log output.
+  * no: do not output ANSI color escape sequences in neither main or log output.
+
+* LOG_DIR_NAME
+
+  The name of the log directory. Default: testout
+
+* LOG_DIR
+
+  Full path of the log directory. Default: `$TEST_SCRIPT_DIR/$LOG_DIR_NAME`
+
+* LOG_NAME
+
+  Name of the log file. Default: `$(basename "$TEST_SCRIPT").out`
+
+* LOG_FILE
+
+  Full path of the log file. Default: `$LOG_DIR/$LOG_NAME`
+
+* LOG_MODE
+
+  Values: overwrite, append. Default: overwrite
+
+  * overwrite: clear the contents of the log file.
+  * append: append the test script log to the existing content.
 
 ### Function reference
 
-This is the list of functions defined by test.sh that you can use in a test script.
+This is the list of functions and aliases defined by test.sh that you can use in a test script.
 
-* run_tests
+* @run_tests
 
   Syntax:
 
   ```text
-  run_tests [test function]...
+  @run_tests
   ```
 
-  Runs the specified test functions in managed mode. With no arguments, runs _discovered_ test
-  functions: functions whose name match the pattern configured in TEST_MATCH. Discovered test functions will be executed
-  in function name order, not function definition order. Test functions specified as arguments
-  will be executed in the order of the arguments.
+  Alias for function `run_tests`.
+  Runs all tests. You should call `run_tests` only once. Alias for function `run_tests`.
 
-  You should call run_tests only once.
+* _eval
 
-  A test function should look:
+  Syntax:
 
-  ```bash
-  test_xxx() {
-    start_test "Short description of this test"
-    # the test code goes here
+  ```text
+  _eval [arguments]...
+  ```
+
+  Wrapper for the `eval` builtin. Throws `eval_syntax_error` exception.
+
+  The `eval` builtin behaviour when the evaluated command contains syntax errors is to exit with exit code 2. No ERR
+  trap is triggered in the shell environment where `eval` is executed; if this is the main shell environment, no
+  exception is generated. The `_eval` function does throw `eval_syntax_error` in this event and is a better fit
+  for test.sh error handling.
+
+* @setup_fixture:
+
+  Syntax:
+
+  ```text
+  @setup_fixture: {
+    command...
   }
   ```
 
-  It should start with a call to `start_test` and should not call `start_test` more than once.
-
-* start_test
-
-  Syntax:
-
-  ```text
-  start_test <short test description>
-  ```
-
-  Set the test description of the current test. The test description is displayed in the main output and should
-  be a single line of text. In inline mode, defines the start of a test (and the end of the previous test).
-  In managed mode, sets the test description of the current test function.
-
-* setup_test_suite
-
+  Alias that defines the function `setup_test_suite`.
   If defined, this function will be called only once before any test.
   A failure in this function will cause failure of the script and no test will be executed.
 
   See [setup/teardown](#setupteardown).
 
-* teardown_test_suite
+* @teardown_fixture:
 
+  Syntax:
+
+  ```text
+  @teardown_fixture: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `teardown_test_suite`.
   If defined, this function will be called once after all tests even if there are failures.
   A failure in this function will not cause failure of the script, but will cause a warning
   message to be displayed on the main output.
 
   See [setup/teardown](#setupteardown).
 
-* setup_test
+* @setup:
 
+  Syntax:
+
+  ```text
+  @setup: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `setup_test`.
   If defined, this function will be called before each test.
   A failure in this function will cause failure of the test.
 
   See [setup/teardown](#setupteardown).
 
-* teardown_test
+* @teardown:
 
+  Syntax:
+
+  ```text
+  @teardown: {
+    command...
+  }
+  ```
+
+  Alias that defines the function `teardown_test`.
   If defined, this function will be called after each test even if the test fails.
   A failure in this function will not cause failure of the test, but will cause a warning
   message to be displayed on the main output.
 
   See [setup/teardown](#setupteardown).
 
-* assert_true
+* assert_success
 
   Syntax:
 
   ```text
-  assert_true <shell command> [message]
+  assert_success <command> [message]
   ```
 
-  Executes \<shell command\>. If the result code is not success, an error message is logged and an error triggered.
+  Evaluates \<command\>. Throws exception `assert` if the exit code is not success.
 
   For example, the following test script:
 
   ```bash
   #!/bin/bash
-
-  SUBSHELL=never
-  STACK_TRACE=full
-  PRUNE_PATH="*/"
-  source "$(dirname "$(readlink -f "$0")")"/test.sh
-
-  assert_true false "this is a test killer"
+  VERBOSE=1 source ./test.sh
+  assert_success false "this is a test killer"
   ```
 
-  will log the following output (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+  prints:
 
-  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected success but got failure in: &apos;false&apos;
-  <font color="#CC0000">[test.sh]</font> Error in expect_true(test.sh:348): &apos;false&apos; exited with status 1
-  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
-  <font color="#CC0000">[test.sh]</font>  at assert_true(test.sh:369)
-  <font color="#CC0000">[test.sh]</font>  at main(mytestasserttrue.sh:8)
+  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer, expected success but got failure in: &apos;false&apos;
+  <font color="#CC0000">[test.sh]</font>  at throw_assert(test.sh:475)
+  <font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:486)
+  <font color="#CC0000">[test.sh]</font>  at main(assert_success.sh:3)
+  <font color="#CC0000">[test.sh]</font> Caused by:
+  <font color="#CC0000">[test.sh]</font> Error in _eval(test.sh:268): &apos;false&apos; exited with status 1
+  <font color="#CC0000">[test.sh]</font>  at assert_success(test.sh:483)
+  <font color="#CC0000">[test.sh]</font>  at main(assert_success.sh:3)
   </pre>
 
-* assert_false
+* assert_failure
 
   Syntax:
 
   ```text
-  assert_false <shell command> [message]
+  assert_failure <command> [message]
   ```
 
-  Executes \<shell command\>. If the result code is success, an error message is logged and an error triggered.
-  For example, the following test script (with STACK_TRACE=full and SUBSHELL=[never\|teardown]):
+  Evaluates \<command\>. Exceptions thrown from command are logged with level info for reference. Throws
+  exception `assert` if the exit code is 0.
+  For example, the following test script:
 
   ```bash
   #!/bin/bash
-
-  SUBSHELL=never
-  STACK_TRACE=full
-  PRUNE_PATH="*/"
-  source "$(dirname "$(readlink -f "$0")")"/test.sh
-
-  assert_false true "this is a test killer"
+  VERBOSE=1 source ./test.sh
+  assert_failure true "this is a test killer"
   ```
 
-  will log the following output:
+  prints:
 
-  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer: expected failure but got success in: &apos;true&apos;
-  <font color="#CC0000">[test.sh]</font> Error in expect_false(test.sh:353): &apos;false&apos; exited with status 1
-  <font color="#CC0000">[test.sh]</font>  at call_assert(test.sh:363)
-  <font color="#CC0000">[test.sh]</font>  at assert_false(test.sh:373)
-  <font color="#CC0000">[test.sh]</font>  at main(mytestassertfalse.sh:8)
+  <pre><font color="#CC0000">[test.sh]</font> Assertion failed: this is a test killer, expected failure but got success in: &apos;true&apos;
+  <font color="#CC0000">[test.sh]</font>  at throw_assert(test.sh:475)
+  <font color="#CC0000">[test.sh]</font>  at assert_failure(test.sh:501)
+  <font color="#CC0000">[test.sh]</font>  at main(assert_failure.sh:3)
   </pre>
 
-    **NOTE**: \<shell command\> is executed in _ignored errexit context_
-    (see [Implicit assertion](#implicit-assertion)). If \<shell command\> calls a function designed to
-    run in errexit context, you should invoke \<shell command\> with the `subshell` function. For example,
-    the assertion `assert_false my_validation_function`, when `my_validation_function` requires errexit
-    context, should be written as: `assert_false "subshell my_validation_function"`.
-
-* subshell
+* assert_equals
 
   Syntax:
 
   ```text
-  subshell <shell command>
+  assert_equals <expected> <current> [message]
   ```
 
-  Executes \<shell command\> in a subshell with errexit context enabled. This is useful when you need to execute code
-  in errexit context but in a situation where bash is in ignored errexit context, such as when negating an expression
-  with `!`. It is also useful for capturing the result code of an expression that might fail.
-  Use this function instead of plain `bash -c`
-  invocations to preserve the error tracing capacity of test.sh.
-
-  See [Subshells](#subshells).
+  Compares \<expected\> and \<current\> with the bash expression: `[[ "$expected" = "$current" ]]`.
+  Throws exception `assert` if the result is non-zero. The exception message follows the pattern
+  `Assertion failed: [<message>, ]expected '<expected>' but got '<current>'`.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

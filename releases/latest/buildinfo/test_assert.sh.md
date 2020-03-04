@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_assert.sh
 
@@ -301,14 +301,57 @@ span { display: inline-block; }
 
 <body class="f9 b9">
 <pre>
+<span class="f4">[test.sh]</span> Included: /home/runner/work/test.sh/test.sh/runtest/test/include/functions.sh
 <span class="f4">[test.sh]</span> Start test: Assertions should not fail when the assertion succeeds
-<span class="f4">[test.sh]</span> Start test: assert_true should fail when the assertion is false
-<span class="f1">[test.sh]</span> Assertion failed: expected success but got failure in: 'false'
-<span class="f4">[test.sh]</span> Start test: assert_false shoud fail when the assertion is true
-<span class="f1">[test.sh]</span> Assertion failed: expected failure but got success in: 'true'
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): 'false' exited with status 1
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_assert.sh:12)
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in fail_validation(runtest/test/test_assert.sh:6): 'false' exited with status 1
+<span class="f4">[test.sh]</span>  at _eval(runtest/test.sh:350)
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_assert.sh:13)
+<span class="f2">[test.sh]</span> PASSED: Assertions should not fail when the assertion succeeds
+<span class="f4">[test.sh]</span> Start test: assert_success should fail when the assertion is false
+<span class="f1">[test.sh]</span> assert exception: Assertion failed: ok, expected success but got failure in: 'false'
+<span class="f1">[test.sh]</span>  at assert_success(runtest/test.sh:693)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:17)
+<span class="f1">[test.sh]</span> Caused by:
+<span class="f1">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at assert_success(runtest/test.sh:690)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:17)
+<span class="f2">[test.sh]</span> PASSED: assert_success should fail when the assertion is false
+<span class="f4">[test.sh]</span> Start test: assert_failure should fail when the assertion is true
+<span class="f1">[test.sh]</span> assert exception: Assertion failed: nok, expected failure but got success in: 'true'
+<span class="f1">[test.sh]</span>  at assert_failure(runtest/test.sh:708)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:23)
+<span class="f2">[test.sh]</span> PASSED: assert_failure should fail when the assertion is true
+<span class="f4">[test.sh]</span> Start test: assert_equals should fail when the arguments are not equal
+<span class="f1">[test.sh]</span> assert exception: Assertion failed: wrong, expected 'expected' but got 'current'
+<span class="f1">[test.sh]</span>  at assert_equals(runtest/test.sh:719)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:29)
+<span class="f2">[test.sh]</span> PASSED: assert_equals should fail when the arguments are not equal
 <span class="f4">[test.sh]</span> Start test: Failed assertions should interrupt the test when FAIL_FAST is true
 <span class="f2">* Assertions should not fail when the assertion succeeds</span>
-<span class="f1">* assert_true should fail when the assertion is false</span>
+<span class="f1">* assert_success should fail when the assertion is false</span>
+<span class="f4">* [skipped] assert_failure should fail when the assertion is true</span>
+<span class="f1">[test.sh]</span> implicit exception: Error in run_test_script(runtest/test.sh:506): '&quot;$test_script&quot; &quot;$@&quot;' exited with status 1
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_assert.sh:35)
+<span class="f2">[test.sh]</span> PASSED: Failed assertions should interrupt the test when FAIL_FAST is true
+<span class="f4">[test.sh]</span> Start test: #89: assert_failure should execute the expression in errexit context
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in ffail(runtest/test/test_assert.sh:41): 'false' exited with status 1
+<span class="f4">[test.sh]</span>  at _eval(runtest/test.sh:350)
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_assert.sh:47)
+<span class="f4">[test.sh]</span> Expected failure:
+<span class="f4">[test.sh]</span> implicit exception: Error in _eval(runtest/test.sh:350): '[[ -f &quot;/home/runner/work/test.sh/test.sh/runtest/test/.test_assert.out&quot; ]]' exited with status 1
+<span class="f4">[test.sh]</span>  at assert_failure(runtest/test.sh:702)
+<span class="f4">[test.sh]</span>  at main(runtest/test/test_assert.sh:48)
+<span class="f2">[test.sh]</span> PASSED: #89: assert_failure should execute the expression in errexit context
+<span class="f4">[test.sh]</span> Start test: #98: non-zero exit code in the expression of assert_failure prints the failure but does not print an assertion failure
+<span class="f2">[test.sh]</span> PASSED: #98: non-zero exit code in the expression of assert_failure prints the failure but does not print an assertion failure
 </pre>
 </body>
 </html>

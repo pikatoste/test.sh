@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-7983286
 ---
 # Output of test_STACK_TRACE.sh
 
@@ -302,15 +302,22 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: STACK_TRACE should accept only valid values
-<span class="f1">[test.sh]</span> Configuration: invalid value in variable STACK_TRACE: 'pepe', should be one of: no full
+<span class="f1">[test.sh]</span> Configuration: invalid value of variable STACK_TRACE: 'pepe', allowed values: no, full
+<span class="f1">[test.sh]</span> Error in validate_values(runtest/test.sh:625): 'false' exited with status 1
+<span class="f1">[test.sh]</span>  at load_config(runtest/test.sh:629)
+<span class="f1">[test.sh]</span>  at test_01(runtest/test/test_STACK_TRACE.sh:11)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:395)
+<span class="f1">[test.sh]</span>  at @run_tests(runtest/test.sh:63)
+<span class="f1">[test.sh]</span>  at main(runtest/test/test_STACK_TRACE.sh:37)
+<span class="f2">[test.sh]</span> PASSED: STACK_TRACE should accept only valid values
 <span class="f4">[test.sh]</span> Start test: When STACK_TRACE=no no stack traces should be produced
-<span class="f4">[test.sh]</span> Start test: When STACK_TRACE=pruned the stack traces should be truncated before the first test.sh frame
-<span class="f4">[test.sh]</span> Start test: When STACK_TRACE=compact the stack traces should not contain frames in test.sh
+<span class="f1">* test_01</span>
+<span class="f2">[test.sh]</span> PASSED: When STACK_TRACE=no no stack traces should be produced
 <span class="f4">[test.sh]</span> Start test: When STACK_TRACE=full the stack traces should contain the complete call stack
-<span class="f1">[test.sh]</span>  at run_test(runtest/test.sh:201)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:229)
+<span class="f1">* test_01</span>
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:395)
+<span class="f1">[test.sh]</span>  at @run_tests(runtest/test.sh:63)
+<span class="f2">[test.sh]</span> PASSED: When STACK_TRACE=full the stack traces should contain the complete call stack
 </pre>
 </body>
 </html>

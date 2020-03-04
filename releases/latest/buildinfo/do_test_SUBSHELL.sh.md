@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-34caf27
 ---
 # Output of do_test_SUBSHELL.sh
 
@@ -302,17 +302,18 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 test_01
+<span class="f2">[test.sh]</span> PASSED: test_01
 teardown_test
 teardown_test_suite
 <span class="f1">[test.sh]</span> Error in teardown_test_suite(environment:1): 'false' exited with status 1
-<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:139)
-<span class="f1">[test.sh]</span>  at call_teardown_subshell(runtest/test.sh:154)
-<span class="f1">[test.sh]</span>  at source(runtest/test.sh:381)
-<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:1)
-<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:277)
-<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:160)
-<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:246)
-<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:19)
+<span class="f1">[test.sh]</span>  at call_if_exists(runtest/test.sh:160)
+<span class="f1">[test.sh]</span>  at source(runtest/test.sh:431)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:2)
+<span class="f1">[test.sh]</span>  at subshell(runtest/test.sh:304)
+<span class="f1">[test.sh]</span>  at call_teardown(runtest/test.sh:176)
+<span class="f1">[test.sh]</span>  at result_of(runtest/test.sh:55)
+<span class="f1">[test.sh]</span>  at run_tests(runtest/test.sh:269)
+<span class="f1">[test.sh]</span>  at main(runtest/test/do_test_SUBSHELL.sh:20)
 </pre>
 </body>
 </html>

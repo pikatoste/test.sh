@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_log.sh
 
@@ -302,8 +302,21 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: The log file should contain test stdout and stderr
+<span class="f2">* passing test</span>
+<span class="f1">* failing test</span>
 output
 stderr
+<span class="f2">[test.sh]</span> PASSED: The log file should contain test stdout and stderr
+<span class="f4">[test.sh]</span> Start test: Start test events should be logged
+<span class="f4">[test.sh]</span> Start test: passing test
+<span class="f4">[test.sh]</span> Start test: failing test
+<span class="f2">[test.sh]</span> PASSED: Start test events should be logged
+<span class="f4">[test.sh]</span> Start test: Test passed events should be logged
+<span class="f2">[test.sh]</span> PASSED: passing test
+<span class="f2">[test.sh]</span> PASSED: Test passed events should be logged
+<span class="f4">[test.sh]</span> Start test: Test failed events should be logged
+<span class="f1">[test.sh]</span> FAILED: failing test
+<span class="f2">[test.sh]</span> PASSED: Test failed events should be logged
 </pre>
 </body>
 </html>

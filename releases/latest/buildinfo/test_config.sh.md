@@ -1,6 +1,6 @@
 ---
 layout: release
-version: 0.1.0-SNAPSHOT-76f350a
+version: 0.1.0-SNAPSHOT-9f8e143
 ---
 # Output of test_config.sh
 
@@ -302,18 +302,19 @@ span { display: inline-block; }
 <body class="f9 b9">
 <pre>
 <span class="f4">[test.sh]</span> Start test: The configuration file should be loaded from the default location
-<span class="f4">[test.sh]</span> Loaded config from /home/runner/work/test.sh/test.sh/runtest/test.sh.config
+<span class="f2">[test.sh]</span> PASSED: The configuration file should be loaded from the default location
 <span class="f4">[test.sh]</span> Start test: The configuration file should be loaded from CONFIG_FILE
-<span class="f4">[test.sh]</span> Loaded config from /home/runner/work/test.sh/test.sh/runtest/test/test.sh.config.FILE
-<span class="f4">[test.sh]</span> Start test: The configuration file should be loaded from CONFIG_DIR
-<span class="f4">[test.sh]</span> Loaded config from /home/runner/work/test.sh/test.sh/runtest/test/test.sh.config
+<span class="f2">[test.sh]</span> PASSED: The configuration file should be loaded from CONFIG_FILE
+<span class="f4">[test.sh]</span> Start test: The configuration file should be loaded from CONFIG_PATH
+<span class="f2">[test.sh]</span> PASSED: The configuration file should be loaded from CONFIG_PATH
 <span class="f4">[test.sh]</span> Start test: Configuration variables in the environment should be respected
+<span class="f2">[test.sh]</span> PASSED: Configuration variables in the environment should be respected
 <span class="f4">[test.sh]</span> Start test: Configuration variables in the environment should override the configuration file
-<span class="f4">[test.sh]</span> Loaded config from /home/runner/work/test.sh/test.sh/runtest/test/test.sh.config.default
+<span class="f2">[test.sh]</span> PASSED: Configuration variables in the environment should override the configuration file
 <span class="f4">[test.sh]</span> Start test: Empty variables should be respected over defaults
-<span class="f3">[test.sh]</span> Configuration: SUBSHELL set to 'always' because FAIL_FAST is false (was: SUBSHELL=teardown)
+<span class="f2">[test.sh]</span> PASSED: Empty variables should be respected over defaults
 <span class="f4">[test.sh]</span> Start test: Empty variables should be respected over configuration file
-<span class="f4">[test.sh]</span> Loaded config from /home/runner/work/test.sh/test.sh/runtest/test/test.sh.config.default
+<span class="f2">[test.sh]</span> PASSED: Empty variables should be respected over configuration file
 </pre>
 </body>
 </html>
