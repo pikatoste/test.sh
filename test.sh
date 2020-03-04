@@ -40,11 +40,12 @@ validate@body() {
   unset '_testfunc' '_SKIP' '_TIMEOUT'
 }
 
-alias try:="_try;(_try_prolog;"
-alias catch:=");_catch ''&&{"
-alias catch=");_catch "
-alias success:="}; _success&&{ enable_exceptions;"
-alias endtry="};_endtry"
+alias try:='_try;(_try_prolog;'
+alias catch:=');_catch ""&&{'
+alias catch=');_catch '
+alias success:='};_success&&{ enable_exceptions;'
+alias finally:='}; { enable_exceptions;'
+alias endtry='};_endtry'
 alias with_cause:='WITH_CAUSE= '
 alias exit='_exit'
 
@@ -473,7 +474,8 @@ call_teardown() {
   try:
     "$1"
   catch:
-    [[ $ANIMATE ]] || warn_teardown_failed "$1"
+    [[ ! $ANIMATE ]] || kill_spinner
+    warn_teardown_failed "$1"
     print_exception
   endtry
 }
@@ -596,8 +598,7 @@ run_tests() {
       "$test_func"
     catch:
       print_exception
-      [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
-    success:
+    finally:
       [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
     endtry
     [[ ! $ANIMATE ]] || {
