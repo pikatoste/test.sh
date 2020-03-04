@@ -413,23 +413,23 @@ start_test() {
 
 display_test_passed() {
   log_ok "PASSED: ${_CURRENT_TEST_NAME}"
-  printf "${_GREEN}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
+  printf "${_GREEN}%${COLUMNS:+.$COLUMNS}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
   ((++_lines_out))
 }
 
 display_test_failed() {
   log_err "FAILED: ${_CURRENT_TEST_NAME}"
-  printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
+  printf "${_RED}%${COLUMNS:+.$COLUMNS}s${_NC}\n" "${_INDENT}* ${_CURRENT_TEST_NAME}" >&3
   ((++_lines_out))
 }
 
 display_test_skipped() {
-  printf "${_BLUE}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}* [skipped] $1" >&3
+  printf "${_BLUE}%${COLUMNS:+.$COLUMNS}s${_NC}\n" "${_INDENT}* [skipped] $1" >&3
   ((++_lines_out))
 }
 
 warn_teardown_failed() {
-  printf "${_ORANGE}%${_cols:+.$_cols}s${_NC}\n" "${_INDENT}WARN: $1 failed" >&3
+  printf "${_ORANGE}%${COLUMNS:+.$COLUMNS}s${_NC}\n" "${_INDENT}WARN: $1 failed" >&3
   ((++_lines_out))
 }
 
@@ -460,7 +460,7 @@ function_exists() {
 call_setup_test_suite() {
   function_exists 'setup_test_suite' || return 0
   # TODO: if exit but not err, the message is not printed, should use try/catch
-  push_err_handler 'printf "${_RED}%${_cols:+.$_cols}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
+  push_err_handler 'printf "${_RED}%${COLUMNS:+.$COLUMNS}s${_NC}\n" "[ERROR] setup_test_suite failed, see ${LOG_FILE##$PRUNE_PATH} for more information" >&3; ((++_lines_out))'
   setup_test_suite
   pop_err_handler
 }
@@ -500,20 +500,19 @@ create_spinners() {
         for ((i=0; i<${#_spinners[@]}; i++)); do
           set ${_spinners[i]}
           eval "linesup=$1"
-          (( $linesup < _lines )) || continue
+          (( $linesup < LINES )) || continue
           linesupcmd=
           colsfcmd=
           (( linesup > 0 )) && linesupcmd="cuu $linesup"
           (( $2 > 0 )) && colsfcmd="cuf $2"
           tput -S <<EOF
-sc
-cub $_cols
+cub $COLUMNS
 $colsfcmd
 $linesupcmd
 EOF
           echo -n "$char"
-          # TODO: avoid this tput
-          tput rc
+          (( linesup > 0 )) && tput cud "$linesup"
+          echo -ne '\r'
           [[ ! $_spinner_kill ]] || exit
         done
         sleep 0.1
@@ -587,7 +586,7 @@ run_tests() {
     [[ ! $ANIMATE ]] || {
       add_spinner 0 "${#_INDENT}"
       create_spinners
-      printf "%.${_cols}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
+      printf "%.${COLUMNS}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
     } >&3
     _setup_passed=1
     try:
@@ -604,7 +603,7 @@ run_tests() {
     [[ ! $ANIMATE ]] || {
       kill_spinner
       _spinners=("${_spinners[@]:0:${#_spinners[@]}-1}")
-      (( _lines_out != _lines-1 )) || {
+      (( _lines_out != LINES-1 )) || {
         tput cuu "$_lines_out"
         failed || ((_failed_count+_error_count > 0)) && echo -ne "\r${_RED}*${_NC}" || echo -ne '\r*'
         tput cud "$_lines_out"
@@ -972,7 +971,7 @@ runner() {
   { time {
     for test_script in "$@"; do
       declare -g '_script_error=0' '_test_count=0' '_failed_count=0' '_skipped_count=0' '_error_count=0' '_lines_out=1'
-      printf "%${_cols:+.$_cols}s\n" "* $test_script:"
+      printf "%${COLUMNS:+.$COLUMNS}s\n" "* $test_script:"
       try:
         setup_test_script
         try:
@@ -1012,15 +1011,12 @@ runner() {
 }
 
 display_test_script_outcome() {
-  local outcome=$1 color
-  if (( _lines_out < _lines )); then
-    tput -S <<EOF
-sc
-cuu $_lines_out
-EOF
+  if (( _lines_out < LINES )); then
+    local outcome=$1 color
+    tput cuu "$_lines_out"
     (( outcome == 0 )) && color=$_GREEN || color=$_RED
-    printf "${color}%${_cols:+.$_cols}s${_NC}" "* $test_script:"
-    tput rc
+    printf "${color}%${COLUMNS:+.$COLUMNS}s${_NC}\r" "* $test_script:"
+    tput cud "$_lines_out"
   fi
 }
 
@@ -1034,25 +1030,26 @@ print_banner() {
 
   [[ $ANIMATE ]] || { echo "$BANNER"; return 0; }
 
-  local ABANNER i len trim real_time
-  readarray -n "$_lines" 'ABANNER' <<<"$BANNER"
-  ABANNER[-1]=$(echo -n "${ABANNER[-1]}")
-  len=${#ABANNER}
-  trim=${ABANNER//?/?}
+  local ABANNER last i len trim real_time
+  readarray -n "$LINES" 'ABANNER' <<<"$BANNER"
+  len=$(( ${#ABANNER} - 1 ))
+  trim=${ABANNER:0:$len}
+  trim=${trim//?/?}
+  printf -v last "%.${len}s" "${ABANNER[-1]}"
+  ABANNER[-1]=$last
 
   # calibrate delay
   alias delay='sleep 0.000'
-  { line_pos; readarray -t -s 1 -n 1 'real_time' < <(
+  readarray -t -s 1 -n 1 'real_time' < <(
     { LANG=C
+      i=1
       time {
-        [[ $LINPOS ]] && tput cup $((LINPOS)) 0
+        ((i)) && tput cuu $((${#ABANNER[@]} - 1))
         trim=${trim:((${#trim}/2))}
-        printf "%.${_cols}s" "${ABANNER[@]#$trim}" >/dev/null
-        [[ $LINPOS ]] || line_pos
+        printf "%.${COLUMNS}b" "${ABANNER[@]#$trim}" '\r'
         eval delay
-      } 1>&3 2>&4
-    } 4>&2 2>&1 )
-  } 3>&1
+      }
+    } 2>&1 >/dev/null )
   [[ $real_time =~ .*m(.*)s ]]
   local ms=$((10#${BASH_REMATCH[1]/./}))
   local step=15
@@ -1066,17 +1063,15 @@ print_banner() {
   fi
 
   # animate
-  LINPOS=
-  for ((i=len-1; i>=0; i--)); do
-    [[ $LINPOS ]] && tput cup $((LINPOS - ${#ABANNER[@]} + 1)) 0
+  for ((i=0; i<len; i++)); do
+    ((i)) && tput cuu $((${#ABANNER[@]} - 1))
     trim=${trim:1}
-    printf "%.${_cols}s" "${ABANNER[@]#$trim}"
-    [[ $LINPOS ]] || line_pos
+    printf "%.${COLUMNS}b" "${ABANNER[@]#$trim}" '\r'
     eval delay
   done
   echo
   readarray -s "${#ABANNER[@]}" 'ABANNER' <<<"$BANNER"
-  printf "%.${_cols}s" "${ABANNER[@]}"
+  printf "%.${COLUMNS}s" "${ABANNER[@]}"
   unalias delay
 }
 
@@ -1088,21 +1083,8 @@ setup_tty() {
   [[ $ANIMATE ]] || return 0
 
   stty -echo
+  shopt -s checkwinsize
   tput civis
-  _cols=$(tput cols)
-  _lines=$(tput lines)
-  trap '_cols=$(tput cols); _lines=$(tput lines)' WINCH
-}
-
-cursor_pos() {
-  echo -en "\E[6n"
-  read -sdR CURPOS
-  CURPOS=${CURPOS#*[}
-}
-
-line_pos() {
-  cursor_pos
-  LINPOS=$((${CURPOS%;*}-1))
 }
 
 if [ "$0" = "${BASH_SOURCE}" ]; then
