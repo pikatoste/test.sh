@@ -129,10 +129,10 @@ of these tags should be present in a test script.
 
 The following semantics apply to the setup & teardown functions:
 
-* `@setup_fixture:`: If present, it will be called once before any test and `setup_test` functions. Failure in this
+* `@setup_once:`: If present, it will be called once before any test and `setup_test` functions. Failure in this
 function will fail the test immediately, i.e. no tests will be executed.
 A failure in this function is reported in the main output and the error is logged in the log output.
-* `@teardown_fixture:`: if present, it will be called once after all tests and `teardown_test` functions. A failure
+* `@teardown_once:`: if present, it will be called once after all tests and `teardown_test` functions. A failure
 in this function will be reported as a warning in the main output and an error will be logged, but will not make
 the test script to fail.
 * `@setup:`: if present, it will be called before every test. A failure in this function will fail the
@@ -529,12 +529,12 @@ This is the list of functions and aliases defined by test.sh that you can use in
   exception is generated. The `_eval` function does throw `eval_syntax_error` in this event and is a better fit
   for test.sh error handling.
 
-* @setup_fixture:
+* @setup_once:
 
   Syntax:
 
   ```text
-  @setup_fixture: {
+  @setup_once: {
     command...
   }
   ```
@@ -545,12 +545,12 @@ This is the list of functions and aliases defined by test.sh that you can use in
 
   See [setup/teardown](#setupteardown).
 
-* @teardown_fixture:
+* @teardown_once:
 
   Syntax:
 
   ```text
-  @teardown_fixture: {
+  @teardown_once: {
     command...
   }
   ```

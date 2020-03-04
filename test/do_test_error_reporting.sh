@@ -24,7 +24,7 @@ func2() {
   true
 }
 
-@teardown_fixture: {
+@teardown_once: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }
@@ -39,7 +39,7 @@ func_assert() {
   true
 }
 
-@setup_fixture: {
+@setup_once: {
   [[ $FAIL_FUNC != *\[$FUNCNAME\]* ]] || false
   true
 }

@@ -1,11 +1,11 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-@setup_fixture: {
+@setup_once: {
   echo setup_test_suite >>"$OUTFILE"
 }
 
-@teardown_fixture: {
+@teardown_once: {
   echo teardown_test_suite >>"$OUTFILE"
 }
 

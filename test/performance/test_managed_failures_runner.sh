@@ -1,6 +1,6 @@
 #!/bin/bash
 
-@teardown_fixture: {
+@teardown_once: {
   assert_failure "[[ a = a ]]"
 }
 

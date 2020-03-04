@@ -14,8 +14,8 @@ alias @test:='define_test'
 alias @body:='validate@body'
 alias @skip='_SKIP=1 '
 alias @timeout='_set_timeout '
-alias @setup_fixture:='setup_test_suite()'
-alias @teardown_fixture:='teardown_test_suite()'
+alias @setup_once:='setup_test_suite()'
+alias @teardown_once:='teardown_test_suite()'
 alias @setup:='setup_test()'
 alias @teardown:='teardown_test()'
 declare -A '_testdescs' '_testskip' '_testtimeout'
@@ -134,9 +134,9 @@ _try_prolog() {
   push_exit_handler "try_exit_handler $_TRY_VARS"
 }
 
+
 _catch() {
   push_try_exit_code
-  # TODO: _TRY_VARS corruption in try in catch
   [[ ! $_TRY_VARS ]] || restore_vars
   [[ -f $_EXCEPTIONS_FILE ]] || {
     [[ $_TRY_EXIT_CODE != 0 ]] || return 1
@@ -682,7 +682,7 @@ assert_failure() {
   try:
     _eval "$what"
   catch nonzero:
-    log_info "Expected failure:"
+    log_info 'Expected failure:'
     print_exception log_info
   success:
     local why="expected failure but got success in: '$what'"

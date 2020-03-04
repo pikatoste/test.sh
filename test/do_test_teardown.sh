@@ -1,7 +1,7 @@
 #!/bin/bash
 source "$(dirname "$(readlink -f "$0")")"/../test.sh
 
-@teardown_fixture: {
+@teardown_once: {
   echo teardown_test_suite
   [[ $command != teardown_test_suite ]] || false
 }

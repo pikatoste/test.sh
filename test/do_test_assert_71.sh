@@ -12,7 +12,7 @@ source "$(dirname "$(readlink -f "$0")")"/../test.sh
   assert_success false "teardown_test"
 }
 
-@teardown_fixture: {
+@teardown_once: {
   assert_success false "teardown_test_suite"
 }
 
