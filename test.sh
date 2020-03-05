@@ -474,7 +474,11 @@ call_teardown() {
   try:
     "$1"
   catch:
-    [[ ! $ANIMATE ]] || kill_spinner
+    [[ ! $ANIMATE ]] || {
+      kill_spinner
+      restore_script_item_bullet "$2"
+      tput el
+    } >&3
     warn_teardown_failed "$1"
     print_exception
   endtry
@@ -490,7 +494,7 @@ run_test_script() {
 
 _spinner_chars=(- \\ \| /)
 create_spinners() {
-  [[ ! $_spinner_pid ]] || kill_spinner
+  kill_spinner
   _spinner_kill=
   ( disable_exceptions
     trap 'spinner_int_trap' INT
@@ -512,9 +516,8 @@ cub $COLUMNS
 $colsfcmd
 $linesupcmd
 EOF
-          echo -n "$char"
+          printf "%s\r" "$char"
           (( linesup > 0 )) && tput cud "$linesup"
-          echo -ne '\r'
           [[ ! $_spinner_kill ]] || exit
         done
         sleep 0.1
@@ -535,7 +538,8 @@ add_spinner() {
 
 kill_spinner() {
   [[ ! $_spinner_pid ]] || {
-    kill -INT "$_spinner_pid" && wait "$_spinner_pid" || true
+    kill -INT "$_spinner_pid"
+    wait "$_spinner_pid"
     _spinner_pid=
   }
 }
@@ -559,12 +563,20 @@ alarm_trap() {
   throw 'timeout' "Test timed out after $_timeout seconds"
 }
 
+restore_script_item_bullet() {
+  (( _lines_out != LINES-1 )) || {
+    tput cuu "$_lines_out"
+    [[ $1 ]] && echo -ne "\r${_RED}*${_NC}\r" || echo -ne '\r*\r'
+    tput cud "$_lines_out"
+  }
+}
+
 run_tests() {
   _MANAGED=
   _failed_count=0
   _error_count=0
   _skipped_count=0
-  local 'test_func' 'setupf' 'teardownf'
+  local 'test_func' 'setupf' 'teardownf' 'script_failed'
   [[ ! $ANIMATE ]] || {
     add_spinner '$_lines_out' 0
     create_spinners
@@ -591,6 +603,7 @@ run_tests() {
       printf "%.${COLUMNS}s" "${_INDENT}* ${_CURRENT_TEST_NAME}"
     } >&3
     _setup_passed=1
+    script_failed=
     try:
       log_info "Start test: $_CURRENT_TEST_NAME"
       start_timeout "$test_func"
@@ -598,18 +611,14 @@ run_tests() {
       "$test_func"
     catch:
       print_exception
+      script_failed=1
     finally:
-      [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test'
+      [[ ! $teardownf ]] || _TRY_VARS= call_teardown 'teardown_test' "$script_failed"
     endtry
     [[ ! $ANIMATE ]] || {
       kill_spinner
       _spinners=("${_spinners[@]:0:${#_spinners[@]}-1}")
-      (( _lines_out != LINES-1 )) || {
-        tput cuu "$_lines_out"
-        failed || ((_failed_count+_error_count > 0)) && echo -ne "\r${_RED}*${_NC}" || echo -ne '\r*'
-        tput cud "$_lines_out"
-      }
-      echo -ne '\r'
+      restore_script_item_bullet "$script_failed"
     } >&3
     if failed; then
       display_test_failed
