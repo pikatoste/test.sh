@@ -1053,8 +1053,8 @@ print_banner() {
     } 2>&1 >/dev/null )
   [[ $real_time =~ .*m(.*)s ]]
   local ms=$((10#${BASH_REMATCH[1]/./}))
-  local step=15
-  if ((ms >= 2*step)); then
+  local step=30
+  if ((ms >= step+step/2)); then
     alias delay=
   else
     ((ms > step)) && ms=$step
@@ -1064,9 +1064,9 @@ print_banner() {
   fi
 
   # animate
-  for ((i=0; i<len; i++)); do
+  for ((i=0; i<len; i+=2)); do
     ((i)) && tput cuu $((${#ABANNER[@]} - 1))
-    trim=${trim:1}
+    trim=${trim:2}
     printf "%.${COLUMNS}b" "${ABANNER[@]#$trim}" '\r'
     eval delay
   done
