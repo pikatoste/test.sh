@@ -140,7 +140,7 @@ _catch() {
   [[ ! $_TRY_VARS ]] || restore_vars
   [[ -f $_EXCEPTIONS_FILE ]] || {
     [[ $_TRY_EXIT_CODE != 0 ]] || return 1
-    builtin exit "$_TRY_EXIT_CODE"
+    exit "$_TRY_EXIT_CODE"
   }
   [[ $_TRY_EXIT_CODE != 0 ]] || {
     _TRY_EXIT_CODE=1

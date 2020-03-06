@@ -40,11 +40,11 @@ start_test "Try blocks that do exit with non-zero with no exit command and no ER
 
 start_test "Try blocks that exit do not generate exception and propagate exit"
 
-  assert_failure '
+  assert_failure '(
     try:
       exit 1
     catch: print_exception
-    endtry' 'Exception caught or zero exit status'
+    endtry )' 'Exception caught or zero exit status'
 
 start_test "Nested try/catch blocks do not repeat exceptions if rethrown"
   try:
